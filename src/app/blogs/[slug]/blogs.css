@@ -1,0 +1,16 @@
+.blog-content {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: #333;
+  padding-top: 10px;
+}
+
+a.text-dark:hover {
+  color: #007bff;
+  text-decoration: underline;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  transition: 0.3s ease;
+}

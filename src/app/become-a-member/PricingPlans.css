@@ -1,0 +1,242 @@
+/* General Styling */
+.pricing-section {
+  font-family: 'Inter', sans-serif;
+  text-align: center;
+  color: #1a202c;
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #2d3748;
+  margin-bottom: 50px;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.title span {
+  color: #6D4AAF;
+}
+
+/* Pricing Cards Container */
+.pricing-cards {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.pricing-titlt {
+  font-size: 14px !important;
+}
+
+/* Individual Card Styling */
+.card {
+  background: #fff;
+  border-radius: 24px;
+  width: 300px;
+  max-width: 100%;
+  padding: 30px 25px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+  position: relative;
+  transition: transform 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
+  text-align: left;
+  border: 2px solid transparent;
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-15px) scale(1.02);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+  border: 2px solid #6D4AAF;
+}
+
+.card.highlight {
+  background: #6D4AAF;
+  color: white;
+  border: 2px solid #5a3c91;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+  transform: scale(1.05);
+  z-index: 2;
+}
+
+.card.highlight:hover {
+  transform: scale(1.07);
+}
+
+.card.highlight ul li,
+.card.highlight h3,
+.card.highlight .gst,
+.card.highlight .accordion-header {
+  color: white;
+}
+
+/* Ribbon for 'Popular' tag */
+.ribbon {
+  background: linear-gradient(45deg, #FFA500, #FFD700);
+  color: #fff;
+  font-weight: 700;
+  padding: 10px 15px;
+  position: absolute;
+  top: 0px;
+  right: -59px;
+  transform: rotate(45deg);
+  width: 180px;
+  text-align: center;
+  font-size: 0.8rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.card h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Price and GST */
+.card h3 {
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin-top: 25px;
+  margin-bottom: 5px;
+  text-align: center;
+}
+
+.card .gst {
+  font-size: 0.95rem;
+  color: #718096;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+/* Buttons */
+.card button {
+  width: 100%;
+  padding: 14px 10px;
+  background: linear-gradient(90deg, #6D4AAF, #5a3c91);
+  border: none;
+  color: white;
+  font-weight: 500;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(109, 74, 175, 0.4);
+}
+
+.card button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(109, 74, 175, 0.6);
+  opacity: 0.95;
+}
+
+.card.highlight button {
+  background: white;
+  color: #6D4AAF;
+  box-shadow: 0 8px 20px rgba(255, 255, 255, 0.3);
+}
+
+.card.highlight button:hover {
+  background: #f0f0f0;
+}
+
+/* Accordion Styling */
+.accordion-item {
+  border-bottom: 1px solid #e2e8f0;
+  padding: 15px 0;
+}
+
+.card.highlight .accordion-item {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.accordion-item:last-child {
+  border-bottom: none;
+}
+
+.accordion-header {
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: color 0.3s ease;
+}
+
+.card.highlight .accordion-header {
+  color: #6D4AAF;
+}
+
+.accordion-header svg {
+  margin-left: 10px;
+  transition: transform 0.3s ease;
+}
+
+/* Accordion Content */
+.accordion-content {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0 0;
+  animation: slideDown 0.4s ease-out;
+}
+
+.accordion-content li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+/* ✅ Consistent icon sizing and alignment */
+.accordion-content li svg {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  flex-shrink: 0;
+}
+
+/* ✅ Icon colors */
+.check {
+  color: #04BA00 !important;
+}
+
+.cross {
+  color: #F34234 !important;
+}
+
+/* Animation */
+@keyframes slideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .pricing-section {
+    padding: 60px 15px;
+  }
+  .title {
+    font-size: 2.5rem;
+  }
+  .pricing-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+}

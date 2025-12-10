@@ -1,0 +1,178 @@
+
+/* utility classes */
+.fs-esm{
+  font-size: 13px;
+}
+.fs-sm{
+  font-size: 15px;
+}
+/* city scrollbar */
+
+.product-image {
+    max-width: 150px;
+    height: auto;
+    object-fit: cover;
+    border-radius: 5px;
+  }
+  .supplier-box {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  
+  .supplier-box h6 {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .supplier-box button {
+    font-size: 14px;
+  }
+
+  .supplier-box {
+    background: #f8f9fa; /* Light grey background */
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    height: 300px !important;
+    justify-content: center;
+}
+
+
+
+.product-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two-column layout */
+    gap: 8px;
+    font-size: 14px;
+}
+
+.product-details p {
+    margin-bottom: 5px;
+} 
+  
+  .city-scroll {
+    white-space: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin; /* For Firefox */
+    scrollbar-color: #ccc transparent;
+  }
+  
+  /* Show scrollbar in WebKit-based browsers (Chrome, Safari) */
+  .city-scroll::-webkit-scrollbar {
+    height: 1px; /* Make scrollbar visible */
+  }
+  
+  .city-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1; /* Light grey track */
+    border-radius: 10px;
+  }
+  
+  .city-scroll::-webkit-scrollbar-thumb {
+    background: #888; /* Darker scrollbar */
+    border-radius: 10px;
+  }
+  
+  .city-scroll::-webkit-scrollbar-thumb:hover {
+    background: #555; /* Darker on hover */
+  }
+  
+  
+  
+  
+  /* Updated Container */
+  .custom-container {
+    max-width: 400px;
+    background: linear-gradient(180deg, #F8F9FD 0%, #E9F0F9 100%);
+    border-radius: 20px;
+    padding: 30px;
+    border: none;
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 20px 40px;
+    margin: 20px auto;
+  }
+  
+  /* Title */
+  .custom-title {
+    font-weight: 700;
+    font-size: 28px;
+    color: #2D78FF;
+  }
+  
+  /* Input Fields */
+  .custom-input-container {
+    margin-top: 15px;
+  }
+  
+  .custom-input {
+    width: 100%;
+    background: white;
+    border: none;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 10px;
+    font-size: 16px;
+    box-shadow: inset rgba(0, 0, 0, 0.1) 0px 5px 10px;
+    border: 2px solid transparent;
+    transition: 0.3s ease-in-out;
+  }
+  
+  .custom-input:focus {
+    outline: none;
+    border: 2px solid #2D78FF;
+    box-shadow: 0 0 8px rgba(45, 120, 255, 0.3);
+  }
+  
+  /* Button */
+  .custom-button {
+    display: block;
+    width: 100%;
+    font-weight: bold;
+    background: linear-gradient(45deg, #2D78FF 0%, #50A3FF 100%);
+    color: white;
+    padding: 15px;
+    margin-top: 30px;
+    border-radius: 10px;
+    border: none;
+    font-size: 18px;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .custom-button:hover {
+    transform: scale(1.02);
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 10px 20px;
+  }
+  
+  .custom-button:active {
+    transform: scale(0.98);
+  }
+  
+  /* Social Buttons */
+  .social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
+  }
+  
+  .social-button {
+    width: 50px;
+    height: 50px;
+    background: white;
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 5px 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.3s ease-in-out;
+  }
+  
+  .social-button:hover {
+    transform: scale(1.1);
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 8px 16px;
+  }
+  
+
+
+  

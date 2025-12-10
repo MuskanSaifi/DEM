@@ -1,0 +1,12 @@
+User-agent: *
+Disallow:
+
+Sitemap: https://www.dialexportmart.com/sitemap.xml
+Host: https://www.dialexportmart.com
+
+# Optional: Block specific bots if needed
+# User-agent: BadBot
+# Disallow: /
+
+# Optional: Crawl-delay for all bots (uncommon but useful during heavy traffic)
+# Crawl-delay: 10

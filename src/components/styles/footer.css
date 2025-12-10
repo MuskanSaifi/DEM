@@ -1,0 +1,16 @@
+.footer{
+    background-color: #6d4aae;
+    color: #fff;
+}
+
+
+.my-cat-list{
+    max-height: 250px;
+    overflow-y: scroll;
+}
+
+
+.bot-to-top{
+    background-color: #6d4aae;
+
+}
