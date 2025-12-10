@@ -46,7 +46,7 @@ const StatsWithImage = () => {
           {stats.map((stat, index) => (
             <div
               key={index}
-              className="bg-white shadow-lg rounded-2xl p-6 text-center"
+              className="bg-white shadow-md rounded-2xl p-6 text-center"
             >
               <h3 className="text-3xl font-bold text-purple-600 mb-2">
                 <Counter end={stat.value} suffix={stat.suffix} />

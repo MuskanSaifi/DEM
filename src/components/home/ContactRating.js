@@ -4,7 +4,7 @@ import Image from 'next/image';
 const ContactRating = () => {
   return (
     <section className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 py-10 px-4">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-10 bg-white rounded-3xl shadow-2xl overflow-hidden p-8 md:p-12">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-10 bg-white rounded-3xl shadow-sm overflow-hidden p-8 md:p-12">
         
         {/* Left Image Side */}
         <div className="relative w-full md:w-1/2 h-[400px] md:h-[500px]">

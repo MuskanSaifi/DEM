@@ -137,8 +137,7 @@ const handleLogout = () => {
 
     const fetchSuggestions = async () => {
       try {
-        const response = await fetch(`/api/adminprofile/seller`);
-        const data = await response.json();
+const response = await fetch(`/api/adminprofile/searchbar?search=${searchTerm}`);        const data = await response.json();
         if (response.ok) {
           const filtered = data.filter((product) =>
             product.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -644,7 +643,6 @@ const handleLogout = () => {
           I want to Buy
         </button>
       </div>
-      
 
       {/* Seller Button */}
       <div className="relative">

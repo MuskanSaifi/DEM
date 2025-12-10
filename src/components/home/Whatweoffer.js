@@ -59,7 +59,7 @@ const WhatWeOffer = () => {
         {services.map((service, index) => (
           <div
             key={index}
-            className="bg-white p-6 rounded-xl shadow-lg hover:shadow-indigo-300 transition-shadow text-center"
+            className="bg-white p-6 rounded-xl shadow-md hover:shadow-indigo-100 transition-shadow text-center"
           >
             <div className="flex justify-center mb-4">{service.icon}</div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">

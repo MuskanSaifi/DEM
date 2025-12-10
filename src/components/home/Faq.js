@@ -98,7 +98,7 @@ const Faq = () => {
               filteredFaqs.map((faq, index) => (
               <div
   key={index}
-  className="bg-white border border-gray-100 rounded-xl shadow hover:shadow-lg hover:border-indigo-300 transition duration-300"
+  className="bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition duration-300"
 >
   <button
     className="w-full px-5 py-4 text-left flex justify-between items-center text-gray-800 font-medium"
