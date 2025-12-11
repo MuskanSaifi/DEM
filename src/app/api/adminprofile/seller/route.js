@@ -4,6 +4,32 @@ import Product from "@/models/Product";
 import Category from "@/models/Category";
 import SubCategory from "@/models/SubCategory";
 import mongoose from "mongoose"; //
+
+// GET method - Fetch all products
+export async function GET() {
+  try {
+    await connectDB();
+
+    const products = await Product.find({})
+      .select("name createdAt subCategory userId") // fetch only required fields
+      .populate({
+        path: "userId",
+        select: "fullname",           // Lightweight user info
+      })
+      .populate({
+        path: "subCategory",
+        select: "name",               // Only subcategory name
+      })
+      .lean();
+
+    return Response.json(products);
+  } catch (error) {
+    console.error("Product Error:", error);
+    return Response.json({ error: "Failed to fetch products" }, { status: 500 });
+  }
+}
+
+
 // POST method - Create a new product
 export async function POST(req) {
   try {
@@ -82,31 +108,6 @@ export async function POST(req) {
   }
 }
 
-// GET method - Fetch all products
-export async function GET(req) {
-  try {
-    await connectDB();
-
-    const products = await Product.find()
-      .populate("category")
-      .populate("subCategory") // Ensure subCategory is populated
-            .populate("userId", "fullname companyName") // <--- CRITICAL CHANGE: Populate userId and select fullname and companyName
-
-      .exec();
-
-
-    return new Response(JSON.stringify(products), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error("❌ Error fetching products:", error);
-    return new Response(
-      JSON.stringify({ error: "Failed to fetch products" }),
-      { status: 500 }
-    );
-  }
-}
 
 
 // DELETE method - Delete a product by ID

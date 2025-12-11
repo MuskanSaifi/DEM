@@ -9,23 +9,42 @@ export async function GET() {
   try {
     await connectDB();
 
-    // Fetch all subcategories and populate category and products
-    const subCategories = await SubCategory.find()
-      .populate("category")
-      .populate("products");
+    // 🔥 Light Query — No heavy product populate
+    const subcategories = await SubCategory.find({})
+      .select("name icon subcategoryslug metatitle metadescription metakeyword category products")
+      .populate({
+        path: "category",
+        select: "name", // Only category name
+      })
+      .lean();
 
-    return new Response(JSON.stringify(subCategories), {
+    // 🔥 Only return product count — NOT full product list
+    const cleanData = subcategories.map((s) => ({
+      _id: s._id,
+      name: s.name,
+      icon: s.icon,
+      subcategoryslug: s.subcategoryslug,
+      metatitle: s.metatitle,
+      metadescription: s.metadescription,
+      metakeyword: s.metakeyword,
+      category: s.category ? { name: s.category.name } : null,
+      productCount: s.products?.length || 0, // ONLY COUNT
+    }));
+
+    return new Response(JSON.stringify(cleanData), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
+
   } catch (error) {
-    console.error("Error fetching subcategories:", error);
+    console.error("❌ Subcategory Fetch Error:", error);
     return new Response(
-      JSON.stringify({ error: "Failed to fetch subcategories." }),
+      JSON.stringify({ error: "Failed to load subcategories" }),
       { status: 500 }
     );
   }
 }
+
 
 // ✅ DELETE API - Delete subcategory by ID
 export async function DELETE(req) {

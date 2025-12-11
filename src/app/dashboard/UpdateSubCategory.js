@@ -27,7 +27,7 @@ const [deletingProductId, setDeletingProductId] = useState(null); // To disable 
 
   const fetchCategories = async () => {
     try {
-      const result = await axios.get(`/api/adminprofile/subcategory`);
+      const result = await axios.get(`/api/admin/update-subcategory`);
       setSelectedSubCategory(result.data);
     } catch (error) {
       toast.error("❌ Error fetching subcategories: " + error.message);

@@ -5,10 +5,6 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import Image from "next/image";
 
-// Redux
-import { useDispatch, useSelector } from "react-redux";
-import { fetchCategories } from "@/app/store/categorySlice";
-
 // Tiptap Editor
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -24,27 +20,19 @@ import CodeBlock from "@tiptap/extension-code-block";
 import Link from "@tiptap/extension-link";
 import ImageExtension from "@tiptap/extension-image";
 
-// Helper to generate slug
 const generateSlug = (text) =>
-  text
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
+  text.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-");
 
-const UpdateCategory = () => {
-  const dispatch = useDispatch();
-
-  // ⭐ Get categories from Redux
-  const { data: categories, loading: catLoading } = useSelector(
-    (state) => state.categories
-  );
-
+export default function UpdateCategory() {
+  // ⬇ NO REDUX ANYMORE
+  const [categories, setCategories] = useState([]);
   const [allSubCategories, setAllSubCategories] = useState([]);
-  const [previewImage, setPreviewImage] = useState("");
-  const [slugEdited, setSlugEdited] = useState(false);
+
+  const [loadingCategory, setLoadingCategory] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [slugEdited, setSlugEdited] = useState(false);
+
+  const [previewImage, setPreviewImage] = useState("");
 
   const [categoryData, setCategoryData] = useState({
     id: "",
@@ -59,32 +47,50 @@ const UpdateCategory = () => {
     subcategories: [],
   });
 
-  // Fetch categories once from Redux
+  // =========================================
+  // FETCH CATEGORIES (NO REDUX)
+  // =========================================
   useEffect(() => {
-    dispatch(fetchCategories());
-  }, [dispatch]);
-
-  // Fetch all subcategories (manual)
-  useEffect(() => {
-    fetchAllSubCategories();
+    async function loadCategories() {
+      try {
+        const res = await fetch(
+          "/api/admin/update-category/category-light",
+          { cache: "no-store" }
+        );
+        const data = await res.json();
+        setCategories(data);
+      } catch {
+        toast.error("Failed to load categories");
+      } finally {
+        setLoadingCategory(false);
+      }
+    }
+    loadCategories();
   }, []);
 
-  // Load Subcategories manually
-  const fetchAllSubCategories = async () => {
-    try {
-      const result = await axios.get(`/api/adminprofile/subcategory`);
-      setAllSubCategories(result.data);
-    } catch (error) {
-      toast.error("Failed to fetch subcategories.");
+  // =========================================
+  // FETCH ALL SUBCATEGORIES
+  // =========================================
+  useEffect(() => {
+    async function loadSubs() {
+      try {
+        const res = await axios.get(`/api/admin/update-category/subcategory-light`);
+        setAllSubCategories(res.data);
+      } catch {
+        toast.error("Failed to load subcategories");
+      }
     }
-  };
+    loadSubs();
+  }, []);
 
-  // Tiptap Editor
+  // =========================================
+  // TIPTAP INITIALIZATION
+  // =========================================
   const editor = useEditor({
     extensions: [
       StarterKit,
       ImageExtension.configure({ inline: true }),
-      Heading.configure({ levels: [1, 2, 3, 4, 5, 6] }),
+      Heading,
       Bold,
       Italic,
       Underline,
@@ -97,48 +103,54 @@ const UpdateCategory = () => {
     ],
     content: categoryData.content,
     onUpdate: ({ editor }) => {
-      setCategoryData((prev) => ({ ...prev, content: editor.getHTML() }));
+      setCategoryData((prev) => ({
+        ...prev,
+        content: editor.getHTML(),
+      }));
     },
   });
 
-  // Update editor when category changes
+  // =========================================
+  // AUTO SLUG UPDATE
+  // =========================================
   useEffect(() => {
-    if (editor && editor.getHTML() !== categoryData.content) {
-      editor.commands.setContent(categoryData.content || "", false);
-    }
-  }, [categoryData.content, editor]);
-
-  // Auto-update slug
-  useEffect(() => {
-    if (!slugEdited && categoryData.id) {
+    if (!slugEdited && categoryData.name) {
       setCategoryData((prev) => ({
         ...prev,
         categoryslug: generateSlug(prev.name),
       }));
     }
-  }, [categoryData.name, slugEdited]);
+  }, [categoryData.name]);
 
-  // When user selects a Category
-  const handleCategorySelectChange = (e) => {
-    const selectedCat = categories.find((c) => c._id === e.target.value);
+  // =========================================
+  // CATEGORY SELECT CHANGE
+  // =========================================
+  const handleCategorySelectChange = async (e) => {
+    const id = e.target.value;
+    if (!id) return resetForm();
 
-    if (selectedCat) {
+    try {
+      const res = await axios.get(`/api/adminprofile/category/${id}`);
+      const cat = res.data;
+
       setCategoryData({
-        id: selectedCat._id,
-        name: selectedCat.name,
-        icon: selectedCat.icon || "",
-        categoryslug: selectedCat.categoryslug || "",
-        metatitle: selectedCat.metatitle || "",
-        metadescription: selectedCat.metadescription || "",
-        metakeywords: selectedCat.metakeywords || "",
-        content: selectedCat.content || "",
-        isTrending: selectedCat.isTrending || false,
-        subcategories: selectedCat.subcategories.map((s) => s._id),
+        id: cat._id,
+        name: cat.name,
+        icon: cat.icon || "",
+        categoryslug: cat.categoryslug || "",
+        metatitle: cat.metatitle || "",
+        metadescription: cat.metadescription || "",
+        metakeywords: cat.metakeywords || "",
+        content: cat.content || "",
+        isTrending: cat.isTrending || false,
+        subcategories: cat.subcategories?.map((s) => s._id) || [],
       });
-      setPreviewImage(selectedCat.icon || "");
+
+      setPreviewImage(cat.icon);
       setSlugEdited(false);
-    } else {
-      resetForm();
+      editor?.commands.setContent(cat.content || "");
+    } catch {
+      toast.error("Failed to load category details");
     }
   };
 
@@ -159,6 +171,9 @@ const UpdateCategory = () => {
     editor?.commands.clearContent();
   };
 
+  // =========================================
+  // INPUT CHANGE
+  // =========================================
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -170,18 +185,24 @@ const UpdateCategory = () => {
     if (name === "categoryslug") setSlugEdited(true);
   };
 
+  // =========================================
+  // IMAGE UPDATE
+  // =========================================
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setCategoryData((prev) => ({ ...prev, icon: reader.result }));
       setPreviewImage(reader.result);
+      setCategoryData((prev) => ({ ...prev, icon: reader.result }));
     };
     reader.readAsDataURL(file);
   };
 
+  // =========================================
+  // SUBMIT UPDATE
+  // =========================================
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -189,8 +210,6 @@ const UpdateCategory = () => {
     try {
       await axios.patch(`/api/adminprofile/category`, categoryData);
       toast.success("Category updated successfully!");
-
-      dispatch(fetchCategories()); // refresh redux
       resetForm();
     } catch (err) {
       toast.error(err.response?.data?.error || "Update failed.");
@@ -199,19 +218,21 @@ const UpdateCategory = () => {
     setLoading(false);
   };
 
+  // =========================================
+  // RENDER UI
+  // =========================================
   return (
     <div className="p-4">
       <h3>Update Category</h3>
 
-      {/* Category Selection */}
+      {/* CATEGORY DROPDOWN */}
       <select
         className="form-control mb-3"
-        value={categoryData.id}
         onChange={handleCategorySelectChange}
       >
         <option value="">-- Select Category --</option>
 
-        {catLoading && <option>Loading...</option>}
+        {loadingCategory && <option>Loading...</option>}
 
         {categories.map((cat) => (
           <option key={cat._id} value={cat._id}>
@@ -220,10 +241,9 @@ const UpdateCategory = () => {
         ))}
       </select>
 
-      {/* Only show form when category is selected */}
+      {/* SHOW FORM ONLY IF CATEGORY SELECTED */}
       {categoryData.id && (
         <form onSubmit={handleSubmit}>
-          {/* Name */}
           <input
             type="text"
             name="name"
@@ -232,7 +252,6 @@ const UpdateCategory = () => {
             onChange={handleInputChange}
           />
 
-          {/* Slug */}
           <input
             type="text"
             name="categoryslug"
@@ -241,52 +260,45 @@ const UpdateCategory = () => {
             onChange={handleInputChange}
           />
 
-          {/* Meta Fields */}
           <input
             type="text"
             name="metatitle"
-            placeholder="Meta Title"
             className="form-control mb-3"
             value={categoryData.metatitle}
             onChange={handleInputChange}
+            placeholder="Meta Title"
           />
 
           <textarea
             name="metadescription"
-            placeholder="Meta Description"
             className="form-control mb-3"
             value={categoryData.metadescription}
             onChange={handleInputChange}
-          ></textarea>
+            placeholder="Meta Description"
+          />
 
           <input
             type="text"
             name="metakeywords"
-            placeholder="Meta Keywords"
             className="form-control mb-3"
             value={categoryData.metakeywords}
             onChange={handleInputChange}
+            placeholder="Meta Keywords"
           />
 
-          {/* Editor */}
-          <div className="border rounded p-2 bg-white mb-3">
+          {/* TIPTAP EDITOR */}
+          <div className="border p-2 bg-white mb-3">
             <EditorContent editor={editor} className="min-h-[200px]" />
           </div>
 
-          {/* Icon Upload */}
+          {/* IMAGE UPLOAD */}
           <input type="file" className="form-control mb-3" onChange={handleImageChange} />
 
           {previewImage && (
-            <Image
-              src={previewImage}
-              width={120}
-              height={120}
-              alt="Preview"
-              className="rounded"
-            />
+            <Image src={previewImage} width={120} height={120} alt="Preview" />
           )}
 
-          {/* Trending Checkbox */}
+          {/* TRENDING */}
           <label className="mt-3 d-flex gap-2 align-items-center">
             <input
               type="checkbox"
@@ -297,7 +309,7 @@ const UpdateCategory = () => {
             Trending Category
           </label>
 
-          {/* Subcategory Multi-select */}
+          {/* SUBCATEGORY MULTI SELECT */}
           <select
             multiple
             className="form-control mb-3"
@@ -316,7 +328,6 @@ const UpdateCategory = () => {
             ))}
           </select>
 
-          {/* Submit */}
           <button className="btn btn-primary" disabled={loading}>
             {loading ? "Updating..." : "Update Category"}
           </button>
@@ -324,6 +335,4 @@ const UpdateCategory = () => {
       )}
     </div>
   );
-};
-
-export default UpdateCategory;
+}

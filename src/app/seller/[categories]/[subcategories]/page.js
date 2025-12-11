@@ -4,8 +4,10 @@ import SubcategoryProductPage from "./SubcategoryProductPage";
 
 // Define fetchCategories function directly
 export async function fetchCategories() {
-  const response = await fetch(`https://www.dialexportmart.com/api/adminprofile/category`);
-  if (!response.ok) {
+ const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/category`, {
+    cache: "no-store",
+  });
+    if (!response.ok) {
     throw new Error("Failed to fetch categories");
   }
   return response.json();

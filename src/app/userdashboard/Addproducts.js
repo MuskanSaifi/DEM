@@ -170,7 +170,7 @@ const [availableCities, setAvailableCities] = useState([]);
 
     const fetchCategories = async () => {
         try {
-            const result = await axios.get(`/api/adminprofile/category`); // ✅ Use the correct route
+            const result = await axios.get(`/api/adminprofile/addcat`); // ✅ Use the correct route
             setSelectedCategory(result.data);
         } catch (error) {
             console.error("Error fetching categories:", error);

@@ -95,8 +95,6 @@ export async function GET() {
 }
 
 
-
-
 export async function PATCH(req) {
   try {
     await connectDB();
@@ -266,8 +264,6 @@ export async function POST(req) {
     );
   }
 }
-
-
 
 
 

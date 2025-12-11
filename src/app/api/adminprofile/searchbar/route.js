@@ -1,4 +1,4 @@
-// api/adminprofile/seller/route.js
+// api/adminprofile/searchbar/route.js
 import connectDB from "@/lib/dbConnect";
 import Product from "@/models/Product";
 import mongoose from "mongoose"; //

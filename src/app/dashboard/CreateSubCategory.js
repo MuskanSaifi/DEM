@@ -4,27 +4,18 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 
-// Redux
-import { useDispatch, useSelector } from "react-redux";
-import { fetchCategories } from "@/app/store/categorySlice";
-
-// Slug generator
-const generateSlug = (text) => {
-  return text
+const generateSlug = (text) =>
+  text
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
-};
 
-const CreateSubCategory = () => {
-  const dispatch = useDispatch();
+export default function CreateSubCategory() {
 
-  // ⬇ Fetching categories from Redux store
-  const { data: selectedCategory, loading: categoryLoading, error } = useSelector(
-    (state) => state.categories
-  );
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   const [productData, setProductData] = useState({
     name: "",
@@ -39,59 +30,54 @@ const CreateSubCategory = () => {
   const [loading, setLoading] = useState(false);
   const [slugEdited, setSlugEdited] = useState(false);
 
-  // ⬇ Load categories from Redux
+  // ✅ Load lightweight categories (NO REDUX)
   useEffect(() => {
-    dispatch(fetchCategories());
-  }, [dispatch]);
+    async function loadCategories() {
+      try {
+        const res = await fetch("/api/admin/sub-category-categories", { cache: "no-store" });
+        const data = await res.json();
+        setCategories(data);
+      } catch (err) {
+        console.error("Category loading error:", err);
+      } finally {
+        setLoadingCategories(false);
+      }
+    }
+    loadCategories();
+  }, []);
 
-  // Auto slug update until user edits manually
+  // Auto slug until manually edited
   useEffect(() => {
-    setProductData((prev) => {
-      if (slugEdited) return prev;
-      return { ...prev, subcategoryslug: generateSlug(prev.name) };
-    });
+    if (!slugEdited) {
+      setProductData((p) => ({
+        ...p,
+        subcategoryslug: generateSlug(p.name),
+      }));
+    }
   }, [productData.name, slugEdited]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setProductData({ ...productData, [name]: value });
-
     if (name === "subcategoryslug") setSlugEdited(true);
   };
 
-  /** ------------------------------------
-   * Cloudinary Upload
-   ------------------------------------**/
   const uploadImageToCloudinary = async (file) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "unsigned_subcategory_upload");
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("upload_preset", "unsigned_subcategory_upload");
 
-    const res = await fetch(
-      "https://api.cloudinary.com/v1_1/dchek3sr8/image/upload",
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
-
-    const contentType = res.headers.get("content-type");
-    if (!res.ok || !contentType?.includes("application/json")) {
-      const errTxt = await res.text();
-      throw new Error(`Cloudinary upload failed: ${errTxt}`);
-    }
+    const res = await fetch("https://api.cloudinary.com/v1_1/dchek3sr8/image/upload", {
+      method: "POST",
+      body: fd,
+    });
 
     const data = await res.json();
-    if (!data.secure_url || !data.public_id) {
-      throw new Error("Image upload failed: Missing URL or Public ID.");
-    }
+    if (!data.secure_url) throw new Error("Upload failed");
 
     return { secure_url: data.secure_url, public_id: data.public_id };
   };
 
-  /** ------------------------------------
-   * Submit Form
-   ------------------------------------**/
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -99,100 +85,56 @@ const CreateSubCategory = () => {
     const { name, category, subcategoryslug, metatitle, metadescription, metakeyword } =
       productData;
 
-    if (!name || !category || !subcategoryslug || !metatitle || !metadescription || !metakeyword) {
+    if (!name || !category || !subcategoryslug || !metatitle) {
       toast.error("Please fill all required fields.");
       setLoading(false);
       return;
     }
 
-    let iconUrl = "";
-    let iconPublicId = "";
+    let iconUrl = "", iconPublicId = "";
 
     if (file) {
-      toast.loading("Uploading subcategory icon...");
-
-      try {
-        const upload = await uploadImageToCloudinary(file);
-        iconUrl = upload.secure_url;
-        iconPublicId = upload.public_id;
-        toast.dismiss();
-        toast.success("Subcategory icon uploaded!");
-      } catch (err) {
-        toast.dismiss();
-        toast.error(err.message || "Upload failed.");
-        setLoading(false);
-        return;
-      }
+      const upload = await uploadImageToCloudinary(file);
+      iconUrl = upload.secure_url;
+      iconPublicId = upload.public_id;
     }
 
     try {
-      const response = await axios.post(`/api/adminprofile/subcategory`, {
-        name,
-        category,
-        subcategoryslug,
-        metatitle,
-        metadescription,
-        metakeyword,
+      await axios.post("/api/adminprofile/subcategory", {
+        ...productData,
         icon: iconUrl,
         iconPublicId,
       });
 
-      if (response.status === 201) {
-        toast.success("SubCategory created!");
+      toast.success("SubCategory created!");
 
-        // Reset form
-        setProductData({
-          name: "",
-          category: "",
-          subcategoryslug: "",
-          metatitle: "",
-          metadescription: "",
-          metakeyword: "",
-        });
+      setProductData({
+        name: "",
+        category: "",
+        subcategoryslug: "",
+        metatitle: "",
+        metadescription: "",
+        metakeyword: "",
+      });
 
-        setFile(null);
-        setSlugEdited(false);
-      }
+      setSlugEdited(false);
+      setFile(null);
+
     } catch (err) {
-      toast.error(err.response?.data?.error || "Failed to create subcategory.");
-    } finally {
-      setLoading(false);
+      toast.error(err.response?.data?.error || "Failed to create subcategory");
     }
+
+    setLoading(false);
   };
 
   return (
     <div className="create-product-form p-4">
-      <h3>Create a New SubCategory</h3>
 
-      {/* Category Loading State */}
-      {categoryLoading && (
-        <div className="text-blue-600 my-2">Loading categories...</div>
-      )}
+      <h3>Create New SubCategory</h3>
 
-      {/* Category Error */}
-      {error && <div className="text-red-500">{error}</div>}
+      {loadingCategories && <p className="text-blue-600">Loading categories...</p>}
 
-      <input
-        className="form-control mb-3"
-        type="text"
-        name="name"
-        placeholder="Enter SubCategory Name"
-        value={productData.name}
-        onChange={handleInputChange}
-        required
-      />
-
-      <input
-        className="form-control mb-3"
-        type="text"
-        name="subcategoryslug"
-        placeholder="SubCategory Slug"
-        value={productData.subcategoryslug}
-        onChange={handleInputChange}
-        required
-      />
-
-      {/* Category Selection from Redux */}
+      {/* Category Dropdown */}
       <select
         className="form-control mb-3"
         name="category"
@@ -201,58 +143,67 @@ const CreateSubCategory = () => {
         required
       >
         <option value="">Select Category</option>
-
-        {selectedCategory?.map((cat) => (
+        {categories.map(cat => (
           <option key={cat._id} value={cat._id}>
             {cat.name}
           </option>
         ))}
       </select>
 
-      {/* Icon Upload */}
-      <div className="mb-3">
-        <label className="form-label">SubCategory Icon</label>
-        <input
-          type="file"
-          className="form-control"
-          accept="image/*"
-          onChange={(e) => setFile(e.target.files[0])}
-        />
-        {file && (
-          <img
-            src={URL.createObjectURL(file)}
-            alt="Preview"
-            className="mt-2"
-            style={{ maxWidth: "100px" }}
-          />
-        )}
-      </div>
+      {/* Form Fields */}
+      <input
+        type="text"
+        name="name"
+        className="form-control mb-3"
+        placeholder="SubCategory Name"
+        value={productData.name}
+        onChange={handleInputChange}
+        required
+      />
 
       <input
+        type="text"
+        name="subcategoryslug"
         className="form-control mb-3"
+        placeholder="Slug"
+        value={productData.subcategoryslug}
+        onChange={handleInputChange}
+        required
+      />
+
+      {/* Upload Icon */}
+      <input
+        type="file"
+        className="form-control mb-3"
+        onChange={(e) => setFile(e.target.files[0])}
+      />
+
+      {/* Meta Fields */}
+      <input
         type="text"
         name="metatitle"
-        placeholder="Enter Meta Title"
+        className="form-control mb-3"
+        placeholder="Meta Title"
         value={productData.metatitle}
         onChange={handleInputChange}
         required
       />
 
       <textarea
-        className="form-control mb-3"
         name="metadescription"
-        rows={3}
-        placeholder="Enter Meta Description"
+        rows="3"
+        className="form-control mb-3"
+        placeholder="Meta Description"
         value={productData.metadescription}
         onChange={handleInputChange}
         required
       ></textarea>
 
       <input
-        className="form-control mb-3"
         type="text"
         name="metakeyword"
-        placeholder="Enter Meta Keywords"
+        className="form-control mb-3"
+        placeholder="Meta Keywords"
         value={productData.metakeyword}
         onChange={handleInputChange}
         required
@@ -263,6 +214,4 @@ const CreateSubCategory = () => {
       </button>
     </div>
   );
-};
-
-export default CreateSubCategory;
+}

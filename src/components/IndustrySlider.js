@@ -19,7 +19,7 @@ const IndustrySlider = () => {
 
     const fetchCategories = async () => {
       try {
-        const response = await fetch("/api/adminprofile/category");
+        const response = await fetch("/api/adminprofile/industryslider");
         const data = await response.json();
         if (!response.ok) throw new Error("Failed to fetch categories");
         setCategories(data);

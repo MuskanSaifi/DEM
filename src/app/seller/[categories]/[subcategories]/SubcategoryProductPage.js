@@ -93,6 +93,10 @@ const SubcategoryProductPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [page, setPage] = useState(1);
+const [totalPages, setTotalPages] = useState(1);
+
+
   // Dropdown states for mobile
   const [subcategoryDropdownOpen, setSubcategoryDropdownOpen] = useState(false);
 
@@ -155,50 +159,42 @@ const handleToggleWishlist = (productId) => {
   }
 };
 
-  const fetchData = useCallback(async () => {
-    if (!categorySlug || !subcategorySlug) return;
-    try {
-      setLoading(true);
-      const res = await fetch("/api/adminprofile/category");
-      const data = await res.json();
+const fetchData = useCallback(async () => {
+  if (!categorySlug || !subcategorySlug) return;
 
-      const category = data.find(
-        (cat) => cat.categoryslug.toLowerCase() === decode(categorySlug)
-      );
+  try {
+    setLoading(true);
 
-      if (!category) throw new Error("Category not found");
+    const res = await fetch(
+      `/api/subcategory-products?categorySlug=${categorySlug}&subcategorySlug=${subcategorySlug}&page=${page}&limit=20`
+    );
 
-      setSubcategories(category.subcategories || []);
+    const data = await res.json();
 
-      const subcat = category.subcategories.find(
-        (sub) => sub.subcategoryslug?.toLowerCase() === decode(subcategorySlug)
-      );
-
-      if (!subcat) throw new Error("Subcategory not found");
-
-      const fetchedProducts = subcat.products || [];
-      setProducts(fetchedProducts);
-
-      // Extract unique brands for filter
-      const brands = [...new Set(fetchedProducts.map(p => p.tradeShopping?.brandName).filter(Boolean))];
-      setAllBrands(brands);
-
-      // Extract unique container types for filter
-      const containerTypes = [...new Set(fetchedProducts.map(p => p.containerType).filter(Boolean))];
-      setAllContainerTypes(containerTypes);
-
-      // Dynamically set max price from fetched products if needed
-      const maxProductPrice = Math.max(...fetchedProducts.map(p => p.tradeShopping?.fixedSellingPrice || p.price || 0));
-      if (maxProductPrice > filters.maxPrice) {
-        dispatchFilters({ type: "SET_FILTER", field: "maxPrice", value: maxProductPrice });
-      }
-
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    if (data.error) {
+      throw new Error(data.error);
     }
-  }, [categorySlug, subcategorySlug]);
+
+    // Main results
+    setProducts(data.products);
+    setSubcategories(data.category.subcategories);
+    setTotalPages(data.totalPages);
+
+    // Extract brands
+    const brands = [...new Set(data.products.map(p => p.tradeShopping?.brandName).filter(Boolean))];
+    setAllBrands(brands);
+
+    // Extract container types
+    const containerTypes = [...new Set(data.products.map(p => p.containerType).filter(Boolean))];
+    setAllContainerTypes(containerTypes);
+
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+}, [categorySlug, subcategorySlug, page]);
+
 
   useEffect(() => {
     fetchData();
@@ -875,6 +871,31 @@ const handleToggleWishlist = (productId) => {
               </p>
             )}
           </div>
+          {!loading && totalPages > 1 && (
+  <div className="d-flex justify-content-center mt-4 gap-3">
+    <button
+      className="btn btn-outline-primary"
+      disabled={page === 1}
+      onClick={() => setPage(page - 1)}
+    >
+      ◀ Previous
+    </button>
+
+    <span className="fw-bold">
+      Page {page} of {totalPages}
+    </span>
+
+    <button
+      className="btn btn-outline-primary"
+      disabled={page === totalPages}
+      onClick={() => setPage(page + 1)}
+    >
+      Next ▶
+    </button>
+  </div>
+)}
+
+
         </main>
 
         {/* Products Sidebar (Desktop) */}

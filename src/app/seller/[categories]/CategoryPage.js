@@ -24,6 +24,11 @@ const CategoryPage = ({ categorySlug }) => {
   const [error, setError] = useState(null);
   const [categoryContent, setCategoryContent] = useState("");
 
+  const [page, setPage] = useState(1);
+const [totalPages, setTotalPages] = useState(1);
+const [totalProducts, setTotalProducts] = useState(0);
+
+
   // State for mobile dropdowns
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const [subcategoryDropdownOpen, setSubcategoryDropdownOpen] = useState(false);
@@ -80,68 +85,37 @@ const buyerToken = useSelector((state) => state.buyer.token);
     };
   }, [filters.productName]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        // Fetch categories and products from your API route
-        const response = await fetch("/api/adminprofile/category");
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to fetch category data");
-        }
+      const response = await fetch(
+        `/api/category-products?categorySlug=${categorySlug}&page=${page}&limit=20`
+      );
 
-        const data = await response.json();
-        setCategories(data);
+      if (!response.ok) throw new Error("API fetch failed");
 
-        if (!categorySlug) {
-          setProducts([]); // No category slug means no products for this page
-          setLoading(false);
-          return;
-        }
+      const data = await response.json();
 
-        // Find the specific category based on the slug
-        const category = data.find((cat) => cat.categoryslug === categorySlug);
-        if (!category) {
-          throw new Error("Category not found for the given slug.");
-        }
+      setCategories([data.category]);
+      setCategoryContent(data.category.content);
+      setSubcategories(data.category.subcategories);
+      setProducts(data.products);
 
-        setSubcategories(category.subcategories || []);
-        setCategoryContent(category.content || "");
+      setTotalPages(data.totalPages);
+      setTotalProducts(data.totalProducts);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        // Flatten all products from all subcategories of the *matched* category
-        const allProducts =
-          category.subcategories?.flatMap((sub) =>
-            (sub.products || []).map((product) => ({
-              ...product,
-              subcategory: sub.name, // Add subcategory name for potential display/future filtering
-            }))
-          ) || [];
+  if (categorySlug) fetchData();
+}, [categorySlug, page]);
 
-        setProducts(allProducts); // Store the original full list of products
-
-        // --- Dynamically set initial max price for slider if products are available ---
-        if (allProducts.length > 0) {
-          const maxProductPrice = Math.max(...allProducts.map(p => p.tradeShopping?.fixedSellingPrice || p.price || 0));
-          // Set a reasonable upper bound for the slider, at least the max product price or a default high value
-          setFilters(prev => ({
-            ...prev,
-            maxPrice: Math.max(prev.maxPrice, maxProductPrice + 1000), // Add some buffer
-          }));
-        }
-
-      } catch (err) {
-        console.error("Error fetching category page data:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [categorySlug]); // Re-fetch data if categorySlug changes
 
   const getCategoryName = () => {
     const matched = categories.find((cat) => cat.categoryslug === categorySlug);
@@ -173,6 +147,13 @@ const buyerToken = useSelector((state) => state.buyer.token);
   }
 }, [user, buyer, dispatch]);
 
+// Auto scroll to top on pagination change
+useEffect(() => {
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+}, [page]);
 
  const handleWishlistToggle = (product) => {
   if (!user && !buyer) {
@@ -892,6 +873,33 @@ const buyerToken = useSelector((state) => state.buyer.token);
               </p>
             )}
           </div>
+
+          {/* Pagination */}
+{!loading && totalPages > 1 && (
+  <div className="d-flex justify-content-center mt-4 gap-3">
+    <button
+      className="btn btn-outline-primary"
+      disabled={page === 1}
+      onClick={() => setPage(page - 1)}
+    >
+      ◀ Previous
+    </button>
+
+    <span className="fw-bold">
+      Page {page} of {totalPages}
+    </span>
+
+    <button
+      className="btn btn-outline-primary"
+      disabled={page === totalPages}
+      onClick={() => setPage(page + 1)}
+    >
+      Next ▶
+    </button>
+  </div>
+)}
+
+
         </main>
 
 
