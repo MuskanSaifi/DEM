@@ -12,25 +12,24 @@ const Bannerslider = () => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const fetchBanners = async () => {
-    try {
-      const res = await axios.get("/api/adminprofile/banner");
-      if (res.data.success) {
-        const filtered = res.data.banners.filter(
-          (b) => b.isActive && (b.platform === "web" || b.platform === "both")
-        );
-        setBanners(filtered);
-      }
-    } catch (error) {
-      console.error("Failed to load banners:", error);
-    } finally {
-      setLoading(false);
-    }
+useEffect(() => {
+  let active = true;
+
+  const fetchData = async () => {
+    const res = await axios.get("/api/adminprofile/banner");
+    if (!active) return;
+    setBanners(res.data.banners);
+    setLoading(false);
   };
 
-  useEffect(() => {
-    fetchBanners();
-  }, []);
+  fetchData();
+
+  return () => {
+    active = false;
+  };
+}, []);
+
+
 
   if (loading)
     return (

@@ -1,3 +1,4 @@
+// api/adminprofile/industryslider
 import connectDB from "@/lib/dbConnect";
 import Category from "@/models/Category";
 

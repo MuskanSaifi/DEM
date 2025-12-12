@@ -1,3 +1,4 @@
+//api/adminprofile/banner
 import { NextResponse } from "next/server";
 import Banner from "@/models/Banner";
 import connectdb from "@/lib/dbConnect";

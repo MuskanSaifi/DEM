@@ -8,21 +8,27 @@ export default function CategoryGridPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadCategories() {
+    let mounted = true;
+
+    const loadCategories = async () => {
       try {
         const res = await fetch("/api/home/categories", {
-          cache: "no-store",
+          next: { revalidate: 120 },
         });
         const data = await res.json();
-        setCategories(data);
-      } catch (error) {
-        console.error("Home Category Error:", error);
+        if (mounted) setCategories(data);
+      } catch (err) {
+        console.error("Category load failed:", err);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
-    }
+    };
 
     loadCategories();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   if (loading) return <p className="text-center p-4">Loading...</p>;

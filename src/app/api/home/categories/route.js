@@ -1,3 +1,5 @@
+// src/app/api/home/categories/route.js
+
 import connectDB from "@/lib/dbConnect";
 import Category from "@/models/Category";
 

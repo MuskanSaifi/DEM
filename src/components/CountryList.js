@@ -6,11 +6,16 @@ export default function CountryList() {
   const [countries, setCountries] = useState([]);
   const router = useRouter();
 
-  useEffect(() => {
-    fetch("/api/location/countries")
-      .then((res) => res.json())
-      .then((data) => setCountries(data.countries));
-  }, []);
+useEffect(() => {
+  let ok = true;
+
+  fetch("/api/location/countries", { next: { revalidate: 300 }})
+    .then(r => r.json())
+    .then(data => { if(ok) setCountries(data.countries); });
+
+  return () => { ok = false };
+}, []);
+
 
   return (
     <div className="grid grid-cols-4 gap-4 p-5 d-none">

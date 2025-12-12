@@ -1,3 +1,4 @@
+// api/location/countries
 import connectDB from "@/lib/dbConnect";
 import User from "@/models/User";
 
