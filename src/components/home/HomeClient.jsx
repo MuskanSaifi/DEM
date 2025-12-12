@@ -67,7 +67,7 @@ export default function HomeClient() {
       {/* <ProductSections1 tag="diwaliOffer" Name="Featured Products" /> */}
       {/* <ProductSections1 tag="holiOffer" Name="Products You May Like" /> */}
 
-      <CountryList />
+      {/* <CountryList /> */}
       <StatsWithImage />
       <WhatWeOffer />
       <Testimonials />
