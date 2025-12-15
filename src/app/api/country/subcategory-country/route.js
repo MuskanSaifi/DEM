@@ -1,3 +1,4 @@
+// api/country/subcategory-country/route.js
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";
 import SubCategory from "@/models/SubCategory";

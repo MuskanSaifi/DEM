@@ -4,29 +4,31 @@ import SubcategoryProductPage from "./SubcategoryProductPage";
 
 // Define fetchCategories function directly
 export async function fetchCategories() {
- const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/category`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/category`, {
     cache: "no-store",
   });
-    if (!response.ok) {
+
+  if (!response.ok) {
     throw new Error("Failed to fetch categories");
   }
+
   return response.json();
 }
 
 
+
 export async function generateMetadata({ params }) {
   try {
-    // Await params to resolve it before accessing properties
-    const resolvedParams = await params;
-    const { categories, subcategories } = resolvedParams;
+    const { categories, subcategories } = params;
 
-    // Decode slugs for better matching
     const decodedCategorySlug = decodeURIComponent(categories || "");
     const decodedSubcategorySlug = decodeURIComponent(subcategories || "");
 
     const categoriesData = await fetchCategories();
+
     const category = categoriesData.find(
-      (cat) => cat.categoryslug.toLowerCase() === decodedCategorySlug.toLowerCase()
+      (cat) =>
+        cat.categoryslug.toLowerCase() === decodedCategorySlug.toLowerCase()
     );
 
     if (!category) {
@@ -37,14 +39,16 @@ export async function generateMetadata({ params }) {
     }
 
     const subcategory = category.subcategories?.find(
-      (sub) => sub.subcategoryslug.toLowerCase() === decodedSubcategorySlug.toLowerCase()
+      (sub) =>
+        sub.subcategoryslug.toLowerCase() ===
+        decodedSubcategorySlug.toLowerCase()
     );
 
     if (!subcategory) {
       return {
         title: "Subcategory Not Found",
         description: "The requested subcategory does not exist.",
-          alternates: {
+        alternates: {
           canonical: `https://www.dialexportmart.com/seller/not-found`,
         },
       };
@@ -55,19 +59,19 @@ export async function generateMetadata({ params }) {
       description:
         subcategory.metadescription ||
         `Explore ${subcategory.name} products under ${category.name}.`,
-      keywords: subcategory.metakeywords || "",
-       alternates: {
+      keywords: subcategory.metakeyword || "",
+      alternates: {
         canonical: `https://www.dialexportmart.com/seller/${category.categoryslug}/${subcategory.subcategoryslug}`,
       },
     };
   } catch (error) {
-    console.error("Error generating metadata:", error);
     return {
       title: "Error",
       description: "An error occurred while generating metadata.",
     };
   }
 }
+
 
 
 export default function Page({ params }) {

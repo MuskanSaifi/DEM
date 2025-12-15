@@ -15,7 +15,14 @@ export async function GET() {
   .select("name categoryslug content subcategories metatitle metadescription metakeywords")
   .populate({
     path: "subcategories",
-    select: "name subcategoryslug products",
+    select: `
+    name
+    subcategoryslug
+    metatitle
+    metadescription
+    metakeyword
+    products
+  `,
     populate: {
       path: "products",
       select: "name description price images tradeShopping tags minimumOrderQuantity currency userId",

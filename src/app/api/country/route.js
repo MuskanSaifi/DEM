@@ -1,5 +1,4 @@
 // app/api/country/route.js
-
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";
 import Category from "@/models/Category";
@@ -40,14 +39,20 @@ export async function GET(req) {
     // 🟢 Load all categories in one query
     const categories = await Category.find(
       { _id: { $in: categoryIds } },
-      { name: 1, categoryslug: 1 }
+      { name: 1, categoryslug: 1, icon: 1 } 
     ).lean();
 
     // 🟢 Load all subcategories in one query
-    const subcategories = await SubCategory.find(
-      { _id: { $in: subcategoryIds } },
-      { name: 1, category: 1, subcategoryslug: 1 }
-    ).lean();
+  const subcategories = await SubCategory.find(
+  { _id: { $in: subcategoryIds } },
+  {
+    name: 1,
+    category: 1,
+    subcategoryslug: 1,
+    icon: 1   // ✅ ADD THIS
+  }
+).lean();
+
 
     return Response.json(
       {
