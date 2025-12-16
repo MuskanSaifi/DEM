@@ -1,4 +1,3 @@
-// app/api/country/route.js
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";
 import Category from "@/models/Category";
@@ -12,17 +11,20 @@ export async function GET(req) {
     const country = searchParams.get("country");
 
     if (!country) {
-      return Response.json({ success: false, message: "Country missing" });
+      return Response.json(
+        { success: false, message: "Country missing" },
+        { status: 400 }
+      );
     }
 
+    // ✅ ALWAYS lowercase (schema already enforces this)
     const cleanCountry = country.toLowerCase();
 
-    // 🟢 SUPER FAST SEARCH — NO REGEX
+    // 🚀 FAST QUERY (INDEX USED)
     const products = await Product.find(
       { country: cleanCountry },
       { category: 1, subCategory: 1 }
-    )
-      .lean(); // ⚡ 30% faster
+    ).lean();
 
     if (!products.length) {
       return Response.json({
@@ -32,44 +34,34 @@ export async function GET(req) {
       });
     }
 
-    // 🟢 Extract unique IDs only once
-    const categoryIds = [...new Set(products.map(p => p.category?.toString()))];
-    const subcategoryIds = [...new Set(products.map(p => p.subCategory?.toString()))];
+    const categoryIds = [
+      ...new Set(products.map(p => p.category?.toString()).filter(Boolean)),
+    ];
 
-    // 🟢 Load all categories in one query
+    const subCategoryIds = [
+      ...new Set(products.map(p => p.subCategory?.toString()).filter(Boolean)),
+    ];
+
     const categories = await Category.find(
       { _id: { $in: categoryIds } },
-      { name: 1, categoryslug: 1, icon: 1 } 
+      { name: 1, categoryslug: 1, icon: 1 }
     ).lean();
 
-    // 🟢 Load all subcategories in one query
-  const subcategories = await SubCategory.find(
-  { _id: { $in: subcategoryIds } },
-  {
-    name: 1,
-    category: 1,
-    subcategoryslug: 1,
-    icon: 1   // ✅ ADD THIS
-  }
-).lean();
+    const subcategories = await SubCategory.find(
+      { _id: { $in: subCategoryIds } },
+      { name: 1, category: 1, subcategoryslug: 1, icon: 1 }
+    ).lean();
 
+    return Response.json({
+      success: true,
+      categories,
+      subcategories,
+    });
 
+  } catch (err) {
+    console.error("COUNTRY API ERROR:", err);
     return Response.json(
-      {
-        success: true,
-        categories,
-        subcategories,
-      },
-      { status: 200 }
-    );
-
-  } catch (error) {
-    console.log("API ERROR:", error);
-    return Response.json(
-      {
-        success: false,
-        message: "Server error",
-      },
+      { success: false, message: "Server error" },
       { status: 500 }
     );
   }

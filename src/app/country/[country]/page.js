@@ -50,12 +50,17 @@ function IconImage({ src, alt, size = 32 }) {
    PAGE
 ================================ */
 export default async function CountryPage({ params }) {
+  // ✅ Next.js 15 FIX
   const { country } = await params;
-  const data = await getCountryData(country.toLowerCase());
+
+  if (!country) {
+    return null; // or notFound()
+  }
+
+  const data = await getCountryData(country);
 
   if (!data?.success) return null;
 
-  /* ===== Group subcategories by category ===== */
   const grouped = {};
   data.categories.forEach(cat => {
     grouped[cat._id] = { ...cat, subs: [] };
@@ -66,7 +71,6 @@ export default async function CountryPage({ params }) {
       grouped[sub.category].subs.push(sub);
     }
   });
-
   return (
     <main className="bg-gray-50">
 
