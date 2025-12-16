@@ -4,12 +4,12 @@ import Link from "next/link";
 
 const countries = [
   { name: "India", flag: "/countries/In.png", link: "/country/in" },
-  { name: "Afghanistan", flag: "/countries/Af.png", link: "/country/af" },
+    { name: "United Arab Emirates", flag: "/countries/United Arab Emirates.png", link: "/country/ae" },
+      { name: "USA", flag: "/countries/Us.png", link: "/country/us" },
+  { name: "China", flag: "/countries/Ch.png", link: "/country/cn" },
   { name: "Australia", flag: "/countries/Au.png", link: "/country/au" },
-  { name: "UAE", flag: "/countries/Bd.png", link: "/country/ae" },
-  { name: "Pakistan", flag: "/countries/Pk.png", link: "/country/pk" },
-  { name: "Russia", flag: "/countries/Ru.png", link: "/country/ru" },
-  { name: "USA", flag: "/countries/Us.png", link: "/country/us" },
+  { name: "Hong Kong", flag: "/countries/Hong Kong.png", link: "/country/hk" },
+
   { name: "More Regions", flag: "", link: "/all-countries" }, // ✅
 ];
 

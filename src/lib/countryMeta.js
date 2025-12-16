@@ -9,36 +9,51 @@ export const COUNTRY_META = {
     name: "United States",
     flag: "/countries/Us.png",
   },
+    au: {
+    name: "Australia",
+    flag: "/countries/AU.png",
+  },
+      bd: {
+    name: "Bangladesh",
+    flag: "/countries/bd.png",
+  },
   hk: {
     name: "Hong Kong",
-    flag: "/countries/Hk.png",
+    flag: "/countries/Hong Kong.png",
   },
   ae: {
-    name: "UAE",
-    flag: "/countries/Ae.png",
-  },
-  ru: {
-    name: "Russia",
-    flag: "/countries/Ru.png",
-  },
-  pk: {
-    name: "Pakistan",
-    flag: "/countries/Pk.png",
+    name: "United Arab Emirates",
+    flag: "/countries/United Arab Emirates.png",
   },
   cn: {
     name: "China",
-    flag: "/countries/Cn.png",
+    flag: "/countries/Ch.png",
   },
-  gb: {
-    name: "United Kingdom",
-    flag: "/countries/Gb.png",
+  id: {
+    name: "Indonesia",
+    flag: "/countries/Indonesia.png",
   },
-  de: {
-    name: "Germany",
-    flag: "/countries/De.png",
+   my: {
+    name: "Malaysia",
+    flag: "/countries/Malaysia.png",
   },
-  fr: {
-    name: "France",
-    flag: "/countries/Fr.png",
+    om: {
+    name: "Oman",
+    flag: "/countries/Oman.png",
+  },
+    sg: {
+    name: "Singapore",
+    flag: "/countries/Singapore.png",
+  },
+     th: {
+    name: "Thailand",
+    flag: "/countries/Thailand.png",
+  },
+       lk: {
+    name: "Sri Lanka",
+    flag: "/countries/Sri Lanka.png",
   },
 };
+
+
+

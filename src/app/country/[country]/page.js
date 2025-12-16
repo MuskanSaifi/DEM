@@ -6,7 +6,7 @@ import Image from "next/image";
 ================================ */
 async function getCountryData(country) {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/country?country=${country}`,
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country?country=${country}`,
     { cache: "no-store" }
   );
   return res.json();

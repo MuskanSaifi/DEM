@@ -3,13 +3,11 @@
 import React from "react";
 import Bannerslider from "@/components/Bannerslider.jsx";
 import BuySellform from "@/components/BuySellform";
-// import ProductSections1 from "@/components/ProductSections1";
-// import ProductSections2 from "@/components/ProductSections2";
+
 import IndustrySlider from "@/components/IndustrySlider";
 import Cities from "@/components/Cities.jsx";
 import Countries from "@/components/Countries.jsx";
 
-import CountryList from "@/components/CountryList";
 import Image from "next/image";
 import Link from "next/link";
 import Testimonials from "@/components/home/Testimonials";
@@ -43,7 +41,6 @@ export default function HomeClient() {
 
       <IndustrySlider />
 
-      {/* <ProductSections1 tag="trending" Name="Trending" /> */}
 
       <div className="banner-container">
         <Link href="/user/register">
@@ -60,12 +57,10 @@ export default function HomeClient() {
       </div>
 
       <CategoryGridPage />
-      {/* <ProductSections2 tag="upcoming" Name="Upcoming" /> */}
 
       <Cities />
       <Countries />
-      {/* <ProductSections1 tag="diwaliOffer" Name="Featured Products" /> */}
-      {/* <ProductSections1 tag="holiOffer" Name="Products You May Like" /> */}
+  
 
       {/* <CountryList /> */}
       <StatsWithImage />

@@ -1,5 +1,3 @@
-// app/api/city/products/route.js (UPDATED GET function)
-
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";
 import { NextResponse } from "next/server";
@@ -10,37 +8,35 @@ export async function GET(req) {
 
     const { searchParams } = new URL(req.url);
     const city = searchParams.get("city");
-    // ✅ CHANGED: 'product' is now 'productslug'
-    const productSlug = searchParams.get("productslug"); 
+    const productSlug = searchParams.get("productslug");
 
-    if (!city || !productSlug) { // ✅ Updated check
+    if (!city || !productSlug) {
       return NextResponse.json(
-        { message: "City and productslug parameters are required" },
+        { message: "city & productslug required" },
         { status: 400 }
       );
     }
 
-    // ✅ CHANGED: Filtering by productslug instead of name
+    const page = Number(searchParams.get("page")) || 1;
+    const limit = 20;
+    const skip = (page - 1) * limit;
+
     const products = await Product.find({
-      // City search remains exact match (case-insensitive)
-      city: { $regex: `^${city}$`, $options: "i" }, 
-      // Filter by the slug (case-insensitive)
-      productslug: { $regex: `^${productSlug}$`, $options: "i" },
+      city: city.toLowerCase(),
+      productslug: productSlug.toLowerCase(),
     })
-      .populate("userId", "companyName mobileNumber email")
-      .populate("category")
-      .populate("subCategory");
+      .select(`
+        name price currency images city state
+        minimumOrderQuantity specifications userId
+      `)
+      .populate("userId", "companyName")
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
-    if (!products.length) {
-      return NextResponse.json(
-        { message: "No matching products found" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(products, { status: 200 });
+    return NextResponse.json({ products }, { status: 200 });
   } catch (error) {
-    console.error("❌ Error fetching product list:", error);
+    console.error("API error:", error);
     return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
 }

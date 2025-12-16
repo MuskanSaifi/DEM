@@ -1,17 +1,18 @@
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 const cities = [
-  { name: "Delhi", icon: "/countries/cities/delhi.png", link: "#" },
-  { name: "Gurugram", icon: "/countries/cities/gurugram.png", link: "#" },
-  { name: "Noida", icon: "/countries/cities/noida.png", link: "#" },
-  { name: "Bengaluru", icon: "/countries/cities/bangalore.png", link: "#" },
-  { name: "Chennai", icon: "/countries/cities/chennai.png", link: "#" },
+  { name: "Delhi", icon: "/countries/cities/delhi.png", link: "/city/delhi" },
+  { name: "Gurugram", icon: "/countries/cities/gurugram.png", link: "/city/gurgaon" },
+  { name: "kolkata", icon: "/countries/cities/kolkata.png", link: "/city/kolkata" },
+  { name: "Bijnor", icon: "/countries/cities/bangalore.png", link: "/city/bijnor" },
+  { name: "Chennai", icon: "/countries/cities/chennai.png", link: "/city/chennai" },
   { name: "More Cities", icon: "", link: "#" },
 ];
 
 const Cities = () => {
-  return (
+return (
     <>
     <div className="bg-gray-100 p-6 rounded-lg mt-5">
       <h2 className="text-xl font-semibold text-gray-800 mb-6 text-center">
@@ -20,27 +21,33 @@ const Cities = () => {
 
       <div className="city-scroll flex md:grid md:grid-cols-4 lg:grid-cols-6 gap-6 overflow-x-auto md:overflow-hidden justify-start">
         {cities.map((city, index) => (
-          <a
+          // 2. Replace <a> with <Link> and wrap the content inside
+          <Link
             key={index}
             href={city.link}
-            className="flex flex-col items-center space-y-3 bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-200 min-w-[100px] flex-shrink-0"
+            legacyBehavior // Add this for compatibility with wrapping <a> tag
+            passHref
           >
-            {city.icon ? (
-              <Image
-                src={city.icon}
-                alt={city.name}
-                width={100}
-                height={100}
-                className="rounded-full border border-gray-300"
-              />
-            ) : (
-              <span className="text-4xl">⋯</span>
-            )}
-            <span className="text-md font-medium text-gray-800">{city.name}</span>
-          </a>
+            {/* 3. Keep the <a> tag inside <Link> */}
+            <a
+                className="flex flex-col items-center space-y-3 bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition duration-200 min-w-[100px] flex-shrink-0"
+            >
+                {city.icon ? (
+                  <Image
+                    src={city.icon}
+                    alt={city.name}
+                    width={100}
+                    height={100}
+                    className="rounded-full border border-gray-300"
+                  />
+                ) : (
+                  <span className="text-4xl">⋯</span>
+                )}
+                <span className="text-md font-medium text-gray-800">{city.name}</span>
+            </a>
+          </Link>
         ))}
       </div>
-
     
     </div>
       {/* ✅ Internal CSS to hide scrollbars */}

@@ -131,4 +131,7 @@ stock: {
   { timestamps: true }
 );
 
+productSchema.index({ city: 1, productslug: 1 });
+
+
 export default mongoose.models.Product || mongoose.model("Product", productSchema);

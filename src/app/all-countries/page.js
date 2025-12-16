@@ -1,6 +1,8 @@
+// /app/all-countries/page.js (or similar)
+
 import Image from "next/image";
 import Link from "next/link";
-import { COUNTRY_META } from "@/lib/countryMeta";
+import { COUNTRY_META } from "@/lib/countryMeta"; // <-- This file needs fixing
 
 /* ================================
    SEO METADATA (SERVER SIDE)
@@ -46,8 +48,9 @@ export async function generateMetadata() {
    API CALL (SERVER SIDE)
 ================================ */
 async function getCountries() {
+  // NOTE: Assuming this API call returns the list of country codes (e.g., ['UA', 'AU', 'BD', 'IN', 'US', ...])
   const res = await fetch(
-    `http://localhost:3000/api/all-countries`,
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/all-countries`,
     { cache: "no-store" }
   );
 
@@ -107,7 +110,7 @@ export default async function Countries() {
                 {/* Flag */}
                 {meta?.flag ? (
                   <Image
-                    src={meta.flag}
+                    src={meta.flag} // <-- The correct path comes from here
                     alt={meta.name}
                     width={80}
                     height={80}

@@ -25,26 +25,36 @@ const arrowStyles = `
 }
 `;
 
-export default function ProductListClient({ city, productslug, initialProducts }) {
-  const [products, setProducts] = useState(initialProducts || []);
-  const [loading, setLoading] = useState(!initialProducts?.length);
+export default function ProductListClient({ city, productslug, initialProducts = [] }) {
+  const [products, setProducts] = useState(initialProducts);
+  const [loading, setLoading] = useState(!initialProducts.length);
 
   useEffect(() => {
-    if (initialProducts?.length) return;
+    if (initialProducts.length) return;
+
+    const controller = new AbortController();
 
     const loadProducts = async () => {
-      setLoading(true);
-      const res = await fetch(`/api/city/products?city=${city}&productslug=${productslug}`);
-      const data = await res.json();
-      setProducts(data?.products || []);
-      setLoading(false);
+      try {
+        setLoading(true);
+        const res = await fetch(
+          `/api/city/products?city=${city}&productslug=${productslug}`,
+          { signal: controller.signal }
+        );
+        const data = await res.json();
+        setProducts(data?.products || []);
+      } catch (err) {
+        if (err.name !== "AbortError") console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadProducts();
-  }, [city, productslug]);
+    return () => controller.abort();
+  }, [city, productslug, initialProducts.length]);
 
-  const pageTitle =
-    products[0]?.name || productslug.replace(/-/g, " ");
+  const pageTitle = products[0]?.name || productslug.replace(/-/g, " ");
 
   return (
     <div className="container mx-auto p-4 md:p-6">
@@ -54,9 +64,7 @@ export default function ProductListClient({ city, productslug, initialProducts }
         {pageTitle} in {city}
       </h1>
 
-      {loading && (
-        <p className="text-center text-lg text-blue-600">Loading Products...</p>
-      )}
+      {loading && <p className="text-center text-lg text-blue-600">Loading Products...</p>}
 
       {!loading && products.length === 0 && (
         <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
@@ -68,8 +76,7 @@ export default function ProductListClient({ city, productslug, initialProducts }
       )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        {!loading &&
-          products.map((p) => <ProductCard key={p._id} product={p} />)}
+        {!loading && products.map((p) => <ProductCard key={p._id} product={p} />)}
       </div>
     </div>
   );
@@ -88,8 +95,7 @@ function ProductCard({ product }) {
     : "Price on Request";
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-xl transition overflow-hidden relative">
-
+    <div className="bg-white border rounded-xl shadow-sm hover:shadow-lg transition overflow-hidden relative">
       <span className="absolute top-0 left-0 bg-blue-600 text-white text-[10px] px-2 py-1 rounded-br-lg rounded-tl-lg z-10">
         Leading Supplier
       </span>
@@ -103,33 +109,27 @@ function ProductCard({ product }) {
               height={300}
               className="w-full h-64 object-cover"
               alt={product.name}
-              unoptimized
               loading="lazy"
+              unoptimized
             />
           </SwiperSlide>
         ))}
       </Swiper>
 
       <div className="p-3">
-        <h2 className="font-semibold text-sm md:text-base capitalize line-clamp-2">
-          {product.name}
-        </h2>
+        <h2 className="font-semibold text-sm capitalize line-clamp-2">{product.name}</h2>
 
-        <p className="text-lg font-bold mt-1 text-red-600">
-          {displayPrice}
-        </p>
+        <p className="text-lg font-bold mt-1 text-red-600">{displayPrice}</p>
 
         {product.minimumOrderQuantity > 0 && (
-          <p className="text-xs text-gray-700 mt-1">
-            MOQ: {product.minimumOrderQuantity}
-          </p>
+          <p className="text-xs text-gray-700 mt-1">MOQ: {product.minimumOrderQuantity}</p>
         )}
 
         <p className="text-xs text-gray-600 mt-1">
           📍 {product.city}, {product.state}
         </p>
 
-        <div className="mt-2 text-xs text-gray-700 space-y-1">
+        <div className="mt-2 text-xs text-gray-700">
           {product.specifications?.material && (
             <p><b>Material:</b> {product.specifications.material}</p>
           )}
@@ -138,11 +138,11 @@ function ProductCard({ product }) {
           )}
         </div>
 
-        <div className="mt-3 pt-2 text-xs border-t font-medium text-gray-800">
+        <div className="mt-3 pt-2 text-xs border-t font-medium">
           {product.userId?.companyName || "Verified Supplier"}
         </div>
 
-        <Link href={`/products/${product._id}`} className="w-full">
+        <Link href={`/products/${product._id}`}>
           <button className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-2 rounded w-full mt-3">
             Contact Supplier
           </button>
