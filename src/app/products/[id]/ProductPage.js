@@ -435,17 +435,16 @@ const ProductDetailPage = () => {
 </div>
 
                   <div className="text-gray-500 d-flex text-sm mt-1 space-x-2">
-                    {product.userId?.fullname && <span>👤 {product.userId.fullname}</span>}
-{product?.userId?.companyName && (
-  <Link
+                    {product.userId?.fullname && <span>
+ <Link
     href={`/company/${product?.userId?.userProfileSlug}`}
     className="text-blue-600 hover:underline flex items-center gap-1"
   >
-    🏢 <span>{product.userId.companyName}</span>
-  </Link>
-)}
+                      👤 {product.userId.fullname}
+                        </Link>
+                      </span>}
+
                   </div>
-                  <p className="text-yellow-500 text-sm font-semibold">⭐⭐⭐⭐ Rating</p>
 
                   <div className="mt-4 flex items-center space-x-6">
                     <div className="bg-green-100 bg-opacity-40 text-green-700 text-4xl font-extrabold px-6 py-3 rounded-lg ">
@@ -691,132 +690,131 @@ const ProductDetailPage = () => {
           )}
         </div>
 
-        {/* --- Related Products Section --- */}
-        {visibleRelatedProducts.length > 0 && (
-   <div className="mt-12 bg-white rounded-3xl p-6">
-  <h2 className="text-2xl font-bold text-gray-900 mb-6">Related Products</h2>
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-    {visibleRelatedProducts.map((relatedProduct) => {
-      // Determine if the *current* related product is in the wishlist
-      const isRelatedProductInWishlist = wishlistItems.some(item => item._id === relatedProduct._id);
+  {/* --- Related Products Section --- */}
+{visibleRelatedProducts.length > 0 && (
+  <div className="mt-10 bg-white rounded-2xl p-5">
+    <h2 className="text-xl font-semibold text-gray-900 mb-5">
+      Related Products
+    </h2>
 
-      return (
-        <Link key={relatedProduct._id} href={`/products/${relatedProduct._id}`} className="block">
-          <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 bg-white flex flex-col h-full">
-            <div className="relative w-full h-48 bg-gray-100 flex items-center justify-center p-2">
-              {/* Image Count - Moved to top-2 left-2 */}
-              <div className="absolute top-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
-                +{relatedProduct.images?.length || 0}
-              </div>
+    {/* 5 cards per row */}
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      {visibleRelatedProducts.map((relatedProduct) => {
+        const isRelatedProductInWishlist = wishlistItems.some(
+          (item) => item._id === relatedProduct._id
+        );
 
-              {/* Wishlist Button - Remains at top-2 right-2 */}
-              <button
-                onClick={(e) => {
-                  e.preventDefault(); // Prevent navigating to the product page when clicking the wishlist button
-                  handleToggleWishlist(relatedProduct._id);
-                }}
-                disabled={wishlistLoading}
-                className={`absolute top-2 right-2 p-2 rounded-full transition-colors duration-200 ${
-                  isRelatedProductInWishlist
-                    ? "bg-red-500 text-white hover:bg-red-600"
-                    : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-                }`}
-                title={isRelatedProductInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
-              >
-                {wishlistLoading ? (
-                  <svg className="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                ) : (
+        const price =
+          relatedProduct.tradeShopping?.slabPricing?.[0]?.price || null;
+
+        return (
+          <Link
+            key={relatedProduct._id}
+            href={`/products/${relatedProduct._id}`}
+            className="block h-full"
+          >
+            <div className="border border-gray-200 rounded-lg bg-white flex flex-col h-full hover:shadow-md transition">
+
+              {/* IMAGE */}
+              <div className="relative h-36 bg-gray-100 flex items-center justify-center p-2">
+                {/* Image Count */}
+                <span className="absolute top-1.5 left-1.5 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded">
+                  +{relatedProduct.images?.length || 0}
+                </span>
+
+                {/* Wishlist Heart */}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation(); // IMPORTANT
+                    handleToggleWishlist(relatedProduct._id);
+                  }}
+                  disabled={wishlistLoading}
+                  className={`absolute top-1.5 right-1.5 w-7 h-7 rounded-full flex items-center justify-center shadow transition
+                    ${
+                      isRelatedProductInWishlist
+                        ? "bg-red-500 text-white"
+                        : "bg-white text-gray-400 hover:text-red-500"
+                    }
+                  `}
+                  title={
+                    isRelatedProductInWishlist
+                      ? "Remove from Wishlist"
+                      : "Add to Wishlist"
+                  }
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-3 w-3"
-                    viewBox="0 0 23 23"
+                    viewBox="0 0 24 24"
                     fill={isRelatedProductInWishlist ? "currentColor" : "none"}
                     stroke="currentColor"
                     strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                    className="w-4 h-4"
                   >
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                   </svg>
-                )}
-              </button>
-              <Image
-                src={relatedProduct.images?.[0] || "/placeholder.png"}
-                alt={relatedProduct.name}
-                width={200}
-                height={150}
-                className="object-contain max-h-full max-w-full"
-                unoptimized
-              />
-            </div>
-            <div className="p-4 flex-grow flex flex-col justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-1 line-clamp-2">
-                  {relatedProduct.name}
-                </h3>
-                <div className="text-blue-600 font-bold text-xl mb-2">
-                  {relatedProduct.tradeShopping?.slabPricing?.[0]?.price ?
-                    `₹${relatedProduct.tradeShopping.slabPricing[0].price}` : "Ask Price"
-                  }
-                </div>
-                <div className="text-sm text-gray-700 space-y-1">
-                  {relatedProduct.specifications?.usage && (
-                    <p><span className="font-medium text-gray-600">Usage:</span> {relatedProduct.specifications.usage}</p>
-                  )}
-                  {relatedProduct.specifications?.woodType && (
-                    <p><span className="font-medium text-gray-600">Wood Type:</span> {relatedProduct.specifications.woodType}</p>
-                  )}
-                  {relatedProduct.specifications?.design && (
-                    <p><span className="font-medium text-gray-600">Design:</span> {relatedProduct.specifications.design}</p>
-                  )}
-                  {relatedProduct.specifications?.finish && (
-                    <p><span className="font-medium text-gray-600">Finish:</span> {relatedProduct.specifications.finish}</p>
-                  )}
-                  {relatedProduct.tradeInformation?.mainExportMarkets?.length > 0 && (
-                    <p><span className="font-medium text-gray-600">Export Markets:</span> {relatedProduct.tradeInformation.mainExportMarkets.join(', ')}</p>
-                  )}
-                  {relatedProduct.tradeInformation?.mainDomesticMarket && (
-                    <p><span className="font-medium text-gray-600">Domestic Market:</span> {relatedProduct.tradeInformation.mainDomesticMarket}</p>
-                  )}
-                </div>
+                </button>
+
+                {/* Product Image */}
+                <Image
+                  src={relatedProduct.images?.[0] || "/placeholder.png"}
+                  alt={relatedProduct.name}
+                  width={140}
+                  height={120}
+                  className="object-contain max-h-full max-w-full"
+                  unoptimized
+                />
               </div>
 
-              <div className="mt-4 pt-3 border-t border-gray-100">
-                {(relatedProduct.userId?.companyName || relatedProduct.userId?.fullname) && (
-                  <p className="text-gray-800 font-semibold text-base">
-                    {relatedProduct.userId?.companyName || relatedProduct.userId?.fullname}
-                  </p>
-                )}
-                <div className="flex items-center space-x-2 mt-2">
-                  {relatedProduct.businessProfile?.gstNumber && (
-                    <span className="flex items-center text-green-700 text-sm font-medium bg-green-50 px-2 py-1 rounded-full">
-                      ✅ GST
-                    </span>
-                  )}
-                  {relatedProduct.businessProfile?.yearOfEstablishment && (
-                    <span className="flex items-center text-gray-600 text-sm font-medium bg-gray-100 px-2 py-1 rounded-full">
-                      👤 {new Date().getFullYear() - relatedProduct.businessProfile.yearOfEstablishment} yrs
-                    </span>
+              {/* CONTENT */}
+              <div className="p-3 flex flex-col flex-grow text-sm">
+              <h3 className="text-xs font-medium text-gray-800 leading-snug line-clamp-2 mb-1">
+  {relatedProduct.name}
+</h3>
+
+
+                {/* Price */}
+                <div className="text-blue-600 font-semibold text-base mb-1">
+                  {price ? `₹${price}` : "Ask Price"}
+                </div>
+
+                {/* Minimal Specs */}
+                <div className="text-[12px] text-gray-600 line-clamp-2">
+                  {relatedProduct.specifications?.usage && (
+                    <p>Usage: {relatedProduct.specifications.usage}</p>
                   )}
                 </div>
-                <p className="text-yellow-500 text-sm font-semibold mt-2">
-                  ⭐⭐⭐⭐ 4.2 (79)
-                </p>
-                <button className="mt-4 w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition-colors duration-200 font-medium">
-                  Contact Supplier
-                </button>
+
+                {/* Bottom */}
+                <div className="mt-auto pt-2 border-t border-gray-100">
+                  <div className="flex gap-1 mb-2">
+                    {relatedProduct.businessProfile?.gstNumber && (
+                      <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                        GST
+                      </span>
+                    )}
+                    {relatedProduct.businessProfile?.yearOfEstablishment && (
+                      <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                        {new Date().getFullYear() -
+                          relatedProduct.businessProfile.yearOfEstablishment}{" "}
+                        yrs
+                      </span>
+                    )}
+                  </div>
+
+                  <button className="w-full bg-green-500 text-white py-1.5 rounded text-sm hover:bg-green-600 transition">
+                    Contact
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </Link>
-      );
-    })}
+          </Link>
+        );
+      })}
+    </div>
   </div>
-</div>
-        )}
+)}
+
 
         {/* --- Related Categories Section --- */}
         {visibleRelatedCategories.length > 0 && (

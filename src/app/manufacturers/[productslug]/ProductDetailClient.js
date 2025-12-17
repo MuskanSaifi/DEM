@@ -211,155 +211,130 @@ const ProductDetailClient = ({ productslug: propProductSlug }) => {
           </div>
         </aside>
 
-        {/* Main Product Section */}
-        <div className="col-md-6 mb-4">
-          {loading ? (
-            <Skeleton height={400} />
-          ) : error ? (
-            <p className="text-danger">{error}</p>
-          ) : products.length > 0 ? (
-            products.map((product) => {
-              const isInWishlist = wishlistItems.some(
-                (item) => item._id === product._id || item.productId === product._id
-              );
-
-              return (
-                <div
-                  key={product._id}
-                  className="card shadow-sm border-0 mb-3 rounded-4 overflow-hidden"
-                >
-                  <div className="row g-0">
-                    {/* Image */}
-                    <div className="col-12 col-md-4 bg-light d-flex align-items-center justify-content-center p-2 position-relative">
-                      <Image
-                        src={product?.images?.[0]?.url || "/placeholder.png"}
-                        alt={product?.name || "Product"}
-                        width={150}
-                        height={150}
-                        className="img-fluid rounded"
-                        onError={(e) => {
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src = "/placeholder.png";
-                        }}
-                      />
-
-                      {/* Wishlist Icon */}
-                      {(user || buyer) && (
-                        <button
-                          className={`btn btn-link p-0 position-absolute top-0 end-0 m-2 ${
-                            isInWishlist ? "text-danger" : "text-muted"
-                          }`}
-                          onClick={() => handleToggleWishlist(product._id)}
-                          disabled={wishlistLoading}
-                          title={isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
-                          aria-label={isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
-                        >
-                          {isInWishlist ? <FaHeart /> : <FaRegHeart />}
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Product Info */}
-                    <div className="col-12 col-md-8 p-3">
-                      <h2 className="text-primary fw-bold mb-2">{product.name}</h2>
-                      <div className="d-flex flex-wrap justify-content-between mb-2">
-                        <p className="mb-0">
-                          <strong>Price:</strong> ₹{product.price} {product.currency || "INR"}
-                        </p>
-                        <p className="mb-0">
-                          <strong>MOQ:</strong> {product.minimumOrderQuantity}{" "}
-                          {product.moqUnit || "Number"}
-                        </p>
-                      </div>
-
-                      {product.description && (
-                        <p className="text-muted small mb-2">
-                          {product.description.length > 120
-                            ? `${product.description.slice(0, 120)}...`
-                            : product.description}
-                        </p>
-                      )}
-
-                      {/* Business Info */}
-                      {businessProfile && (
-                        <div className="border-top pt-3 mt-3 small">
-                          <p className="mb-1">
-                            <strong>Company Name:</strong> {businessProfile.companyName}
-                          </p>
-                         <p className="mb-1">
-                            {/* MASKING APPLIED HERE */}
-                            <strong>GST Number:</strong> {maskedGstNumber}
-                          </p>
-                          <p className="mb-1">
-                            <strong>Year Established:</strong>{" "}
-                            {businessProfile.yearOfEstablishment}
-                          </p>
-                        </div>
-                      )}
-
-                      {product?.tradeShopping && (
-                        <div className="mb-2 small">
-                          <p className="mb-0">
-                            <strong>GST:</strong> {product.tradeShopping.gst}%
-                          </p>
-                          <p className="mb-0">
-                            <strong>Selling Price Type:</strong>{" "}
-                            {product.tradeShopping.sellingPriceType}
-                          </p>
-                          <p className="mb-0">
-                            <strong>Returnable:</strong>{" "}
-                            {product.tradeShopping.isReturnable ? "Yes" : "No"}
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="d-flex justify-content-between align-items-center mt-3">
-                        <Link
-                          href={`/products/${product._id}`}
-                          className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-blue-600 border border-blue-500 rounded hover:bg-blue-50 transition"
-                        >
-                          More Details
-                        </Link>
-                        <Buyfrom product={product} sellerId={product?.userId} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          ) : (
-            <p className="text-warning">
-              This Product is not available. It may belong to a seller you have blocked.
-            </p>
-          )}
+      {/* Main Product Section */}
+<div className="col-md-9 mb-4">
+  {loading ? (
+    <div className="row">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="col-md-3 col-sm-6 mb-4">
+          <Skeleton height={300} />
         </div>
+      ))}
+    </div>
+  ) : error ? (
+    <p className="text-danger">{error}</p>
+  ) : products.length > 0 ? (
+    <div className="row">
+      {products.map((product) => {
+        const isInWishlist = wishlistItems.some(
+          (item) =>
+            item._id === product._id || item.productId === product._id
+        );
 
-        {/* Related Products */}
-        <aside className="col-md-3 mb-4 d-none d-md-block">
-          <div className="bg-white p-3 rounded common-shad sticky top-20">
-            <div className="mb-3 text-light global-heading rounded-2 common-shad px-4 text-center py-1 text-sm">
-              Related Products
-            </div>
-            {loading ? (
-              <Skeleton count={5} height={20} />
-            ) : relatedProducts.length > 0 ? (
-              <ul className="list-group">
-                {relatedProducts.map((prod) => (
-                  <Link
-                    key={prod._id}
-                    href={`/manufacturers/${prod.productslug}`}
-                    className="text-web text-decoration-none"
+        return (
+          <div
+            key={product._id}
+            className="col-6 col-sm-6 col-md-3 mb-4"
+          >
+            <div className="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
+
+              {/* IMAGE */}
+              <div className="position-relative bg-light p-3 text-center">
+                <Image
+                  src={product?.images?.[0]?.url || "/placeholder.png"}
+                  alt={product?.name || "Product"}
+                  width={180}
+                  height={180}
+                  className="img-fluid rounded"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = "/placeholder.png";
+                  }}
+                />
+
+                {/* Wishlist */}
+                {(user || buyer) && (
+                  <button
+                    className={`position-absolute top-0 end-0 m-2 btn btn-sm ${
+                      isInWishlist ? "text-danger" : "text-muted"
+                    }`}
+                    onClick={() => handleToggleWishlist(product._id)}
+                    disabled={wishlistLoading}
                   >
-                    <li className="list-group-item hover:bg-gray-100">{prod.name}</li>
+                    {isInWishlist ? <FaHeart /> : <FaRegHeart />}
+                  </button>
+                )}
+              </div>
+
+              {/* CONTENT */}
+              <div className="card-body d-flex flex-column">
+
+                <h6 className="fw-bold text-primary mb-1 text-truncate">
+                  {product.name}
+                </h6>
+
+                <p className="small mb-1">
+                  <strong>₹{product.price}</strong>{" "}
+                  {product.currency || "INR"}
+                </p>
+
+                <p className="small text-muted mb-1">
+                  MOQ: {product.minimumOrderQuantity}{" "}
+                  {product.moqUnit || "Number"}
+                </p>
+
+                {product.description && (
+                  <p className="small text-muted flex-grow-1">
+                    {product.description.length > 70
+                      ? `${product.description.slice(0, 70)}...`
+                      : product.description}
+                  </p>
+                )}
+
+                {/* Business Info */}
+                {businessProfile && (
+                  <div className="border-top pt-2 mt-2 small">
+                    <p className="mb-1">
+                      <strong>GST:</strong> {maskedGstNumber}
+                    </p>
+                    <p className="mb-0">
+                      <strong>Established:</strong>{" "}
+                      {businessProfile.yearOfEstablishment}
+                    </p>
+                  </div>
+                )}
+
+                {/* ACTIONS */}
+                <div className=" gap-2 mt-3">
+                  <Link
+                    href={`/products/${product._id}`}
+                    className="btn   w-100 btn-outline-primary btn-sm mb-2"
+                  >
+                    Details
                   </Link>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-muted">No related products available.</p>
-            )}
+
+                  <Buyfrom
+                    product={product}
+                    sellerId={product?.userId}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
-        </aside>
+        );
+      })}
+    </div>
+  ) : (
+    <p className="text-warning">
+      This Product is not available. It may belong to a seller you have blocked.
+    </p>
+  )}
+</div>
+
+
+       
       </div>
+
     </div>
   );
 };

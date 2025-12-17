@@ -24,6 +24,11 @@ export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenpopup, setIsOpenpopup] = useState(false);
 
+  const [isSearching, setIsSearching] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+const abortRef = useRef(null);
+
+
   const togglepopup = () => {
     setIsOpenpopup(!isOpenpopup);
   };
@@ -67,21 +72,38 @@ export default function Header() {
     fetchTotalUsers();
   }, []);
 
-  useEffect(() => {
-    // Fetch all cities dynamically from the API
-    async function fetchCities() {
-      try {
-        const response = await fetch("/api/location/allheadercity");
-        const data = await response.json();
-        if (response.ok) {
-          setCities(["All City", ...data.cities]); // Include "All City" at the start
-        }
-      } catch (error) {
-        console.error("Error fetching cities:", error);
+useEffect(() => {
+  const cached = sessionStorage.getItem("headerCities");
+
+  if (cached) {
+    setCities(JSON.parse(cached));
+    return;
+  }
+
+  (async () => {
+    try {
+      const res = await fetch("/api/location/allheadercity");
+      const data = await res.json();
+
+      if (res.ok && Array.isArray(data.cities)) {
+        const list = ["All City", ...data.cities];
+        setCities(list);
+        sessionStorage.setItem("headerCities", JSON.stringify(list));
       }
+    } catch (err) {
+      console.error("City fetch error:", err);
     }
-    fetchCities();
-  }, []);
+  })();
+}, []);
+
+
+
+
+useEffect(() => {
+  if (suggestions.length === 0) {
+    setActiveIndex(-1);
+  }
+}, [suggestions]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -130,40 +152,63 @@ const handleLogout = () => {
 };
 
 
-  useEffect(() => {
-    if (searchTerm.trim() === "") {
-      setSuggestions([]); // Immediately clear suggestions when empty
-      return;
-    }
+ useEffect(() => {
+  if (searchTerm.trim() === "") {
+    setSuggestions([]);
+    setIsSearching(false);
+    return;
+  }
 
-    const fetchSuggestions = async () => {
-      try {
-const response = await fetch(`/api/adminprofile/searchbar?search=${searchTerm}`);        const data = await response.json();
-        if (response.ok) {
-          const filtered = data.filter((product) =>
-            product.name.toLowerCase().includes(searchTerm.toLowerCase())
-          );
-          setSuggestions(filtered);
-        }
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      }
-    };
+  // 🔥 cancel previous request
+  if (abortRef.current) {
+    abortRef.current.abort();
+  }
 
-    const delayDebounceFn = setTimeout(fetchSuggestions, 300);
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm]);
+  const controller = new AbortController();
+  abortRef.current = controller;
 
-  const handleSearchSelect = (product) => {
-    const formatUrl = (name) =>
-      encodeURIComponent(
-        name.replace(/&/g, "and").replace(/\s+/g, "-").toLowerCase()
+  const fetchSuggestions = async () => {
+    try {
+      setIsSearching(true);
+
+      const res = await fetch(
+        `/api/adminprofile/searchbar?search=${encodeURIComponent(searchTerm)}`,
+        { signal: controller.signal }
       );
 
-    setSearchTerm(product.name);
-    setSuggestions([]);
-    router.push(`/manufacturers/${product.productslug}`);
+      const data = await res.json();
+
+      if (res.ok && Array.isArray(data)) {
+        setSuggestions(data);
+      } else {
+        setSuggestions([]);
+      }
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        console.error("Search error:", err);
+        setSuggestions([]);
+      }
+    } finally {
+      setIsSearching(false);
+    }
   };
+
+  // ⏳ debounce (FAST but safe)
+  const timer = setTimeout(fetchSuggestions, 300);
+
+  return () => {
+    clearTimeout(timer);
+    controller.abort();
+  };
+}, [searchTerm]);
+
+
+ const handleSearchSelect = React.useCallback((product) => {
+  setSearchTerm(product.name);
+  setSuggestions([]);
+  router.push(`/manufacturers/${product.productslug}`);
+}, [router]);
+
 
   const directoryLinks = [
     { label: "Become a Member", href: "/become-a-member" },
@@ -328,10 +373,12 @@ const response = await fetch(`/api/adminprofile/searchbar?search=${searchTerm}`)
                       </div>
                      <ul className="max-h-60 overflow-y-auto">
   {cities?.length > 0 ? (
-    cities
-      .filter((city) =>
-        city.toLowerCase().includes(citySearch.toLowerCase())
-      )
+  cities
+  .filter(
+    (city) =>
+      typeof city === "string" &&
+      city.toLowerCase().includes(citySearch.toLowerCase())
+  )
       .map((city, index) => (
         <li key={index}>
           <button
@@ -355,34 +402,80 @@ const response = await fetch(`/api/adminprofile/searchbar?search=${searchTerm}`)
   className="position-relative flex-grow-1 pro-ser-div"
   ref={searchRef}
 >
-  <input
-    className="product-search form-control"
-    type="text"
-    placeholder="🔍 B2B Marketplace in India, B2B Portal"
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-  />
+<input
+  className="product-search form-control"
+  type="text"
+  placeholder="🔍 B2B Marketplace in India, B2B Portal"
+  value={searchTerm}
+  onChange={(e) => {
+    setSearchTerm(e.target.value);
+    setActiveIndex(-1); // reset on typing
+  }}
+  onKeyDown={(e) => {
+    if (!suggestions.length) return;
+
+    // ⬇️ Down Arrow
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((prev) =>
+        prev < suggestions.length - 1 ? prev + 1 : 0
+      );
+    }
+
+    // ⬆️ Up Arrow
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((prev) =>
+        prev > 0 ? prev - 1 : suggestions.length - 1
+      );
+    }
+
+    // ⏎ Enter
+    if (e.key === "Enter" && activeIndex >= 0) {
+      e.preventDefault();
+      handleSearchSelect(suggestions[activeIndex]);
+    }
+  }}
+/>
+
 
   {/* Show suggestions or "not found" */}
-  {(searchTerm.trim() !== "") && (
-    <ul className="list-group position-absolute w-100 shadow-sm bg-white text-sm z-50">
-      {suggestions.length > 0 ? (
-        suggestions.map((product) => (
-          <li
-            key={product._id}
-            className="list-group-item list-group-item-action cursor-pointer"
-            onClick={() => handleSearchSelect(product)}
-          >
-            {product.name}
-          </li>
-        ))
-      ) : (
-        <li className="list-group-item text-muted text-center">
-          🚫 Product not found
-        </li>
-      )}
-    </ul>
-  )}
+ {(searchTerm.trim() !== "") && (
+  <ul className="list-group position-absolute w-100 shadow-sm bg-white text-sm z-50">
+
+    {/* 🔄 LOADING */}
+    {isSearching && (
+      <li className="list-group-item text-center text-muted">
+        🔍 Loading suggestions...
+      </li>
+    )}
+
+    {/* ✅ RESULTS */}
+ {!isSearching && suggestions.length > 0 &&
+  suggestions.map((product, index) => (
+    <li
+      key={product._id}
+      className={`list-group-item list-group-item-action cursor-pointer
+        ${index === activeIndex ? "bg-primary text-white" : ""}
+      `}
+      onMouseEnter={() => setActiveIndex(index)} // hover sync
+      onClick={() => handleSearchSelect(product)}
+    >
+      {product.name}
+    </li>
+  ))}
+
+
+    {/* ❌ NOT FOUND */}
+    {!isSearching && suggestions.length === 0 && (
+      <li className="list-group-item text-muted text-center">
+        🚫 Product not found
+      </li>
+    )}
+  </ul>
+)}
+
+
 </div>
                 {/* Registered Users */}
                 <div className="registered-users-box text-center d-none-mob">

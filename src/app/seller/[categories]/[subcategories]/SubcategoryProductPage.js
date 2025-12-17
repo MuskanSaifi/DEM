@@ -686,7 +686,7 @@ const fetchData = useCallback(async () => {
         </aside>
 
         {/* Product Listing */}
-        <main className="col-md-6 common-shad rounded-2 p-3">
+        <main className="col-md-9 common-shad rounded-2 p-3">
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h1 className="text-uppercase text-lg text-secondary">
               {loading ? <Skeleton width={200} /> : decode(subcategorySlug)}{" "}
@@ -713,7 +713,7 @@ const fetchData = useCallback(async () => {
                 );
 
                 return (
-                  <div key={`${product._id}-${index}`} className="col-md-6">
+                  <div key={`${product._id}-${index}`} className="col-md-3 col-6">
                     <div className="card border-0 shadow-sm p-3 rounded-3">
                       <div className="position-relative text-center">
                         <Image
@@ -757,9 +757,9 @@ const fetchData = useCallback(async () => {
                       {product.businessProfile &&
                         shouldDisplay(product.businessProfile.companyName) && (
                           <div className="mb-3 pb-2 border-bottom">
-                            <h3 className="fw-bold text-dark text-sm mb-2">
+                            {/* <h3 className="fw-bold text-dark text-sm mb-2">
                               {product.businessProfile.companyName}
-                            </h3>
+                            </h3> */}
                             <div className="d-flex flex-wrap align-items-center text-sm">
                               {/* Location */}
                               {(shouldDisplay(product.businessProfile.city) ||
@@ -898,30 +898,7 @@ const fetchData = useCallback(async () => {
 
         </main>
 
-        {/* Products Sidebar (Desktop) */}
-        <aside className="col-md-3 d-none d-md-block">
-          <div className="bg-white p-3 rounded common-shad sticky top-5">
-            <div className="mb-3 text-light global-heading rounded-2 common-shad px-4 text-center py-1 text-sm">
-              Products in {decode(subcategorySlug)}
-            </div>
-            {loading ? (
-              <Skeleton count={5} height={20} />
-            ) : (
-              <ul className="list-group">
-                {products.map((product) => (
-                  <li key={product._id} className="list-group-item border-0 p-1">
-                    <Link
-                      href={`/products/${product._id}`}
-                      className="text-web text-decoration-none common-shad d-block p-2 rounded-2 hover:bg-gray-100"
-                    >
-                      {product.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </aside>
+ 
       </div>
     </div>
   );

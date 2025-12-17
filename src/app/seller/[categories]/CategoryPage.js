@@ -519,37 +519,32 @@ useEffect(() => {
           {/* --- Filters Section in Desktop Sidebar --- */}
           <div className="bg-white p-3 rounded common-shad mt-4 sticky top-5">
               <div >
-                   <div className="mb-3 text-light global-heading rounded-2 common-shad px-4 text-center py-1 text-sm">
-              Filters
-            </div>
-<label className="form-label fw-bold"> All Categories</label>
+              
 
-            {loading ? (
-              <Skeleton count={5} height={20} />
-            ) : (
-              <ul className="list-group">
-                {categories.map((cat) => {
-                  const isActive = cat.categoryslug === categorySlug;
-                  return (
-              <Link
-  key={cat._id}
-  href={`/seller/${cat.categoryslug}`}
-  className="text-decoration-none"
->
-  <li
-    className={`list-group-item ${
-      isActive
-        ? "custom-active"
-        : "text-dark"
-    }`}
-  >
-    {cat.name}
-  </li>
-</Link>
-                  );
-                })}
-              </ul>
-            )}
+    <div className="bg-white rounded sticky top-5">
+  <div className="mb-3 text-light global-heading rounded-2 common-shad px-4 text-center py-1 text-sm">
+    Subcategories
+  </div>
+
+  {loading ? (
+    <Skeleton count={5} height={20} />
+  ) : (
+    <ul className="list-group">
+      {subcategories.map((sub) => (
+        <Link
+          key={sub._id}
+          href={`/seller/${categorySlug}/${sub.subcategoryslug}`}
+          className="text-decoration-none"
+        >
+          <li className="list-group-item text-dark hover:bg-gray-100 transition cursor-pointer">
+            {sub.name}
+          </li>
+        </Link>
+      ))}
+    </ul>
+  )}
+</div>
+
           </div>
             <div className="mb-3 mt-3">
               <label htmlFor="productNameDesktop" className="form-label fw-bold">Product Name</label>
@@ -718,7 +713,7 @@ useEffect(() => {
         </aside>
 
         {/* Main Product Listing Area */}
-        <main className="col-md-6 common-shad rounded-2 p-3">
+        <main className="col-md-9  rounded-2 p-3">
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h1 className="text-uppercase text-lg text-secondary">
               {getCategoryName()} Products
@@ -732,8 +727,8 @@ useEffect(() => {
             {loading ? (
               // Display skeleton loaders while loading
               Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="col-md-6">
-                  <div className="card border-0 shadow-sm p-3 rounded-3">
+                <div key={i} className="col-md-3 col-6">
+                  <div className="card border-0  p-3 rounded-3">
                     <Skeleton height={180} />
                     <Skeleton count={3} />
                     <Skeleton width={100} height={20} className="mt-2" />
@@ -745,8 +740,8 @@ useEffect(() => {
             ) : filteredProducts.length > 0 ? (
               // Map through filtered products
               filteredProducts.map((product, index) => (
-                <div key={`${product._id}-${index}`} className="col-md-6">
-                  <div className="card border-0 shadow-sm p-3 rounded-3 position-relative">
+                <div key={`${product._id}-${index}`} className="col-md-3 col-6">
+                  <div className="card border-0  p-3 rounded-3 position-relative">
                     {/* Wishlist Button */}
                     <button
                       className="btn btn-link p-0 position-absolute top-0 end-0 m-2"
@@ -782,7 +777,7 @@ useEffect(() => {
                     {/* Company Info Section */}
                     {product.businessProfile && shouldDisplay(product.businessProfile.companyName) && (
                       <div className="mb-3 pb-2 border-bottom">
-                        <h3 className="fw-bold text-dark text-sm mb-2">{product.businessProfile.companyName}</h3>
+                        {/* <h3 className="fw-bold text-dark text-sm mb-2">{product.businessProfile.companyName}</h3> */}
                         <div className="d-flex flex-wrap align-items-center text-sm">
                           {/* Location */}
                           {(shouldDisplay(product.businessProfile.city) || shouldDisplay(product.businessProfile.state)) && (
@@ -903,30 +898,7 @@ useEffect(() => {
         </main>
 
 
-        {/* Subcategories Sidebar (Desktop Only) */}
-        <aside className="col-md-3 d-none d-md-block">
-          <div className="bg-white p-3 rounded common-shad sticky top-5">
-            <div className="mb-3 text-light global-heading rounded-2 common-shad px-4 text-center py-1 text-sm">
-              Subcategories
-            </div>
-
-            {loading ? (
-              <Skeleton count={5} height={20} />
-            ) : (
-              <ul className="list-group">
-                {subcategories.map((sub) => (
-                  <Link
-                    key={sub._id}
-                    href={`/seller/${categorySlug}/${sub.subcategoryslug}`}
-                    className="text-decoration-none"
-                  >
-                    <li className="list-group-item text-dark">{sub.name}</li>
-                  </Link>
-                ))}
-              </ul>
-            )}
-          </div>
-        </aside>
+    
       </div>
 
       <div className="mt-4">
