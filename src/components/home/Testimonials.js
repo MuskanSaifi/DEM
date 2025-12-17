@@ -142,7 +142,7 @@ const Testimonials = () => {
         <p className="text-lg sm:text-xl text-gray-700 italic mb-6 max-w-xl">
           "{testimonial.content}"
         </p>
-        <h3 className="text-2xl font-semibold text-purple-700">{testimonial.name}</h3>
+        <span className="text-2xl font-semibold text-purple-700">{testimonial.name}</span>
         <p className="text-sm text-gray-500">{testimonial.title}</p>
       </div>
     </div>

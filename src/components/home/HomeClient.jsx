@@ -21,7 +21,7 @@ import CategoryGridPage from "@/components/home/CategoryGridPage";
 export default function HomeClient() {
   return (
     <>
-      <h1 className="hidden">Dial Export Mart | Best B2B Marketplace in India</h1>
+      <h1 className="hidden">Best B2B Marketplace in India for Verified Suppliers & Buyers</h1>
       <Bannerslider />
       <BuySellform />
 
@@ -40,7 +40,6 @@ export default function HomeClient() {
       </div>
 
       <IndustrySlider />
-
 
       <div className="banner-container">
         <Link href="/user/register">

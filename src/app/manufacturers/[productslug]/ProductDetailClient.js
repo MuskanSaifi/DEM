@@ -330,11 +330,7 @@ const ProductDetailClient = ({ productslug: propProductSlug }) => {
     </p>
   )}
 </div>
-
-
-       
       </div>
-
     </div>
   );
 };

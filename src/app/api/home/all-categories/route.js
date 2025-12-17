@@ -1,3 +1,7 @@
+export const dynamic = "force-static";
+export const revalidate = 60 * 60 * 24; // ✅ 24 HOURS
+
+
 import connectDB from "@/lib/dbConnect";
 import Category from "@/models/Category";
 import SubCategory from "@/models/SubCategory";

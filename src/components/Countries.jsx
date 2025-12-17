@@ -40,9 +40,9 @@ const Countries = () => {
                 <span className="text-4xl">⋯</span>
               )}
 
-              <span className="text-md font-medium text-gray-800">
+              <h3 className="text-sm text-gray-800">
                 {country.name}
-              </span>
+              </h3>
             </Link>
           ))}
         </div>

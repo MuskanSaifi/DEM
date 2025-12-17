@@ -15,19 +15,50 @@ const Bannerslider = () => {
 useEffect(() => {
   let active = true;
 
-  const fetchData = async () => {
-    const res = await axios.get("/api/adminprofile/banner");
-    if (!active) return;
-    setBanners(res.data.banners);
-    setLoading(false);
+  const CACHE_KEY = "HOME_BANNERS";
+  const CACHE_TIME = "HOME_BANNERS_TIME";
+  const EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+
+  const fetchBanners = async () => {
+    try {
+      const cachedData = localStorage.getItem(CACHE_KEY);
+      const cachedTime = localStorage.getItem(CACHE_TIME);
+
+      // ✅ Use cache if valid
+      if (cachedData && cachedTime) {
+        const isValid = Date.now() - Number(cachedTime) < EXPIRY;
+        if (isValid) {
+          setBanners(JSON.parse(cachedData));
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 🔁 API call only if cache expired
+      const res = await axios.get("/api/adminprofile/banner?platform=web");
+
+      if (!active) return;
+
+      setBanners(res.data.banners);
+      setLoading(false);
+
+      // 💾 Save to cache
+      localStorage.setItem(CACHE_KEY, JSON.stringify(res.data.banners));
+      localStorage.setItem(CACHE_TIME, Date.now().toString());
+
+    } catch (err) {
+      console.error("Banner fetch error", err);
+      setLoading(false);
+    }
   };
 
-  fetchData();
+  fetchBanners();
 
   return () => {
     active = false;
   };
 }, []);
+
 
 
 

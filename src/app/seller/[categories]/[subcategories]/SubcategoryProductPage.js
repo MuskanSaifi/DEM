@@ -714,14 +714,17 @@ const fetchData = useCallback(async () => {
 
                 return (
                   <div key={`${product._id}-${index}`} className="col-md-3 col-6">
-                    <div className="card border-0 shadow-sm p-3 rounded-3">
-                      <div className="position-relative text-center">
+<div className="card border-0 shadow-sm p-3 rounded-3 h-100 d-flex flex-column">
+                      <div
+  className="position-relative text-center mb-2"
+  style={{ height: "170px" }}
+>
                         <Image
                           src={product.images?.[0]?.url || "/placeholder.png"}
                           alt={product.name}
                           width={180}
                           height={180}
-                          className="rounded-md object-cover mx-auto block"
+                          className="rounded-md object-contain mx-auto h-100 w-100"
                         />
                         {/* Wishlist Icon */}
                       {(user || buyer) && (
@@ -742,7 +745,7 @@ const fetchData = useCallback(async () => {
                       <h2 className="mt-2 text-primary text-sm text-center">
                         {product.name}
                       </h2>
-                      <p className="text-sm">
+                     <p className="text-sm text-muted line-clamp-2 mb-2">
                         {product.description
                           ? product.description
                               .split(" ")
@@ -756,7 +759,7 @@ const fetchData = useCallback(async () => {
                       {/* Company Info Section */}
                       {product.businessProfile &&
                         shouldDisplay(product.businessProfile.companyName) && (
-                          <div className="mb-3 pb-2 border-bottom">
+                          <div className="mb-2 pb-1 border-bottom small">
                             {/* <h3 className="fw-bold text-dark text-sm mb-2">
                               {product.businessProfile.companyName}
                             </h3> */}

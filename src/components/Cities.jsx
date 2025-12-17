@@ -43,7 +43,7 @@ return (
                 ) : (
                   <span className="text-4xl">⋯</span>
                 )}
-                <span className="text-md font-medium text-gray-800">{city.name}</span>
+                <h3 className="text-sm text-gray-800">{city.name}</h3>
             </a>
           </Link>
         ))}

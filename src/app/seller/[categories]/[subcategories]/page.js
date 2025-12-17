@@ -19,7 +19,9 @@ export async function fetchCategories() {
 
 export async function generateMetadata({ params }) {
   try {
-    const { categories, subcategories } = params;
+      const resolvedParams = await params; // ✅ IMPORTANT
+
+    const { categories, subcategories } = resolvedParams;
 
     const decodedCategorySlug = decodeURIComponent(categories || "");
     const decodedSubcategorySlug = decodeURIComponent(subcategories || "");

@@ -741,7 +741,7 @@ useEffect(() => {
               // Map through filtered products
               filteredProducts.map((product, index) => (
                 <div key={`${product._id}-${index}`} className="col-md-3 col-6">
-                  <div className="card border-0  p-3 rounded-3 position-relative">
+<div className="card border-0 p-3 rounded-3 position-relative h-100 d-flex flex-column">
                     {/* Wishlist Button */}
                     <button
                       className="btn btn-link p-0 position-absolute top-0 end-0 m-2"
@@ -756,27 +756,27 @@ useEffect(() => {
                       )}
                     </button>
 
-                    <div className="position-relative text-center">
+<div className="position-relative text-center mb-2" style={{ height: "180px" }}>
                       <Image
                         src={product.images?.[0]?.url || "/placeholder.png"}
                         alt={product.name}
                         width={180}
                         height={180}
-                        className="rounded-md object-cover mx-auto block"
+className="rounded-md object-contain mx-auto h-100 w-100"
                         onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/placeholder.png"; }}
                       />
                     </div>
                     <h2 className="mt-2 text-primary text-sm text-center">
                       {product.name}
                     </h2>
-                    <p className="text-sm">
+<p className="text-sm text-muted line-clamp-2">
                       {product.description
                         ? product.description.split(" ").slice(0, 15).join(" ") + (product.description.split(" ").length > 15 ? "..." : "") // Shorten description
                         : "No description available."}
                     </p>
                     {/* Company Info Section */}
                     {product.businessProfile && shouldDisplay(product.businessProfile.companyName) && (
-                      <div className="mb-3 pb-2 border-bottom">
+<div className="mb-2 pb-1 border-bottom small">
                         {/* <h3 className="fw-bold text-dark text-sm mb-2">{product.businessProfile.companyName}</h3> */}
                         <div className="d-flex flex-wrap align-items-center text-sm">
                           {/* Location */}
@@ -814,7 +814,7 @@ useEffect(() => {
                         </div>
                       </div>
                     )}
-                    <table className="table table-sm mt-2 text-sm">
+<table className="table table-sm mt-2 text-sm mb-2">
                       <tbody>
                         {shouldDisplay(product.tradeShopping?.fixedSellingPrice || product.price) && (
                           <tr>
@@ -893,14 +893,8 @@ useEffect(() => {
     </button>
   </div>
 )}
-
-
         </main>
-
-
-    
       </div>
-
       <div className="mt-4">
         {/* Category HTML Content */}
         {categoryContent && (

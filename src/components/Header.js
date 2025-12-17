@@ -13,6 +13,10 @@ import { BsBriefcaseFill } from "react-icons/bs";
 import { logout, initializeUser } from "@/app/store/userSlice";
 import SmoothCounter from "./Counter";
 
+const CACHE_KEY = "totalUsersCount";
+const CACHE_TIME = 1000 * 60 * 60 * 24; // 24 hours
+
+
 export default function Header() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -56,21 +60,41 @@ const abortRef = useRef(null);
 
   const [cities, setCities] = useState(["All City"]); // Store cities from API
 
-  useEffect(() => {
-    const fetchTotalUsers = async () => {
-      try {
-        const res = await fetch("/api/registeredusers"); // replace with your actual API route
-        const data = await res.json();
-        if (data.success) {
-          setTotalUsers(data.totalUsers);
-        }
-      } catch (err) {
-        console.error("Failed to fetch total users:", err);
+useEffect(() => {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const { value, time } = JSON.parse(cached);
+      if (Date.now() - time < CACHE_TIME) {
+        setTotalUsers(value);
+        return;
       }
-    };
+      localStorage.removeItem(CACHE_KEY);
+    }
+  } catch {
+    localStorage.removeItem(CACHE_KEY);
+  }
 
-    fetchTotalUsers();
-  }, []);
+  const fetchTotalUsers = async () => {
+    try {
+      const res = await fetch("/api/registeredusers");
+      const data = await res.json();
+
+      if (data.success) {
+        setTotalUsers(data.totalUsers);
+        localStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({ value: data.totalUsers, time: Date.now() })
+        );
+      }
+    } catch (err) {
+      console.error("Failed to fetch total users:", err);
+    }
+  };
+
+  fetchTotalUsers();
+}, []);
+
 
 useEffect(() => {
   const cached = sessionStorage.getItem("headerCities");

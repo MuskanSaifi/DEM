@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Image from "next/image";
 
 const allFaqs = [
   {
@@ -49,91 +48,93 @@ const allFaqs = [
   },
 ];
 
-
 const Faq = () => {
   const [openIndex, setOpenIndex] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
 
   const toggle = (index) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
-  const filteredFaqs = searchTerm
-    ? allFaqs.filter((faq) =>
-        faq.question.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : allFaqs.slice(0, 10); // Show top 10 by default
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fdfcfb] via-[#e6f0ff] to-[#fcefe7] relative px-4 py-16 mt-5 mb-5">
       {/* Decorative Background */}
-      <div className="absolute top-0 left-0 w-72 h-72 bg-pink-100 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-pulse z-0"></div>
-      <div className="absolute bottom-0 right-0 w-72 h-72 bg-purple-100 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-pulse z-0"></div>
+      <div className="absolute top-0 left-0 w-72 h-72 bg-pink-100 rounded-full blur-2xl opacity-40 z-0"></div>
+      <div className="absolute bottom-0 right-0 w-72 h-72 bg-purple-100 rounded-full blur-2xl opacity-40 z-0"></div>
 
-      <div className="max-w-7xl mx-auto relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-        {/* Left Side */}
-        <div>
-          <h2 className="text-4xl font-bold text-gray-800 mb-6">
-            Frequently Asked <br /> Questions
-          </h2>
+      <div className="max-w-7xl mx-auto relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
 
-          {/* Search Bar */}
-          <div className="relative mb-6">
-            <input
-              type="text"
-              placeholder="Search question here"
-              className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg shadow focus:outline-none"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-              🔍
-            </span>
-          </div>
+        {/* Left Content */}
+      <div className="relative bg-white/90 p-10 rounded-3xl shadow-xl border border-gray-100">
+  <h2 className="text-3xl font-extrabold text-gray-900 mb-4 leading-snug">
+    Dial Export Mart – <span className="text-indigo-600">India’s Leading B2B Marketplace</span>
+  </h2>
 
-          {/* FAQ List with max height */}
-       <div className="space-y-4 overflow-y-auto pr-2 max-h-[470px]">
+  <p className="text-gray-700 leading-relaxed mb-4">
+    Dial Export Mart is a trusted and fast-growing B2B marketplace in India
+    connecting verified manufacturers, suppliers, and exporters with buyers worldwide.
+  </p>
 
-            {filteredFaqs.length > 0 ? (
-              filteredFaqs.map((faq, index) => (
-              <div
-  key={index}
-  className="bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition duration-300"
->
-  <button
-    className="w-full px-5 py-4 text-left flex justify-between items-center text-gray-800 font-medium"
-    onClick={() => toggle(index)}
-  >
-    {faq.question}
-    <span className="text-2xl text-indigo-500">
-      {openIndex === index ? "−" : "+"}
-    </span>
-  </button>
-  {openIndex === index && (
-    <div className="px-5 pb-4 text-gray-600 text-sm leading-relaxed">
-      {faq.answer}
-    </div>
-  )}
+  <p className="text-gray-700 leading-relaxed mb-6">
+    Our platform helps businesses discover genuine trade opportunities and
+    grow internationally with confidence across multiple industries.
+  </p>
+
+  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+    Benefits for Exporters
+  </h3>
+
+  <ul className="space-y-3 text-gray-700">
+    <li className="flex items-start gap-2">✅ Increased brand visibility in global markets</li>
+    <li className="flex items-start gap-2">✅ Access to verified international buyers</li>
+    <li className="flex items-start gap-2">✅ Cost-effective digital marketing for exports</li>
+    <li className="flex items-start gap-2">✅ List products across multiple categories</li>
+  </ul>
 </div>
 
-              ))
-            ) : (
-              <p className="text-gray-500">No matching FAQs found.</p>
-            )}
-          </div>
+
+        {/* Right FAQ Section */}
+       <div className="space-y-5 max-h-[520px] overflow-y-auto pr-3 scrollbar-thin scrollbar-thumb-indigo-200 scrollbar-track-transparent">
+  {allFaqs.map((faq, index) => {
+    const isOpen = openIndex === index;
+
+    return (
+      <div
+        key={index}
+        className={`rounded-2xl border transition-all duration-300 bg-white
+          ${isOpen ? "border-indigo-300 shadow-lg" : "border-gray-200 shadow-sm hover:shadow-md"}
+        `}
+      >
+        <button
+          className="w-full px-6 py-5 flex justify-between items-center text-left"
+          onClick={() => toggle(index)}
+        >
+          <h3 className="text-base font-semibold text-gray-900 pr-4">
+            {faq.question}
+          </h3>
+
+          <span
+            className={`text-2xl font-bold text-indigo-600 transition-transform duration-300
+              ${isOpen ? "rotate-45" : ""}
+            `}
+          >
+            +
+          </span>
+        </button>
+
+        <div
+          className={`overflow-hidden transition-all duration-300 px-6
+            ${isOpen ? "max-h-40 pb-5 opacity-100" : "max-h-0 opacity-0"}
+          `}
+        >
+          <p className="text-sm text-gray-600 leading-relaxed">
+            {faq.answer}
+          </p>
         </div>
-
-        {/* Right Illustration */}
-   <div className="relative w-full h-[500px] md:h-[600px] lg:h-[700px]">
-  <Image
-    src="/assets/faq.png"
-    alt="FAQ Illustration"
-    fill
-    className="object-contain md:object-cover"
-      loading="lazy"        
-
-  />
+      </div>
+    );
+  })}
 </div>
+
 
       </div>
     </div>

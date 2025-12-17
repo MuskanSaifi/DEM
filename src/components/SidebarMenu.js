@@ -7,6 +7,9 @@ import Image from "next/image";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
+const CACHE_KEY = "sidebarData";
+const CACHE_TIME = 1000 * 60 * 60 * 24 * 5; // ✅ 5 days
+
 const SidebarMenu = () => {
   const [activeCategory, setActiveCategory] = useState(null);
   const [categories, setCategories] = useState([]);
@@ -15,15 +18,32 @@ const SidebarMenu = () => {
   const menuRef = useRef(null);
   const router = useRouter();
 
-  // 🔥 API Fetch (Direct Sidebar Optimized API)
+  // 🔥 OPTIMIZED FETCH (SAME UI)
   useEffect(() => {
+    const cached = localStorage.getItem(CACHE_KEY);
+
+    if (cached) {
+      const { data, time } = JSON.parse(cached);
+
+      if (Date.now() - time < CACHE_TIME) {
+        setCategories(data);
+        setLoading(false);
+        return;
+      } else {
+        localStorage.removeItem(CACHE_KEY);
+      }
+    }
+
     const fetchSidebar = async () => {
       try {
-        const res = await fetch("/api/adminprofile/sidebarmenu", {
-          cache: "no-store", // prevent stale cached data
-        });
+        const res = await fetch("/api/adminprofile/sidebarmenu");
         const data = await res.json();
+
         setCategories(data);
+        localStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({ data, time: Date.now() })
+        );
       } catch (err) {
         console.error("Sidebar API Error:", err);
       } finally {
@@ -43,10 +63,11 @@ const SidebarMenu = () => {
     };
 
     document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
+    return () =>
+      document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
-  // ----------- LOADING SKELETON -------------
+  // ----------- LOADING SKELETON (SAME) -------------
   if (loading) {
     return (
       <SkeletonTheme baseColor="#f2f2f2" highlightColor="#e0e0e0">
@@ -57,7 +78,7 @@ const SidebarMenu = () => {
               .fill()
               .map((_, i) => (
                 <li key={i} className="flex items-center space-x-2 py-1">
-                  <Skeleton circle={true} height={24} width={24} />
+                  <Skeleton circle height={24} width={24} />
                   <Skeleton height={20} width="80%" />
                 </li>
               ))}
@@ -71,12 +92,12 @@ const SidebarMenu = () => {
     <div className="menu bg-white rounded-md w-64 d-none-mob" ref={menuRef}>
       {/* Top Categories */}
       <Link href="/industry">
-        <div className="category font-semibold text-lg text-web mb-2">
+        <h2 className="category font-semibold text-lg text-web mb-2">
           Top Categories
-        </div>
+        </h2>
       </Link>
 
-      {/* ----------- CATEGORY LIST ------------- */}
+      {/* ----------- CATEGORY LIST (SAME UI) ------------- */}
       <ul className="border top-cat-list border-b border-gray-300 p-2">
         {categories.slice(0, 11).map((category) => (
           <li
@@ -84,7 +105,9 @@ const SidebarMenu = () => {
             className={`cursor-pointer hover:bg-gray-100 py-2 rounded-md ${
               activeCategory === category._id ? "bg-gray-200" : ""
             }`}
-            onClick={() => router.push(`/seller/${category.categoryslug}`)}
+            onClick={() =>
+              router.push(`/seller/${category.categoryslug}`)
+            }
             onMouseEnter={() => setActiveCategory(category._id)}
           >
             <div className="flex items-center">
@@ -96,9 +119,11 @@ const SidebarMenu = () => {
                 loading="lazy"
                 className="w-6 h-6 mr-2"
               />
-              <span className="text-sm">
-                {category.name.replace(/\b\w/g, (c) => c.toUpperCase())}
-              </span>
+              <h3 className="text-sm">
+                {category.name.replace(/\b\w/g, (c) =>
+                  c.toUpperCase()
+                )}
+              </h3>
             </div>
           </li>
         ))}
@@ -113,7 +138,7 @@ const SidebarMenu = () => {
         </div>
       </ul>
 
-      {/* ----------- MEGA MENU (Hover) ------------- */}
+      {/* ----------- MEGA MENU (SAME UI) ------------- */}
       {categories.map(
         (category) =>
           activeCategory === category._id && (
@@ -124,8 +149,8 @@ const SidebarMenu = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                 {category.subcategories.map((subcategory) => (
                   <div key={subcategory._id} className="subcategory">
-                    <h3
-                      className="font-semibold text-blue-600 hover:underline cursor-pointer"
+                    <p
+                      className="font-semibold mb-0 text-dark-600 hover:underline cursor-pointer"
                       onClick={() =>
                         router.push(
                           `/seller/${category.categoryslug}/${subcategory.subcategoryslug}`
@@ -134,7 +159,10 @@ const SidebarMenu = () => {
                     >
                       <div className="flex items-center">
                         <Image
-                          src={subcategory.icon || "/default-subcategory.png"}
+                          src={
+                            subcategory.icon ||
+                            "/default-subcategory.png"
+                          }
                           alt={subcategory.name}
                           width={24}
                           height={24}
@@ -147,19 +175,11 @@ const SidebarMenu = () => {
                           )}
                         </span>
                       </div>
-                    </h3>
+                    </p>
 
-                    {/* ----------- PRODUCTS LIST (Max 6) ------------- */}
                     <ul className="text-gray-700">
-                      {Array.from(
-                        new Map(
-                          subcategory.products.map((p) => [
-                            p.name.trim().toLowerCase(),
-                            p,
-                          ])
-                        ).values()
-                      )
-                        .slice(0, 6)
+                      {subcategory.products
+                        ?.slice(0, 6)
                         .map((product) => (
                           <li key={product._id}>
                             <Link

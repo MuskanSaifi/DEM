@@ -10,21 +10,45 @@ export default function CategoryList() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const res = await fetch("/api/home/all-categories", { cache: "no-store" });
-        const data = await res.json();
-        setCategories(data);
-      } catch (err) {
-        console.error("Category List Error:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
+const CACHE_KEY = "homeCategories";
+const CACHE_TIME = 1000 * 60 * 60 * 24; // 24 hours
 
-    loadData();
-  }, []);
+
+useEffect(() => {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const { data, time } = JSON.parse(cached);
+      if (Date.now() - time < CACHE_TIME) {
+        setCategories(data);
+        setLoading(false);
+        return;
+      }
+      localStorage.removeItem(CACHE_KEY);
+    }
+  } catch {
+    localStorage.removeItem(CACHE_KEY);
+  }
+
+  const loadData = async () => {
+    try {
+      const res = await fetch("/api/home/all-categories");
+      const data = await res.json();
+      setCategories(data);
+      localStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify({ data, time: Date.now() })
+      );
+    } catch (err) {
+      console.error("Category List Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  loadData();
+}, []);
+
 
   // ⭐ SKELETON LOADER
   if (loading) {

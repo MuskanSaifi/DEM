@@ -17,8 +17,15 @@ export async function GET(req) {
       filter.$or = [{ platform }, { platform: "both" }];
     }
 
-    const banners = await Banner.find(filter).sort({ createdAt: -1 });
-    return NextResponse.json({ success: true, banners });
+    const banners = await Banner.find(filter).sort({ createdAt: -1 }).lean();;
+return NextResponse.json(
+  { success: true, banners },
+  {
+    headers: {
+      "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+    },
+  }
+);
   } catch (error) {
     console.error("GET Error:", error);
     return NextResponse.json({ success: false, error: "Failed to fetch banners" }, { status: 500 });

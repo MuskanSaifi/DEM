@@ -62,7 +62,7 @@ const CategoryGridSection = ({ categories }) => {
 
               {/* Category Info */}
               <div className="p-3">
-                <h3 className="text-xl font-bold mb-2">{category.name}</h3>
+                <div className="text-xl font-bold mb-2">{category.name}</div>
                 <div className="text-gray-200 space-y-1 text-sm">
                   {category.subcategories?.slice(0, 5).map((sub) => (
                    <Link
@@ -103,9 +103,9 @@ const CategoryGridSection = ({ categories }) => {
 
                   {/* Subcategory Details */}
                   <div className="p-3 flex flex-col justify-center">
-                    <h4 className="font-semibold text-gray-800 text-base capitalize mb-1">
+                    <h3 className="font-semibold text-gray-800 text-base capitalize mb-1">
                       {sub.name}
-                    </h4>
+                    </h3>
                     <ul className="space-y-0.5 text-sm" style={{ color: "#6D4AAE" }}>
                       {sub.products?.slice(0, 3).map((product) => (
                         <li key={product._id}>

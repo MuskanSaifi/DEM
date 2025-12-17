@@ -50,10 +50,13 @@ const IndustrySlider = () => {
   return (
     <section className="py-10 mt-5">
       <div className="container-fluid mx-auto px-4">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 tracking-tight">
+        <div className="text-center ">
+  <span className="text-3xl md:text-4xl font-bold mb-8 tracking-tight">
           Explore Industries
-        </h2>
+        </span>
 
+        </div>
+      
         <Swiper
           modules={[Pagination, Autoplay]}
           spaceBetween={24}
@@ -85,9 +88,9 @@ const IndustrySlider = () => {
                       height={30}
                       className="rounded-lg object-cover"
                     />
-                    <h3 className="text-sm font-semibold text-gray-800">
+                    <p className="text-sm font-semibold mb-0 text-gray-800">
                       {category.name}
-                    </h3>
+                    </p>
                   </div>
 
                   <Link
