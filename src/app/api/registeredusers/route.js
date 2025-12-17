@@ -2,9 +2,8 @@ import { NextResponse } from "next/server";
 import connectdb from "@/lib/dbConnect";
 import User from "@/models/User";
 
-export const dynamic = "force-static";
-export const revalidate = 86400; // 24 hours
-
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET() {
   try {
@@ -14,7 +13,12 @@ export async function GET() {
 
     return NextResponse.json(
       { success: true, totalUsers },
-      { status: 200 }
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+        },
+      }
     );
   } catch (error) {
     console.error("Error fetching totalUsers:", error);

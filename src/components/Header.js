@@ -77,7 +77,9 @@ useEffect(() => {
 
   const fetchTotalUsers = async () => {
     try {
-      const res = await fetch("/api/registeredusers");
+const res = await fetch("/api/registeredusers", {
+  cache: "force-cache",
+});
       const data = await res.json();
 
       if (data.success) {

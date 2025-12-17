@@ -36,7 +36,9 @@ const SidebarMenu = () => {
 
     const fetchSidebar = async () => {
       try {
-        const res = await fetch("/api/adminprofile/sidebarmenu");
+const res = await fetch("/api/adminprofile/sidebarmenu", {
+  cache: "force-cache",
+});
         const data = await res.json();
 
         setCategories(data);
