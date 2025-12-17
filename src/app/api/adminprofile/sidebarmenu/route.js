@@ -1,10 +1,13 @@
-// ✅ CACHE SETTINGS (VERY IMPORTANT)
-export const dynamic = "force-static";
-export const revalidate = 60 * 60 * 24 * 5; // 5 DAYS
+
 
 import connectDB from "@/lib/dbConnect";
 import Category from "@/models/Category";
 import Product from "@/models/Product";
+
+// ✅ CACHE SETTINGS (VERY IMPORTANT)
+export const dynamic = "force-static";
+export const revalidate = 432000; // 5 days
+
 
 export async function GET() {
   try {

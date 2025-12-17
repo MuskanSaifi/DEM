@@ -1,5 +1,4 @@
-export const dynamic = "force-static";
-export const revalidate = 60 * 60 * 24; // ✅ 24 HOURS
+
 
 
 import connectDB from "@/lib/dbConnect";
@@ -8,6 +7,10 @@ import SubCategory from "@/models/SubCategory";
 import Product from "@/models/Product";
 import User from "@/models/User";
 import BusinessProfile from "@/models/BusinessProfile";
+
+
+export const dynamic = "force-static";
+export const revalidate = 86400; // 24 hours
 
 export async function GET() {
   try {

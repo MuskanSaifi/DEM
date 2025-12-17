@@ -3,7 +3,8 @@ import connectdb from "@/lib/dbConnect";
 import User from "@/models/User";
 
 export const dynamic = "force-static";
-export const revalidate = 60 * 60 * 24; // 24 hours
+export const revalidate = 86400; // 24 hours
+
 
 export async function GET() {
   try {
