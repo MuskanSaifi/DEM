@@ -13,8 +13,7 @@ import { BsBriefcaseFill } from "react-icons/bs";
 import { logout, initializeUser } from "@/app/store/userSlice";
 import SmoothCounter from "./Counter";
 
-const CACHE_KEY = "totalUsersCount";
-const CACHE_TIME = 1000 * 60 * 60 * 24; // 24 hours
+
 
 
 export default function Header() {
@@ -24,12 +23,13 @@ export default function Header() {
   const [selectedCity, setSelectedCity] = useState("All City");
   const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
   const [citySearch, setCitySearch] = useState("");
-  const [totalUsers, setTotalUsers] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenpopup, setIsOpenpopup] = useState(false);
 
   const [isSearching, setIsSearching] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const TOTAL_USERS = 120072;
+
 const abortRef = useRef(null);
 
 
@@ -60,42 +60,7 @@ const abortRef = useRef(null);
 
   const [cities, setCities] = useState(["All City"]); // Store cities from API
 
-useEffect(() => {
-  try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-      const { value, time } = JSON.parse(cached);
-      if (Date.now() - time < CACHE_TIME) {
-        setTotalUsers(value);
-        return;
-      }
-      localStorage.removeItem(CACHE_KEY);
-    }
-  } catch {
-    localStorage.removeItem(CACHE_KEY);
-  }
 
-  const fetchTotalUsers = async () => {
-    try {
-const res = await fetch("/api/registeredusers", {
-  cache: "force-cache",
-});
-      const data = await res.json();
-
-      if (data.success) {
-        setTotalUsers(data.totalUsers);
-        localStorage.setItem(
-          CACHE_KEY,
-          JSON.stringify({ value: data.totalUsers, time: Date.now() })
-        );
-      }
-    } catch (err) {
-      console.error("Failed to fetch total users:", err);
-    }
-  };
-
-  fetchTotalUsers();
-}, []);
 
 
 useEffect(() => {
@@ -508,7 +473,7 @@ const handleLogout = () => {
                   <div>Registered Users</div>
                   <p>
                     {" "}
-                    <SmoothCounter end={totalUsers + 118000} duration={2} />
+<SmoothCounter end={TOTAL_USERS} />
                   </p>
                 </div>
               </div>
@@ -781,7 +746,7 @@ const handleLogout = () => {
       <p className="mt-4 text-center text-sm text-gray-500">
         Registered Users:{" "}
         <span className="text-green-600">
-          <SmoothCounter end={totalUsers + 350000} duration={2} />
+<SmoothCounter end={TOTAL_USERS} duration={2} />
         </span>
       </p>
     </>

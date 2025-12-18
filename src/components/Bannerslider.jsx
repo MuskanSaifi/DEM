@@ -4,7 +4,6 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Carousel } from "react-responsive-carousel";
 import SidebarMenu from "./SidebarMenu";
 import Image from "next/image";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 
 const Bannerslider = () => {
@@ -17,14 +16,13 @@ useEffect(() => {
 
   const CACHE_KEY = "HOME_BANNERS";
   const CACHE_TIME = "HOME_BANNERS_TIME";
-  const EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+  const EXPIRY = 24 * 60 * 60 * 1000;
 
   const fetchBanners = async () => {
     try {
       const cachedData = localStorage.getItem(CACHE_KEY);
       const cachedTime = localStorage.getItem(CACHE_TIME);
 
-      // ✅ Use cache if valid
       if (cachedData && cachedTime) {
         const isValid = Date.now() - Number(cachedTime) < EXPIRY;
         if (isValid) {
@@ -34,20 +32,31 @@ useEffect(() => {
         }
       }
 
-      // 🔁 API call only if cache expired
-      const res = await axios.get("/api/adminprofile/banner?platform=web");
+      const res = await fetch(
+        "/api/adminprofile/banner?platform=web",
+        { cache: "force-cache" }
+      );
 
+      const data = await res.json();
       if (!active) return;
 
-      setBanners(res.data.banners);
+      const bannerList = data?.banners || [];
+
+      setBanners(bannerList);
       setLoading(false);
 
-      // 💾 Save to cache
-      localStorage.setItem(CACHE_KEY, JSON.stringify(res.data.banners));
-      localStorage.setItem(CACHE_TIME, Date.now().toString());
+      // ✅ FIXED CACHE SAVE
+      localStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify(bannerList)
+      );
+      localStorage.setItem(
+        CACHE_TIME,
+        Date.now().toString()
+      );
 
     } catch (err) {
-      console.error("Banner fetch error", err);
+      console.error("Banner fetch error:", err);
       setLoading(false);
     }
   };
@@ -58,7 +67,6 @@ useEffect(() => {
     active = false;
   };
 }, []);
-
 
 
 

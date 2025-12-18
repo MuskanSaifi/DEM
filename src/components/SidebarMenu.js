@@ -180,20 +180,20 @@ const res = await fetch("/api/adminprofile/sidebarmenu", {
                     </p>
 
                     <ul className="text-gray-700">
-                      {subcategory.products
-                        ?.slice(0, 6)
-                        .map((product) => (
-                          <li key={product._id}>
-                            <Link
-                              href={`/manufacturers/${product.productslug}`}
-                              className="text-sm text-blue-700 hover:underline"
-                            >
-                              {product.name.replace(/\b\w/g, (c) =>
-                                c.toUpperCase()
-                              )}
-                            </Link>
-                          </li>
-                        ))}
+            {subcategory.products?.length > 0 && (
+  <ul className="text-gray-700">
+    {subcategory.products.slice(0, 4).map((product) => (
+      <li key={product._id}>
+        <Link
+          href={`/manufacturers/${product.productslug}`}
+          className="text-sm text-blue-700 hover:underline"
+        >
+          {product.name}
+        </Link>
+      </li>
+    ))}
+  </ul>
+)}
                     </ul>
                   </div>
                 ))}

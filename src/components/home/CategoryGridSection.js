@@ -92,12 +92,17 @@ const CategoryGridSection = ({ categories }) => {
                   {/* ✅ Centered Subcategory Image */}
                   <div className="w-28 h-28 flex items-center justify-center bg-gray-50">
                     <div className="relative w-20 h-20">
-                      <Image
-                        src={sub.icon || "/subcategory-placeholder.jpg"}
-                        alt={sub.name}
-                        fill
-                        className="object-contain"
-                      />
+                    <Image
+  src={sub.icon || "/placeholder.png"}
+  alt={sub.name || "subcategory"}
+  fill
+  sizes="80px"
+  className="object-contain"
+  onError={(e) => {
+    e.currentTarget.src = "/placeholder.png";
+  }}
+/>
+
                     </div>
                   </div>
 

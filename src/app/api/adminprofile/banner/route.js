@@ -10,27 +10,31 @@ export async function GET(req) {
     await connectdb();
 
     const { searchParams } = new URL(req.url);
-    const platform = searchParams.get("platform"); // web | app | both
+    const platform = searchParams.get("platform");
 
-    const filter = {};
+    const filter = { isActive: true };
     if (platform) {
       filter.$or = [{ platform }, { platform: "both" }];
     }
 
-    const banners = await Banner.find(filter).sort({ createdAt: -1 }).lean();;
-return NextResponse.json(
-  { success: true, banners },
-  {
-    headers: {
-      "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
-    },
-  }
-);
+    const banners = await Banner.find(filter)
+      .select("title link imageUrl")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return NextResponse.json(
+      { success: true, banners },
+      {
+        headers: {
+          "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+        },
+      }
+    );
   } catch (error) {
-    console.error("GET Error:", error);
-    return NextResponse.json({ success: false, error: "Failed to fetch banners" }, { status: 500 });
+    return NextResponse.json({ success: false }, { status: 500 });
   }
 }
+
 
 // ================== CREATE BANNER ==================
 export async function POST(req) {

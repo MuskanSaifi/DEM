@@ -4,7 +4,7 @@ import React from "react";
 import Bannerslider from "@/components/Bannerslider.jsx";
 import BuySellform from "@/components/BuySellform";
 
-import IndustrySlider from "@/components/IndustrySlider";
+// import IndustrySlider from "@/components/IndustrySlider";
 import Cities from "@/components/Cities.jsx";
 import Countries from "@/components/Countries.jsx";
 
@@ -39,7 +39,10 @@ export default function HomeClient() {
         </Link>
       </div>
 
-      <IndustrySlider />
+   
+
+      <CategoryGridPage />
+   {/* <IndustrySlider /> */}
 
       <div className="banner-container">
         <Link href="/user/register">
@@ -54,9 +57,6 @@ export default function HomeClient() {
           />
         </Link>
       </div>
-
-      <CategoryGridPage />
-
       <Cities />
       <Countries />
   
