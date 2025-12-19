@@ -1,13 +1,16 @@
 import Link from "next/link";
 import Image from "next/image";
 
+// ✅ ISR: Revalidate every hour (3600 seconds)
+export const revalidate = 3600;
+
 /* ================================
    API CALL
 ================================ */
 async function getCountryData(country) {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country?country=${country}`,
-    { cache: "no-store" }
+    { next: { revalidate: 3600 } } // ✅ ISR: Revalidate every hour
   );
   return res.json();
 }

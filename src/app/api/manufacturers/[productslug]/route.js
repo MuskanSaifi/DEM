@@ -5,6 +5,8 @@ import Product from "@/models/Product";
 import SubCategory from "@/models/SubCategory";
 import BusinessProfile from "@/models/BusinessProfile";
 import BlockedUser from "@/models/BlockedUser";
+import User from "@/models/User"; // ✅ Required for populate("userId")
+import Category from "@/models/Category"; // ✅ Required for populate("category")
 
 export async function GET(request) {
   await connectdb();

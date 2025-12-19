@@ -23,7 +23,12 @@ export async function GET() {
       })
       .lean();
 
-    return Response.json(categories, { status: 200 });
+    return Response.json(categories, {
+      status: 200,
+      headers: {
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600", // Cache for 5 minutes
+      },
+    });
   } catch (error) {
     console.error("HOME CATEGORY API ERROR:", error);
     return Response.json(

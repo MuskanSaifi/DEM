@@ -21,15 +21,16 @@ export async function GET(request) {
       blockedSellerIds = blockedSellers.map((b) => b.sellerId.toString());
     }
 
-    // --- Categories fetch with populated subcategories + products ---
+    // ✅ OPTIMIZED: Fetch categories with LIMITED products per subcategory
     const categories = await Category.find()
       .populate({
         path: "subcategories",
         populate: {
           path: "products",
-          match: { userId: { $nin: blockedSellerIds } }, // 👈 blocked sellers ke products hata do
+          match: { userId: { $nin: blockedSellerIds } },
           select:
             "name description price images productslug tradeShopping userId minimumOrderQuantity currency tags",
+          options: { limit: 10 }, // ✅ Limit products per subcategory to prevent CPU spike
           populate: [
             {
               path: "userId",
@@ -39,35 +40,47 @@ export async function GET(request) {
           ],
         },
       })
-      .exec();
+      .lean(); // ✅ Use lean() for better performance
 
-    // --- BusinessProfile add karna hai (blocked sellers ke liye null hi rahega) ---
-    const categoriesWithBusinessProfiles = await Promise.all(
-      categories.map(async (category) => {
-        const subcategoriesWithBusinessProfiles = await Promise.all(
-          category.subcategories.map(async (subcat) => {
-            const productsWithBusinessProfiles = await Promise.all(
-              subcat.products.map(async (product) => {
-                let businessProfile = null;
-                if (product.userId && !blockedSellerIds.includes(product.userId._id.toString())) {
-                  businessProfile = await BusinessProfile.findOne({
-                    userId: product.userId._id,
-                  }).select(
-                    "companyName address city state country gstNumber trustSealVerified yearOfEstablishment"
-                  );
-                }
-                return {
-                  ...product.toObject(),
-                  businessProfile: businessProfile ? businessProfile.toObject() : null,
-                };
-              })
-            );
-            return { ...subcat.toObject(), products: productsWithBusinessProfiles };
-          })
-        );
-        return { ...category.toObject(), subcategories: subcategoriesWithBusinessProfiles };
-      })
-    );
+    // ✅ OPTIMIZED: Collect all userIds first, then fetch all BusinessProfiles in ONE query
+    const userIdSet = new Set();
+    categories.forEach((category) => {
+      category.subcategories?.forEach((subcat) => {
+        subcat.products?.forEach((product) => {
+          const uid = product.userId?._id?.toString() || product.userId?.toString();
+          if (uid && !blockedSellerIds.includes(uid)) {
+            userIdSet.add(uid);
+          }
+        });
+      });
+    });
+
+    const userIds = [...userIdSet];
+    
+    // ✅ Fetch ALL BusinessProfiles in ONE query instead of individual queries
+    const businessProfiles = await BusinessProfile.find({
+      userId: { $in: userIds },
+    })
+      .select("userId companyName address city state country gstNumber trustSealVerified yearOfEstablishment")
+      .lean();
+
+    // ✅ Create map for O(1) lookup
+    const bpMap = {};
+    businessProfiles.forEach((bp) => {
+      bpMap[bp.userId.toString()] = bp;
+    });
+
+    // ✅ Attach business profiles in memory (no extra DB calls)
+    categories.forEach((category) => {
+      category.subcategories?.forEach((subcat) => {
+        subcat.products?.forEach((product) => {
+          const uid = product.userId?._id?.toString() || product.userId?.toString();
+          product.businessProfile = uid && !blockedSellerIds.includes(uid) ? bpMap[uid] || null : null;
+        });
+      });
+    });
+
+    const categoriesWithBusinessProfiles = categories;
 
     if (!categoriesWithBusinessProfiles.length) {
       return new Response(JSON.stringify({ message: "No categories found" }), {
@@ -78,7 +91,10 @@ export async function GET(request) {
 
     return new Response(JSON.stringify(categoriesWithBusinessProfiles), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600", // ✅ Cache for 5 minutes
+      },
     });
   } catch (error) {
     console.error("❌ Error fetching categories:", error);

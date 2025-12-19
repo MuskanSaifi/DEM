@@ -2,6 +2,9 @@
 
 import ProductDetailClient from "./ProductDetailClient";
 
+// ✅ ISR: Revalidate every hour (3600 seconds)
+export const revalidate = 3600;
+
 // This function runs on the server to generate metadata
 export async function generateMetadata({ params }) {
   const resolvedParams = await params;
@@ -19,7 +22,7 @@ export async function generateMetadata({ params }) {
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL}/api/manufacturers/${productslug}`,
-      { cache: "no-store" } // Use no-store for dynamic content if product changes frequently
+      { next: { revalidate: 3600 } } // ✅ ISR: Revalidate every hour
     );
 
     if (!res.ok) {

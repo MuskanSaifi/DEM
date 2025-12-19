@@ -13,7 +13,7 @@ export async function GET() {
   try {
     await connectDB();
 
-    // 1) Fetch all categories with subcategories + products + users (single query)
+    // ✅ OPTIMIZED: Fetch categories with LIMITED products per subcategory
     const categories = await Category.find()
       .populate({
         path: "subcategories",
@@ -21,6 +21,7 @@ export async function GET() {
           path: "products",
           select:
             "name description price images productslug tradeShopping userId minimumOrderQuantity currency tags",
+          options: { limit: 10 }, // ✅ Limit products per subcategory to prevent CPU spike
           populate: {
             path: "userId",
             model: "User",

@@ -3,6 +3,9 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 
+// ✅ ISR: Revalidate every hour (3600 seconds)
+export const revalidate = 3600;
+
 // 🔑 Helper function for masking sensitive data
 const maskData = (data) => {
   if (!data || typeof data !== 'string' || data.length < 5) {
@@ -27,8 +30,9 @@ export default async function CompanyProfile({ params }) {
     return null; 
   }
 
+  // ✅ ISR: Use force-cache with revalidate instead of no-store
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/userprofile/profile/userprofile/${slug}`, {
-    cache: 'no-store',
+    next: { revalidate: 3600 }, // Revalidate every hour
   });
 
   const data = await res.json();

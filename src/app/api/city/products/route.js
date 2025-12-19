@@ -1,5 +1,6 @@
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";
+import User from "@/models/User"; // ✅ Required for populate("userId")
 import { NextResponse } from "next/server";
 
 export async function GET(req) {

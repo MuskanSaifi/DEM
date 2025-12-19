@@ -1,3 +1,4 @@
+// app/page.js
 import HomeClient from "@/components/home/HomeClient";
 
 export const metadata = {

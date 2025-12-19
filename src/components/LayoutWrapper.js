@@ -1,3 +1,4 @@
+// src/components/LayoutWrapper.js
 "use client";
 
 import React from "react";

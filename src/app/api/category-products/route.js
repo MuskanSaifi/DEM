@@ -4,6 +4,7 @@ import Category from "@/models/Category";
 import SubCategory from "@/models/SubCategory";
 import Product from "@/models/Product";
 import BusinessProfile from "@/models/BusinessProfile";
+import User from "@/models/User"; // ✅ Required for populate("userId")
 
 export async function GET(req) {
   try {

@@ -10,29 +10,30 @@ export async function GET() {
   try {
     await connectDB();
 
-    // 1) Fetch all categories + subcategories + products (light fields only)
-  const categories = await Category.find()
-  .select("name categoryslug content subcategories metatitle metadescription metakeywords")
-  .populate({
-    path: "subcategories",
-    select: `
-    name
-    subcategoryslug
-    metatitle
-    metadescription
-    metakeyword
-    products
-  `,
-    populate: {
-      path: "products",
-      select: "name description price images tradeShopping tags minimumOrderQuantity currency userId",
-      populate: {
-        path: "userId",
-        select: "fullname mobileNumber",
-      },
-    },
-  })
-  .lean();
+    // ✅ 1) Fetch all categories + subcategories + LIMITED products (max 5 per subcategory)
+    const categories = await Category.find()
+      .select("name categoryslug content subcategories metatitle metadescription metakeywords")
+      .populate({
+        path: "subcategories",
+        select: `
+          name
+          subcategoryslug
+          metatitle
+          metadescription
+          metakeyword
+          products
+        `,
+        populate: {
+          path: "products",
+          select: "name description price images tradeShopping tags minimumOrderQuantity currency userId",
+          options: { limit: 5 }, // ✅ Limit products per subcategory
+          populate: {
+            path: "userId",
+            select: "fullname mobileNumber",
+          },
+        },
+      })
+      .lean();
 
 
     if (!categories.length) {
@@ -81,8 +82,13 @@ export async function GET() {
       });
     });
 
-    // 6) Return optimized response
-    return Response.json(categories, { status: 200 });
+    // ✅ 6) Return optimized response with caching headers
+    return Response.json(categories, {
+      status: 200,
+      headers: {
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600", // Cache for 5 minutes
+      },
+    });
   } catch (error) {
     console.error("❌ CATEGORY API ERROR:", error);
     return Response.json(

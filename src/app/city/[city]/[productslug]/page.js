@@ -1,6 +1,11 @@
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";
+import User from "@/models/User"; // ✅ Required for populate("userId")
+import Category from "@/models/Category"; // ✅ Required for populate("category")
 import ProductListClient from "./ProductListClient";
+
+// ✅ ISR: Revalidate every hour (3600 seconds)
+export const revalidate = 3600;
 
 // --- DYNAMIC METADATA GENERATION ---
 export async function generateMetadata({ params: rawParams }) {

@@ -1,14 +1,19 @@
 // C:\Users\abc\Desktop\DEM\src\app\products\[id]\page.js
 import ProductDetailPage from "./ProductPage";
 
+// ✅ ISR: Revalidate every hour (3600 seconds)
+export const revalidate = 3600;
+
 // Dynamic metadata generation
 export async function generateMetadata({ params }) {
   const { id } = await params;
 
   try {
-const res = await fetch(`http://localhost:3000/api/products/${id}`, {
-  cache: "no-store",
-});
+    // ✅ Fixed: Use environment variable instead of hardcoded localhost
+    const apiUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || '';
+    const res = await fetch(`${apiUrl}/api/products/${id}`, {
+      next: { revalidate: 3600 }, // ✅ ISR: Revalidate every hour
+    });
     const product = await res.json();
 
     return {

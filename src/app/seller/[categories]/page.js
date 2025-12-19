@@ -2,10 +2,13 @@
 import React from "react";
 import CategoryPage from "./CategoryPage";
 
+// ✅ ISR: Revalidate every hour (3600 seconds)
+export const revalidate = 3600;
+
 // ---------- FETCH CATEGORIES ----------
 export async function fetchCategories() {
   const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/category`, {
-    cache: "no-store",
+    next: { revalidate: 3600 }, // ✅ ISR: Revalidate every hour
   });
 
   if (!response.ok) {

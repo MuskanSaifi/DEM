@@ -4,6 +4,9 @@ import Product from "@/models/Product";
 import Link from "next/link";
 import Image from "next/image";
 
+// ✅ ISR: Revalidate every hour (3600 seconds)
+export const revalidate = 3600;
+
 /* ⭐ SEO METADATA (FIXED) */
 export async function generateMetadata({ params }) {
   const { city } = await params; // ✅ MUST await

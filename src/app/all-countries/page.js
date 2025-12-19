@@ -2,7 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { COUNTRY_META } from "@/lib/countryMeta"; // <-- This file needs fixing
+import { COUNTRY_META } from "@/lib/countryMeta";
+import connectdb from "@/lib/dbConnect";
+import Product from "@/models/Product";
+
+// ✅ Dynamic page - fetch at request time (not build time)
+export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // Revalidate every hour
 
 /* ================================
    SEO METADATA (SERVER SIDE)
@@ -45,17 +51,35 @@ export async function generateMetadata() {
 }
 
 /* ================================
-   API CALL (SERVER SIDE)
+   GET COUNTRIES DIRECTLY FROM DB (NO API CALL)
 ================================ */
 async function getCountries() {
-  // NOTE: Assuming this API call returns the list of country codes (e.g., ['UA', 'AU', 'BD', 'IN', 'US', ...])
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/all-countries`,
-    { cache: "no-store" }
-  );
+  try {
+    await connectdb();
+    
+    // ✅ Direct database query instead of API call
+    const countries = await Product.distinct("country");
 
-  if (!res.ok) return null;
-  return res.json();
+    const uniqueCountries = [
+      ...new Set(
+        countries
+          .filter(Boolean)
+          .map(c => c.toLowerCase().trim())
+      ),
+    ];
+
+    return {
+      success: true,
+      countries: uniqueCountries,
+    };
+  } catch (error) {
+    console.error("Error fetching countries:", error);
+    // ✅ Return empty array on error instead of null
+    return {
+      success: false,
+      countries: [],
+    };
+  }
 }
 
 /* ================================
@@ -63,7 +87,22 @@ async function getCountries() {
 ================================ */
 export default async function Countries() {
   const data = await getCountries();
-  if (!data?.success) return null;
+  
+  // ✅ Handle error case gracefully
+  if (!data?.success || !data?.countries?.length) {
+    return (
+      <main className="bg-gray-50">
+        <section className="container mx-auto px-4 py-12">
+          <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-800">
+            Find Suppliers by Country or Region
+          </h1>
+          <p className="text-gray-600 text-center mt-3">
+            Loading countries...
+          </p>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="bg-gray-50">
