@@ -77,3 +77,8 @@ echo "1. Check CPU: top"
 echo "2. Start your app: pm2 start npm --name 'dialexportmart' -- start"
 echo "3. Monitor: pm2 monit"
 
+
+
+
+
+

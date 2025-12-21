@@ -76,3 +76,8 @@ echo "4. Verify site: https://www.dialexportmart.com"
 echo ""
 echo -e "${GREEN}✅ All done! Your optimized site is now live!${NC}"
 
+
+
+
+
+

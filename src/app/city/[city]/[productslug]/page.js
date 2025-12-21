@@ -9,90 +9,129 @@ export const revalidate = 3600;
 
 // --- DYNAMIC METADATA GENERATION ---
 export async function generateMetadata({ params: rawParams }) {
-  const params = await rawParams;
-  const { city, productslug } = params;
+  try {
+    const params = await rawParams;
+    const { city, productslug } = params;
 
-  await connectdb();
+    await connectdb();
 
-  // ✅ UPDATED: Populate 'category' to get the category name for the SEO formula.
-  const product = await Product.findOne({ productslug })
-    .populate("userId")
-    .populate("category") // <-- Added for Category Name
-    .lean();
+    // ✅ FIXED: Filter by city AND productslug to use compound index efficiently
+    const normalizedCity = city.toLowerCase();
+    const product = await Product.findOne({ 
+      productslug: productslug.toLowerCase(),
+      city: normalizedCity 
+    })
+      .select("name images")
+      .populate("category", "name")
+      .lean();
 
-  // --- Formatting Variables ---
-  const formattedSlug = productslug.replace(/-/g, " ");
-  // City name should be capitalized for display in metadata (e.g., Kolkata)
-  const displayCity = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
-  
+    // --- Formatting Variables ---
+    const formattedSlug = productslug.replace(/-/g, " ");
+    // City name should be capitalized for display in metadata (e.g., Kolkata)
+    const displayCity = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
+    
+    const productName = product?.name || formattedSlug;
 
-  // --- APPLY NEW FORMULAS ---
+    // --- APPLY NEW FORMULAS ---
 
-  // Title Formula: Best {Category} in {City} - Top Manufacturers, Suppliers & Wholesalers
-  const title = `${product?.name} in ${displayCity} - Best Manufacturers, Suppliers & Wholesalers `;
+    // Title Formula: Best {Category} in {City} - Top Manufacturers, Suppliers & Wholesalers
+    const title = `${productName} in ${displayCity} - Best Manufacturers, Suppliers & Wholesalers `;
 
-  // Meta Description Formula: Buy {Category} in {City} at wholesale prices. Connect with verified manufacturers, suppliers and exporters for bulk orders. Fast delivery & quality products.
-  const description = `Buy ${product?.name} in ${displayCity} at wholesale prices. Connect with verified manufacturers, suppliers and exporters for bulk orders. Fast delivery & quality products.`;
+    // Meta Description Formula: Buy {Category} in {City} at wholesale prices. Connect with verified manufacturers, suppliers and exporters for bulk orders. Fast delivery & quality products.
+    const description = `Buy ${productName} in ${displayCity} at wholesale prices. Connect with verified manufacturers, suppliers and exporters for bulk orders. Fast delivery & quality products.`;
 
-  // --- Keywords (Updated to focus on Category/City) ---
-  const keywords = [
-    product?.name,
-    `${product?.name} in ${displayCity}`,
-    `${product?.name} suppliers`,
-    `${product?.name} manufacturers`,
-    displayCity,
-  ];
+    // --- Keywords (Updated to focus on Category/City) ---
+    const keywords = [
+      productName,
+      `${productName} in ${displayCity}`,
+      `${productName} suppliers`,
+      `${productName} manufacturers`,
+      displayCity,
+    ];
 
-  return {
-    title,
-    description,
-    keywords,
-    alternates: {
-      canonical: `https://www.dialexportmart.com/${city}/${productslug}`,
-    },
-    openGraph: {
+    return {
       title,
       description,
-      images: product?.images?.length
-        ? [{ url: product.images[0].url }]
-        : [{ url: "/default-product.jpg" }],
-      url: `https://www.dialexportmart.com/${city}/${productslug}`,
-      type: "article",
-      locale: "en_IN",
-      siteName: "Dial Export Mart",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: product?.images?.length
-        ? [{ url: product.images[0].url }]
-        : [{ url: "/default-product.jpg" }],
-    },
-  };
+      keywords,
+      alternates: {
+        canonical: `https://www.dialexportmart.com/${city}/${productslug}`,
+      },
+      openGraph: {
+        title,
+        description,
+        images: product?.images?.length
+          ? [{ url: product.images[0].url }]
+          : [{ url: "/default-product.jpg" }],
+        url: `https://www.dialexportmart.com/${city}/${productslug}`,
+        type: "article",
+        locale: "en_IN",
+        siteName: "Dial Export Mart",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: product?.images?.length
+          ? [{ url: product.images[0].url }]
+          : [{ url: "/default-product.jpg" }],
+      },
+    };
+  } catch (error) {
+    console.error("Error generating metadata:", error);
+    // Return default metadata on error
+    const params = await rawParams;
+    const { city, productslug } = params;
+    const displayCity = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
+    return {
+      title: `${productslug.replace(/-/g, " ")} in ${displayCity} - Dial Export Mart`,
+      description: `Find ${productslug.replace(/-/g, " ")} in ${displayCity} at wholesale prices.`,
+    };
+  }
 }
 // --- END DYNAMIC METADATA GENERATION ---
 
 
 export default async function Page({ params: rawParams }) {
-  const params = await rawParams;
-  const { city, productslug } = params;
+  try {
+    const params = await rawParams;
+    const { city, productslug } = params;
 
-  await connectdb();
-  // Fetch all products matching the slug in the city
-  const products = await Product.find({ 
-    productslug,
-    // Add city filter here to ensure products are relevant to the URL context
-    city: { $regex: `^${city}$`, $options: "i" }
-  })
-    .populate("userId")
-    .lean();
+    await connectdb();
+    
+    // ✅ CRITICAL FIX: Use direct city match (lowercase) instead of regex to utilize index
+    // ✅ City is stored as lowercase in DB, so normalize input
+    const normalizedCity = city.toLowerCase();
+    const normalizedSlug = productslug.toLowerCase();
+    
+    // ✅ FIXED: Add limit to prevent fetching all products (max 100 per page)
+    // ✅ FIXED: Use compound index (city_1_productslug_1) efficiently
+    // ✅ FIXED: Select only required fields for better performance
+    const products = await Product.find({ 
+      productslug: normalizedSlug,
+      city: normalizedCity // Direct match uses index efficiently
+    })
+      .select("name price currency images city state minimumOrderQuantity specifications userId productslug")
+      .populate("userId", "companyName") // Only fetch companyName, not entire user object
+      .limit(100) // ✅ CRITICAL: Limit to prevent CPU spike
+      .lean();
 
-  return (
-    <ProductListClient
-      city={city}
-      productslug={productslug}
-      initialProducts={JSON.parse(JSON.stringify(products))}
-    />
-  );
+    // ✅ FIXED: Remove unnecessary JSON.parse(JSON.stringify()) - lean() already returns plain objects
+    return (
+      <ProductListClient
+        city={city}
+        productslug={productslug}
+        initialProducts={products}
+      />
+    );
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    // Return empty state on error instead of crashing
+    return (
+      <ProductListClient
+        city={city}
+        productslug={productslug}
+        initialProducts={[]}
+      />
+    );
+  }
 }
