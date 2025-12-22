@@ -15,19 +15,22 @@ export async function GET(req) {
     }
 
 
+    // ✅ CRITICAL FIX: Add limit to prevent CPU spike
     // ✅ Fetch products including category, subcategory, and images
     const products = await Product.find({ name: { $regex: searchQuery, $options: "i" } })
       .populate("category", "name")
       .populate("subCategory", "name")
-      .select("-__v");
+      .select("-__v")
+      .limit(100) // ✅ CRITICAL: Limit to prevent fetching all products
+      .lean(); // ✅ Use lean() for better performance
 
     if (products.length === 0) {
       return NextResponse.json({ error: "No products found" }, { status: 404 });
     }
 
-    // ✅ Format product images correctly
+    // ✅ Format product images correctly (lean() already returns plain objects)
     const formattedProducts = products.map((product) => ({
-      ...product.toObject(),
+      ...product,
       images: product.images
         .filter((img) => img && (img.url || img.data)) // ✅ Remove null images
         .map((img) =>
@@ -37,7 +40,12 @@ export async function GET(req) {
         ),
     }));
 
-    return NextResponse.json(formattedProducts, { status: 200 });
+    return NextResponse.json(formattedProducts, {
+      status: 200,
+      headers: {
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600", // ✅ Cache for 5 minutes
+      },
+    });
 
   } catch (error) {
     console.error("❌ API Error:", error);

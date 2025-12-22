@@ -131,7 +131,16 @@ stock: {
   { timestamps: true }
 );
 
-productSchema.index({ city: 1, productslug: 1 });
+// ✅ CRITICAL: Indexes for performance optimization
+productSchema.index({ city: 1, productslug: 1 }); // Compound index (already exists)
+productSchema.index({ name: "text" }); // Text search index
+productSchema.index({ city: 1 }); // City queries
+productSchema.index({ category: 1 }); // Category queries
+productSchema.index({ subCategory: 1 }); // Subcategory queries
+productSchema.index({ userId: 1 }); // User products
+productSchema.index({ productslug: 1 }); // Slug queries (for single field lookups)
+productSchema.index({ country: 1 }); // Country queries
+productSchema.index({ state: 1 }); // State queries
 
 
 export default mongoose.models.Product || mongoose.model("Product", productSchema);

@@ -16,6 +16,11 @@ const subcategorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// ✅ CRITICAL: Indexes for performance optimization
+subcategorySchema.index({ name: 1 }); // Name queries
+subcategorySchema.index({ subcategoryslug: 1 }); // Slug queries
+subcategorySchema.index({ category: 1 }); // Category filter
+
 // ✅ Ensure model is not re-registered
 const SubCategory = mongoose.models.SubCategory || mongoose.model("SubCategory", subcategorySchema);
 export default SubCategory;

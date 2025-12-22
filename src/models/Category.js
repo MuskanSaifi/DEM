@@ -16,6 +16,11 @@ const categorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// ✅ CRITICAL: Indexes for performance optimization
+categorySchema.index({ name: 1 }); // Name queries
+categorySchema.index({ categoryslug: 1 }); // Slug queries
+categorySchema.index({ isTrending: 1 }); // Trending filter
+
 // ✅ Ensure model is not re-registered
 const Category = mongoose.models.Category || mongoose.model("Category", categorySchema);
 export default Category;

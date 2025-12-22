@@ -43,11 +43,12 @@ export default async function CityPage({ params }) {
     await connectdb();
 
     // ✅ FIXED: Add error handling and ensure efficient query
+    // ✅ CRITICAL: Reduced limit from 500 to 200 to prevent CPU spike
     const products = await Product.find({ city })
       .select("name price images productslug category subCategory moqUnit")
       .populate("category", "name")
       .populate("subCategory", "name")
-      .limit(500) // ✅ Already has limit
+      .limit(200) // ✅ CRITICAL: Reduced from 500 to 200
       .lean();
 
     // Group by category (JS-side, cheap)
