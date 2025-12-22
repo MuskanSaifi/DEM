@@ -22,7 +22,7 @@ mkdir -p logs
 pm2 delete dialexportmart
 
 # 7. Naye config se start karo (IMPORTANT!)
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 
 # 8. PM2 save karo
 pm2 save

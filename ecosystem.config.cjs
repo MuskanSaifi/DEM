@@ -2,6 +2,7 @@
  * PM2 Ecosystem Configuration
  * Auto-restart, memory limits, and error handling
  * Ye file site ko permanently chalne ke liye zaroori hai
+ * .cjs extension use kiya hai kyunki package.json mein "type": "module" hai
  */
 module.exports = {
   apps: [
@@ -48,3 +49,4 @@ module.exports = {
     },
   ],
 };
+

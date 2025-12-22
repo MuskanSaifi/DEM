@@ -70,8 +70,8 @@ mkdir -p logs
 # Purani process delete karein
 pm2 delete dialexportmart
 
-# Naye config se start karein (ecosystem.config.js use karega)
-pm2 start ecosystem.config.js
+# Naye config se start karein (ecosystem.config.cjs use karega)
+pm2 start ecosystem.config.cjs
 
 # PM2 save karein
 pm2 save
