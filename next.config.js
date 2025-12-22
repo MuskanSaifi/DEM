@@ -15,6 +15,10 @@ const nextConfig = {
   // ✅ Production optimizations
   output: 'standalone', // For better VPS deployment
   reactStrictMode: true,
+  // ✅ Enable instrumentation for error handlers
+  experimental: {
+    instrumentationHook: true,
+  },
 };
 
 export default nextConfig;

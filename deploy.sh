@@ -45,13 +45,23 @@ npm run build || {
     exit 1
 }
 
-# Step 6: Delete old PM2 process
-echo -e "${YELLOW}🗑️  Step 6: Cleaning up old PM2 process...${NC}"
+# Step 6: Create logs directory
+echo -e "${YELLOW}📁 Step 6: Creating logs directory...${NC}"
+mkdir -p logs
+
+# Step 7: Delete old PM2 process
+echo -e "${YELLOW}🗑️  Step 7: Cleaning up old PM2 process...${NC}"
 pm2 delete dialexportmart 2>/dev/null || echo "No old process to delete"
 
-# Step 7: Start with PM2
-echo -e "${YELLOW}🚀 Step 7: Starting application with PM2...${NC}"
-pm2 start npm --name "dialexportmart" -- start
+# Step 8: Start with PM2 using ecosystem config
+echo -e "${YELLOW}🚀 Step 8: Starting application with PM2 (using ecosystem.config.js)...${NC}"
+if [ -f "ecosystem.config.js" ]; then
+  pm2 start ecosystem.config.js
+  echo -e "${GREEN}✅ Started with ecosystem.config.js (auto-restart enabled)${NC}"
+else
+  echo -e "${RED}⚠️  ecosystem.config.js not found, using fallback method...${NC}"
+  pm2 start npm --name "dialexportmart" -- start
+fi
 
 # Step 8: Save PM2 configuration
 echo -e "${YELLOW}💾 Step 8: Saving PM2 configuration...${NC}"
