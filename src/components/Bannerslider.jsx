@@ -106,10 +106,13 @@ useEffect(() => {
                 autoPlay
                 infiniteLoop
                 interval={6000}
-                showThumbs
+                showThumbs={banners.length > 1} // ✅ Only show thumbs if multiple banners
                 showStatus={false}
+                stopOnHover // ✅ Stop on hover to save CPU
+                swipeable={true} // ✅ Enable swipe
+                emulateTouch={true} // ✅ Enable touch
                 renderThumbs={() =>
-                  banners.map((b, index) => (
+                  banners.length > 1 ? banners.map((b, index) => (
                     <Image
                       key={index}
                       src={b.imageUrl}
@@ -117,9 +120,10 @@ useEffect(() => {
                       width={150}
                       height={70}
                       unoptimized
+                      loading="lazy" // ✅ Lazy load thumbnails
                       style={{ objectFit: "cover" }}
                     />
-                  ))
+                  )) : null
                 }
               >
                 {banners.map((b, index) => (

@@ -17,7 +17,7 @@ const categorySchema = new mongoose.Schema(
 );
 
 // ✅ CRITICAL: Indexes for performance optimization
-categorySchema.index({ name: 1 }); // Name queries
+// Note: name index already exists via unique: true, so we don't duplicate it
 categorySchema.index({ categoryslug: 1 }); // Slug queries
 categorySchema.index({ isTrending: 1 }); // Trending filter
 

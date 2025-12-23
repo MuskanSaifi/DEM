@@ -71,3 +71,4 @@ echo "2. Find xmrig source: find / -name '*xmrig*' 2>/dev/null"
 echo "3. Check cron: crontab -l"
 echo "4. Start your app: pm2 start npm --name 'dialexportmart' -- start"
 
+

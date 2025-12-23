@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -64,4 +64,5 @@ return (
   );
 };
 
-export default Cities;
+// ✅ OPTIMIZED: Memoize component to prevent unnecessary re-renders
+export default memo(Cities);

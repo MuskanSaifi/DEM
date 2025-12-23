@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -62,4 +62,5 @@ const Countries = () => {
   );
 };
 
-export default Countries;
+// ✅ OPTIMIZED: Memoize component to prevent unnecessary re-renders
+export default memo(Countries);

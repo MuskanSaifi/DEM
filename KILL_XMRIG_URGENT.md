@@ -250,3 +250,4 @@ If xmrig restarts after killing it:
 
 **ACTION REQUIRED**: Run `kill -9 1187` and `pkill -9 xmrig` NOW!
 
+

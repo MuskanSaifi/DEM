@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -135,4 +135,5 @@ const CategoryGridSection = ({ categories }) => {
   );
 };
 
-export default CategoryGridSection;
+// ✅ OPTIMIZED: Memoize component to prevent unnecessary re-renders
+export default memo(CategoryGridSection);

@@ -54,7 +54,7 @@ export async function generateMetadata({ params: rawParams }) {
       description,
       keywords,
       alternates: {
-        canonical: `https://www.dialexportmart.com/${city}/${productslug}`,
+        canonical: `https://www.dialexportmart.com/city/${city}/${productslug}`,
       },
       openGraph: {
         title,
@@ -115,12 +115,28 @@ export default async function Page({ params: rawParams }) {
       .limit(100) // ✅ CRITICAL: Limit to prevent CPU spike
       .lean();
 
-    // ✅ FIXED: Remove unnecessary JSON.parse(JSON.stringify()) - lean() already returns plain objects
+    // ✅ FIXED: Serialize products to plain objects for Client Component
+    // Next.js requires plain objects (no Mongoose documents, no buffers)
+    const serializedProducts = products.map((product) => ({
+      ...product,
+      _id: product._id?.toString() || product._id,
+      userId: product.userId?._id 
+        ? { 
+            _id: product.userId._id.toString(),
+            companyName: product.userId.companyName 
+          }
+        : product.userId,
+      images: product.images?.map((img) => ({
+        ...img,
+        _id: img._id?.toString() || img._id,
+      })) || [],
+    }));
+
     return (
       <ProductListClient
         city={city}
         productslug={productslug}
-        initialProducts={products}
+        initialProducts={serializedProducts}
       />
     );
   } catch (error) {

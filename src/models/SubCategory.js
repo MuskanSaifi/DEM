@@ -17,6 +17,7 @@ const subcategorySchema = new mongoose.Schema(
 );
 
 // ✅ CRITICAL: Indexes for performance optimization
+// Note: name field doesn't have unique: true, so we add index
 subcategorySchema.index({ name: 1 }); // Name queries
 subcategorySchema.index({ subcategoryslug: 1 }); // Slug queries
 subcategorySchema.index({ category: 1 }); // Category filter

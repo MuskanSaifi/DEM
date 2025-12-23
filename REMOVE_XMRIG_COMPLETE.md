@@ -263,3 +263,4 @@ If xmrig restarts after removal:
 
 **ACTION REQUIRED**: Run all removal steps above to completely eliminate xmrig!
 
+

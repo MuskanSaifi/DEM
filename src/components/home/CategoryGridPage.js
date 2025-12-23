@@ -1,24 +1,35 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import CategoryGridSection from "./CategoryGridSection";
 
 export default function CategoryGridPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const abortControllerRef = useRef(null);
 
   useEffect(() => {
     let mounted = true;
+    
+    // ✅ OPTIMIZED: Create AbortController for request cancellation
+    abortControllerRef.current = new AbortController();
 
     const loadCategories = async () => {
       try {
+        // ✅ OPTIMIZED: Use cache and add timeout
         const res = await fetch("/api/home/categories", {
-          next: { revalidate: 120 },
+          cache: "force-cache", // ✅ Use browser cache
+          signal: abortControllerRef.current.signal, // ✅ Allow cancellation
         });
+        
+        if (!res.ok) throw new Error("Failed to fetch");
+        
         const data = await res.json();
         if (mounted) setCategories(data);
       } catch (err) {
-        console.error("Category load failed:", err);
+        if (err.name !== "AbortError") {
+          console.error("Category load failed:", err);
+        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -28,6 +39,10 @@ export default function CategoryGridPage() {
 
     return () => {
       mounted = false;
+      // ✅ Cancel request if component unmounts
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     };
   }, []);
 

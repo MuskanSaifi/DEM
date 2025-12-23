@@ -93,3 +93,4 @@ echo "3. Update system: apt update && apt upgrade -y"
 echo "4. Install fail2ban: apt install fail2ban -y"
 echo "5. Start your app: pm2 start npm --name 'dialexportmart' -- start"
 
+

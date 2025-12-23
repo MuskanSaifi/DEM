@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 
 const stats = [
@@ -10,27 +10,64 @@ const stats = [
 
 const Counter = ({ end, suffix }) => {
   const [count, setCount] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const counterRef = useRef(null);
+
+  // ✅ OPTIMIZED: Use Intersection Observer to start animation only when visible
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (counterRef.current) {
+      observer.observe(counterRef.current);
+    }
+
+    return () => {
+      if (counterRef.current) {
+        observer.unobserve(counterRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
+    if (!isVisible) return; // ✅ Don't start animation until visible
+
     let start = 0;
     const duration = 2000;
-    const increment = end / (duration / 16);
+    // ✅ OPTIMIZED: Use requestAnimationFrame instead of setInterval
+    // ✅ Reduced frequency - still smooth but less CPU intensive
+    const increment = end / (duration / 50);
+    let animationFrameId;
 
-    const counter = setInterval(() => {
+    const animate = () => {
       start += increment;
       if (start >= end) {
         setCount(end);
-        clearInterval(counter);
+        return;
       } else {
         setCount(Math.floor(start));
+        animationFrameId = requestAnimationFrame(animate);
       }
-    }, 16);
+    };
 
-    return () => clearInterval(counter);
-  }, [end]);
+    animationFrameId = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [end, isVisible]);
 
   return (
-    <span>
+    <span ref={counterRef}>
       {count.toLocaleString()}
       {suffix}
     </span>
