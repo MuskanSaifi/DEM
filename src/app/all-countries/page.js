@@ -1,22 +1,14 @@
-// /app/all-countries/page.js (or similar)
-
 import Image from "next/image";
 import Link from "next/link";
 import { COUNTRY_META } from "@/lib/countryMeta";
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";
 
-<<<<<<< HEAD
-// ✅ ISR: Revalidate every hour (3600 seconds)
+// ✅ ISR: Revalidate every hour
 export const revalidate = 3600;
-=======
-// ✅ Dynamic page - fetch at request time (not build time)
-export const dynamic = 'force-dynamic';
-export const revalidate = 3600; // Revalidate every hour
->>>>>>> 7a4ef87b5589de0578ef3876d5f92e9edeeb60bd
 
 /* ================================
-   SEO METADATA (SERVER SIDE)
+   SEO METADATA
 ================================ */
 export async function generateMetadata() {
   const title = "Find Suppliers by Country | Global B2B Marketplace";
@@ -28,100 +20,53 @@ export async function generateMetadata() {
   return {
     title,
     description,
-    alternates: {
-      canonical: url,
-    },
+    alternates: { canonical: url },
     openGraph: {
       title,
       description,
       url,
       siteName: "Dial Export Mart",
       type: "website",
-      images: [
-        {
-          url: `${process.env.NEXT_PUBLIC_BASE_URL}/og/all-countries.png`,
-          width: 1200,
-          height: 630,
-          alt: "Find Suppliers by Country",
-        },
-      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [`${process.env.NEXT_PUBLIC_BASE_URL}/og/all-countries.png`],
     },
   };
 }
 
 /* ================================
-<<<<<<< HEAD
-   GET COUNTRIES WITH PRODUCT COUNTS (OPTIMIZED)
-=======
-   GET COUNTRIES DIRECTLY FROM DB (NO API CALL)
->>>>>>> 7a4ef87b5589de0578ef3876d5f92e9edeeb60bd
+   GET COUNTRIES WITH PRODUCT COUNT
 ================================ */
 async function getCountries() {
   try {
     await connectdb();
-    
-<<<<<<< HEAD
-    // ✅ Get countries with product counts in one query (FAST)
+
     const countriesWithCounts = await Product.aggregate([
       {
         $match: {
-          country: { $exists: true, $ne: null, $ne: "" }
-        }
+          country: { $exists: true, $ne: null, $ne: "" },
+        },
       },
       {
         $group: {
           _id: { $toLower: { $trim: { input: "$country" } } },
-          count: { $sum: 1 }
-        }
+          count: { $sum: 1 },
+        },
       },
-      {
-        $sort: { count: -1 } // Sort by product count (most products first)
-      }
+      { $sort: { count: -1 } },
     ]);
 
-    const countries = countriesWithCounts.map(item => ({
+    const countries = countriesWithCounts.map((item) => ({
       code: item._id,
-      count: item.count
+      count: item.count,
     }));
 
-    return {
-      success: true,
-      countries,
-    };
-  } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error("Error fetching countries:", error);
-    }
-=======
-    // ✅ Direct database query instead of API call
-    const countries = await Product.distinct("country");
-
-    const uniqueCountries = [
-      ...new Set(
-        countries
-          .filter(Boolean)
-          .map(c => c.toLowerCase().trim())
-      ),
-    ];
-
-    return {
-      success: true,
-      countries: uniqueCountries,
-    };
+    return { success: true, countries };
   } catch (error) {
     console.error("Error fetching countries:", error);
-    // ✅ Return empty array on error instead of null
->>>>>>> 7a4ef87b5589de0578ef3876d5f92e9edeeb60bd
-    return {
-      success: false,
-      countries: [],
-    };
+    return { success: false, countries: [] };
   }
 }
 
@@ -130,188 +75,102 @@ async function getCountries() {
 ================================ */
 export default async function Countries() {
   const data = await getCountries();
-  
-  // ✅ Handle error case gracefully
-  if (!data?.success || !data?.countries?.length) {
-    return (
-      <main className="bg-gray-50">
-        <section className="container mx-auto px-4 py-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-800">
-            Find Suppliers by Country or Region
-          </h1>
-          <p className="text-gray-600 text-center mt-3">
-            Loading countries...
-          </p>
-        </section>
-      </main>
-    );
+
+  if (!data?.success) {
+    return <p className="text-center py-10">Loading countries...</p>;
   }
 
   return (
-<<<<<<< HEAD
-    <main className="bg-gradient-to-b from-gray-50 to-white min-h-screen">
-      <section className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 md:py-12">
-        {/* ===== HEADING - Mobile Optimized ===== */}
-        <div className="text-center mb-8 sm:mb-10">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 leading-tight">
-            Find Suppliers by Country or Region
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-2 sm:mt-3 max-w-3xl mx-auto">
-            Discover verified manufacturers, exporters, and wholesalers from
-            top global markets.
-          </p>
-          <p className="text-xs sm:text-sm text-gray-500 mt-2">
-            {data.countries.length} countries available
-          </p>
-        </div>
-
-        {/* ===== COUNTRY GRID - Optimized ===== */}
-        <div className="
-          grid grid-cols-2
-          sm:grid-cols-3
-          md:grid-cols-4
-          lg:grid-cols-6
-          xl:grid-cols-8
-          gap-3 sm:gap-4 md:gap-5 lg:gap-6
-          justify-center
-        ">
-          {data.countries.map((country) => {
-            const meta = COUNTRY_META[country.code];
-            const countryName = meta?.name || country.code.toUpperCase();
-
-            return (
-              <Link
-                key={country.code}
-                href={`/country/${country.code}`}
-                className="
-                  group
-                  flex flex-col items-center
-                  bg-white
-                  p-3 sm:p-4 md:p-5
-                  rounded-lg sm:rounded-xl
-                  shadow-sm
-                  hover:shadow-xl
-                  hover:-translate-y-1
-                  transition-all duration-300
-                  border border-gray-100
-                  hover:border-blue-300
-                "
-              >
-                {/* Flag Container */}
-                <div className="relative mb-2 sm:mb-3">
-                  {meta?.flag ? (
-                    <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-gray-200 group-hover:border-blue-400 transition-colors">
-                      <Image
-                        src={meta.flag}
-                        alt={countryName}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 640px) 56px, (max-width: 768px) 64px, 80px"
-                        loading="lazy"
-                        quality={85}
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center border-2 border-gray-200 group-hover:border-blue-400 transition-colors">
-                      <span className="text-2xl sm:text-3xl md:text-4xl">🌍</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Country Name */}
-                <span className="text-xs sm:text-sm font-semibold text-gray-800 text-center mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">
-                  {countryName}
-                </span>
-
-                {/* Product Count Badge */}
-                {country.count > 0 && (
-                  <span className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full mt-1">
-                    {country.count} {country.count === 1 ? 'product' : 'products'}
-                  </span>
-                )}
-=======
-    <main className="bg-gray-50">
-      <section className="container mx-auto px-4 py-12">
-
-        {/* ===== HEADING ===== */}
+    <main className="bg-gray-50 min-h-screen">
+      <section className="container mx-auto px-4 py-10">
         <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-800">
           Find Suppliers by Country or Region
         </h1>
 
-        <p className="text-gray-600 text-center mt-3 max-w-3xl mx-auto">
-          Discover verified manufacturers, exporters, and wholesalers from
-          top global markets.
+        <p className="text-gray-600 text-center mt-3">
+          {data.countries.length} countries available
         </p>
 
-        {/* ===== COUNTRY GRID ===== */}
-        <div className="
-          mt-10
-          grid grid-cols-2
-          sm:grid-cols-3
-          md:grid-cols-4
-          lg:grid-cols-8
-          gap-6
-          justify-center
-        ">
-          {data.countries.map((code) => {
-            const meta = COUNTRY_META[code];
+        <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+          {data.countries.map((country) => {
+            const meta = COUNTRY_META[country.code];
+            const name = meta?.name || country.code.toUpperCase();
 
             return (
               <Link
-                key={code}
-                href={`/country/${code}`}
-                className="
-                  flex flex-col items-center
-                  space-y-3
-                  bg-white
-                  p-5
-                  rounded-xl
-                  shadow-md
-                  hover:shadow-lg
-                  transition
-                "
-              >
-                {/* Flag */}
-                {meta?.flag ? (
-                  <Image
-                    src={meta.flag} // <-- The correct path comes from here
-                    alt={meta.name}
-                    width={80}
-                    height={80}
-                    className="rounded-full border border-gray-300"
-                  />
-                ) : (
-                  <span className="text-4xl">🌍</span>
-                )}
+              key={country.code}
+              href={`/country/${country.code}`}
+              className="
+                group
+                relative
+                flex flex-col items-center
+                bg-white
+                p-4
+                rounded-xl
+                border border-gray-100
+                shadow-sm
+                transition-all duration-300 ease-out
+                hover:-translate-y-2
+                hover:shadow-xl
+                hover:border-blue-300
+              "
+            >            
+            <div className="relative mb-2">
+  {meta?.flag ? (
+    <div className="
+      w-16 h-16
+      rounded-full
+      overflow-hidden
+      border border-gray-200
+      transition-all duration-300
+      group-hover:scale-110
+      group-hover:border-blue-400
+      group-hover:shadow-md
+    ">
+      <Image
+        src={meta.flag}
+        alt={name}
+        width={64}
+        height={64}
+        className="object-cover"
+      />
+    </div>
+  ) : (
+    <div className="
+      w-16 h-16
+      rounded-full
+      bg-gradient-to-br from-blue-100 to-blue-200
+      flex items-center justify-center
+      text-3xl
+      transition-transform duration-300
+      group-hover:scale-110
+    ">
+      🌍
+    </div>
+  )}
+</div>
 
-                {/* Country Name */}
-                <span className="text-sm font-medium text-gray-800 text-center">
-                  {meta?.name || code.toUpperCase()}
+
+<span className="
+  mt-2
+  text-sm
+  font-semibold
+  text-gray-800
+  text-center
+  transition-colors duration-300
+  group-hover:text-blue-600
+">
+  {name}
+</span>
+
+
+                <span className="text-xs text-gray-500">
+                  {country.count} products
                 </span>
->>>>>>> 7a4ef87b5589de0578ef3876d5f92e9edeeb60bd
               </Link>
             );
           })}
         </div>
-
-<<<<<<< HEAD
-        {/* ===== EMPTY STATE ===== */}
-        {data.countries.length === 0 && (
-          <div className="text-center py-12">
-            <div className="bg-white rounded-lg p-8 shadow-sm max-w-md mx-auto">
-              <span className="text-6xl mb-4 block">🌍</span>
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                No Countries Found
-              </h2>
-              <p className="text-gray-600 text-sm">
-                We're working on adding more countries. Please check back soon!
-              </p>
-            </div>
-          </div>
-        )}
-
-=======
->>>>>>> 7a4ef87b5589de0578ef3876d5f92e9edeeb60bd
       </section>
     </main>
   );
