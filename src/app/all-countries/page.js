@@ -6,8 +6,14 @@ import { COUNTRY_META } from "@/lib/countryMeta";
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";
 
+<<<<<<< HEAD
 // ✅ ISR: Revalidate every hour (3600 seconds)
 export const revalidate = 3600;
+=======
+// ✅ Dynamic page - fetch at request time (not build time)
+export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // Revalidate every hour
+>>>>>>> 7a4ef87b5589de0578ef3876d5f92e9edeeb60bd
 
 /* ================================
    SEO METADATA (SERVER SIDE)
@@ -50,12 +56,17 @@ export async function generateMetadata() {
 }
 
 /* ================================
+<<<<<<< HEAD
    GET COUNTRIES WITH PRODUCT COUNTS (OPTIMIZED)
+=======
+   GET COUNTRIES DIRECTLY FROM DB (NO API CALL)
+>>>>>>> 7a4ef87b5589de0578ef3876d5f92e9edeeb60bd
 ================================ */
 async function getCountries() {
   try {
     await connectdb();
     
+<<<<<<< HEAD
     // ✅ Get countries with product counts in one query (FAST)
     const countriesWithCounts = await Product.aggregate([
       {
@@ -87,6 +98,26 @@ async function getCountries() {
     if (process.env.NODE_ENV === 'development') {
       console.error("Error fetching countries:", error);
     }
+=======
+    // ✅ Direct database query instead of API call
+    const countries = await Product.distinct("country");
+
+    const uniqueCountries = [
+      ...new Set(
+        countries
+          .filter(Boolean)
+          .map(c => c.toLowerCase().trim())
+      ),
+    ];
+
+    return {
+      success: true,
+      countries: uniqueCountries,
+    };
+  } catch (error) {
+    console.error("Error fetching countries:", error);
+    // ✅ Return empty array on error instead of null
+>>>>>>> 7a4ef87b5589de0578ef3876d5f92e9edeeb60bd
     return {
       success: false,
       countries: [],
@@ -117,6 +148,7 @@ export default async function Countries() {
   }
 
   return (
+<<<<<<< HEAD
     <main className="bg-gradient-to-b from-gray-50 to-white min-h-screen">
       <section className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 md:py-12">
         {/* ===== HEADING - Mobile Optimized ===== */}
@@ -197,11 +229,72 @@ export default async function Countries() {
                     {country.count} {country.count === 1 ? 'product' : 'products'}
                   </span>
                 )}
+=======
+    <main className="bg-gray-50">
+      <section className="container mx-auto px-4 py-12">
+
+        {/* ===== HEADING ===== */}
+        <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-800">
+          Find Suppliers by Country or Region
+        </h1>
+
+        <p className="text-gray-600 text-center mt-3 max-w-3xl mx-auto">
+          Discover verified manufacturers, exporters, and wholesalers from
+          top global markets.
+        </p>
+
+        {/* ===== COUNTRY GRID ===== */}
+        <div className="
+          mt-10
+          grid grid-cols-2
+          sm:grid-cols-3
+          md:grid-cols-4
+          lg:grid-cols-8
+          gap-6
+          justify-center
+        ">
+          {data.countries.map((code) => {
+            const meta = COUNTRY_META[code];
+
+            return (
+              <Link
+                key={code}
+                href={`/country/${code}`}
+                className="
+                  flex flex-col items-center
+                  space-y-3
+                  bg-white
+                  p-5
+                  rounded-xl
+                  shadow-md
+                  hover:shadow-lg
+                  transition
+                "
+              >
+                {/* Flag */}
+                {meta?.flag ? (
+                  <Image
+                    src={meta.flag} // <-- The correct path comes from here
+                    alt={meta.name}
+                    width={80}
+                    height={80}
+                    className="rounded-full border border-gray-300"
+                  />
+                ) : (
+                  <span className="text-4xl">🌍</span>
+                )}
+
+                {/* Country Name */}
+                <span className="text-sm font-medium text-gray-800 text-center">
+                  {meta?.name || code.toUpperCase()}
+                </span>
+>>>>>>> 7a4ef87b5589de0578ef3876d5f92e9edeeb60bd
               </Link>
             );
           })}
         </div>
 
+<<<<<<< HEAD
         {/* ===== EMPTY STATE ===== */}
         {data.countries.length === 0 && (
           <div className="text-center py-12">
@@ -217,6 +310,8 @@ export default async function Countries() {
           </div>
         )}
 
+=======
+>>>>>>> 7a4ef87b5589de0578ef3876d5f92e9edeeb60bd
       </section>
     </main>
   );
