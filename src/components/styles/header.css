@@ -1,0 +1,383 @@
+/* Top Bar */
+.top-bar {
+    background-color: #6d4aae !important;
+    text-align: center;
+    padding: 5px 0;
+    font-size: 14px;
+}
+
+.top-bar > p {
+    font-size: 12px;
+    margin-bottom: 0;
+    color: #fff;
+
+}
+
+/* Main Header */
+.mainheader{
+  border-bottom: 1px solid rgba(128, 128, 128, 0.6);
+  padding-bottom: 10px;
+}
+.main-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background-color: #fff;
+    color: rgb(0, 0, 0);
+}
+
+.marq {
+  display: none;
+}
+
+.marq2 {
+  display: block;
+}
+
+@media (max-width: 700px) {
+  .marq {
+    display: block;
+  }
+
+  .marq2 {
+    display: none;
+  }
+}
+
+
+.logo {
+    font-size: 1.25rem;
+    font-weight: bold;
+    width: 15%;
+}
+
+.search-bar {
+    flex: 1;
+    margin: 0 16px;
+    width: 80%;
+}
+
+.list-group{
+  z-index: 20 !important;
+  max-height: 400px;
+  overflow-x: scroll;
+}
+.search-bar .input {
+    width: 100%;
+    height: 40px;
+    line-height: 28px;
+    padding: 0 1rem;
+    padding-left: 2.5rem;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    outline: none;
+    background-color: #f3f3f4;
+    color: #0d0c22;
+    transition: 0.3s ease;
+}
+
+.search-bar .input::placeholder {
+    color: #9e9ea7;
+}
+
+.search-bar .input:focus,
+.search-bar .input:hover {
+    outline: none;
+    border-color: rgba(234, 76, 137, 0.4);
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgb(234 76 137 / 10%);
+}
+
+.right-section {
+    display: flex;
+    gap: 24px;
+    width: 20%;
+}
+
+.right-section a {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+.right-section .cart {
+    position: relative;
+}
+
+.right-section .cart .cart-count {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #dc2626;
+    color: white;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    border-radius: 50%;
+}
+
+/* d -none mobile */
+@media only screen and (max-width: 768px) {
+  .d-none-mob{
+    display: none !important;
+  }
+  
+  .pro-ser-div{
+    margin: 0px 6px !important;
+  }
+}
+
+/* d- none Desktop */
+@media only screen and (min-width: 768px) {
+  .d-none-web{
+    display: none !important;
+  }
+ 
+}
+
+.bottom-drawer{
+  z-index: 13;
+  opacity: 676;
+}
+
+
+/* Navbar */
+
+/* Basic menu structure */
+.menu {
+    position: relative;
+    width: 100%;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Top Categories button */
+  .category {
+    cursor: pointer;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    text-align: center;
+    font-weight: bold;
+  }
+  
+  /* Dropdown menu */
+  .dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    z-index: 10;
+    width: 100%;
+    display: block;
+  }
+  
+  .dropdown ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .dropdown ul li {
+    padding: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .dropdown ul li:hover {
+    background-color: #f7f7f7;
+  }
+  
+  /* Mega menu container */
+  .mega-menu {
+    position: absolute;
+    top: 0;
+    left: 220px;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    z-index: 10;
+    width: 60vw;
+    padding: 15px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Subcategory section */
+  .subcategory {
+    flex: 1;
+    margin-right: 20px;
+  }
+  
+  .subcategory h3 {
+    margin-top: 0;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+  }
+  
+  .subcategory ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .subcategory ul li {
+    padding: 1px 0;
+    font-size: 14px;
+    color: black;
+    cursor: pointer;
+    transition: color 0.3s ease;
+  }
+  
+  .subcategory ul li:hover {
+    color: #007bff;
+    text-decoration: underline;
+  }
+  
+  /* Hover styles for smooth user experience */
+  .category:hover {
+    background-color: #e0e0e0;
+  }
+  
+
+  .sign-up-btn{
+    background-color: #6d4aae;
+    color: #fff;
+    border-radius: 4px;
+    padding: 8px 12px;
+  }
+
+
+.pro-ser-div{
+  margin: 0px 20px;
+}
+
+  /* Dearch Bar */
+
+  .product-search-input {
+    --icon-size: 28px;
+    position: relative;
+  }
+  
+
+
+  .product-search-input:is(:hover, :focus-within) .product-search-svg path {
+    animation: pop 0.5s var(--d);
+  }
+
+  
+  @keyframes pop {
+    50% {
+      scale: var(--s, 1);
+      rotate: var(--r, 0deg);
+    }
+  }
+  
+
+  @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+  .product-search::placeholder {
+    color: color-mix(in lch, canvas, canvasText 30%);
+  }
+  
+  .product-search {
+    font-family: inherit;
+    width: 100%;
+    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+    padding: 8px;
+    font-size: 1.025rem;
+    background:
+      linear-gradient(canvas, canvas) padding-box,
+      linear-gradient(120deg, hsl(278, 44%, 73%), hsl(35, 81%, 73%)) border-box;
+    border: 4px solid transparent;
+    border-radius: 12px;
+    outline: none;
+  }
+  
+  /* Mobile View Styles */
+@media (max-width: 768px) {
+  .product-search {
+    font-size: 0.95rem;
+    padding: 4px;
+    border-radius: 8px;
+    background:
+    linear-gradient(canvas, canvas) padding-box,
+      linear-gradient(120deg, hsl(278, 44%, 73%), hsl(35, 81%, 73%)) border-box;
+    border-width: 2px;
+  }
+}
+
+
+  .registered-users-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 130px; /* Adjust as needed */
+    border: 2px solid #cce7f0; /* Light blue border */
+    border-radius: 10px;
+    background-color: #e0f2f8; /* Light blue background */
+    text-align: center;
+    padding: 4px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .registered-users-box div {
+    font-size: 13px;
+    margin: 0;
+    padding: 3px;
+    width: 100%;
+    background-color: white;
+    border-radius: 8px 8px 0 0;
+  }
+  
+  .registered-users-box p {
+    font-size: 13px;
+    margin: 0px;
+    font-weight: bold;
+    color: #2b6ea4; /* Dark blue text */
+  }
+  
+
+  .city-search{
+    padding: 12px 13px;
+  }
+
+
+  .common-shad{
+    box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
+  }
+
+  .thumbs{
+    margin-bottom: 0px;
+    padding-left: 0px;
+  }
+
+
+  .thumbs-wrapper{
+    margin: 10px 0px !important;
+  }
+
+  .top-cat-list{
+max-height: 100%;
+    overflow-y: scroll;
+  }
+
+  /* d -none mobile */
+@media only screen and (max-width: 1200px) {
+  .top-cat-list{
+    max-height: 300px !important;
+        overflow-y: scroll;
+      }
+}

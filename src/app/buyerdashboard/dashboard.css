@@ -1,0 +1,256 @@
+.resdes-dashboard {
+    display: flex;
+    height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  .resdes-sidebar {
+    width: 250px;
+    background-color: #fff;
+    color: #747378;
+    max-height: 100vh;
+    transition: width 0.3s ease;
+    overflow-y: scroll;
+  }
+  
+  .resdes-sidebar.resdes-closed {
+    width: 2px;
+  }
+  
+  .resdes-sidebar h2 {
+    text-align: center;
+    margin: 20px 0;
+    font-size: 1.5rem;
+    transition: opacity 0.3s ease;
+  }
+  
+  .resdes-sidebar.resdes-closed h2 {
+    opacity: 0; /* Hide text when collapsed */
+  }
+  
+  .resdes-sidebar ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .resdes-sidebar ul li {
+    padding: 6px 10px;
+    cursor: pointer;
+    color: #fff;
+    text-align: start;
+    border-radius: 10px;
+    background-color: rebeccapurple;
+    margin: 10px;
+    
+  }
+  
+  .resdes-sidebar ul li:hover {
+    background-color: rgb(131, 79, 182);
+    color: rgb(255, 255, 255);
+  }
+  
+  .resdes-content {
+    flex: 1;
+    background-color: #f5f7ff;
+    transition: margin-left 0.3s ease;
+    padding: 20px;
+  }
+  
+  .resdes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    border-radius: 10px;
+    background-color: #fff;
+    margin-bottom: 30px;
+    padding: 4px 30px;
+  }
+  
+  .common-shad{
+    box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
+  }
+
+  .resdes-hamburger {
+    font-size: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    outline: none;
+  }
+  
+  .resdes-cards {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .resdes-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    flex: 1 1 calc(33.33% - 20px);
+    text-align: center;
+  }
+  
+  .resdes-card h3 {
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+  }
+  
+  .resdes-card p {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .resdes-card span {
+    color: #fff;
+    font-size: 0.9rem;
+  }
+  
+  
+  .res-color{
+    background-color: #7da0fa;
+  }
+  .res-color2{
+    background-color: #4747a1;
+  }
+  .res-color3{
+    background-color: #f3797e;
+  }
+  
+  
+  .sidebar-icon {
+    margin-right: 8px;
+    font-size: 20px; /* Adjust as needed */
+  }
+  
+  
+  .resdes-sidebar ul li.active {
+    background-color: #f3797e; /* Keep the existing background color or change it */
+    color: #fff; /* Set the active item text color to black */
+  }
+  
+
+
+  /* table style all category */
+  .table-font{
+    font-size: 13px;
+  }
+
+  /* for business profile */
+  .common-das-btn{
+    background-color: rgb(131, 79, 182);
+color: #fff;
+box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+border-radius: 10px;
+  }
+  .common-das-btn:hover{
+  background-color: #663399;
+  }
+  .common-das-background{
+    background-color: rgb(131, 79, 182);
+  }
+  .common-das-test{
+    color: rgb(131, 79, 182);
+  }
+  .common-das-test:hover{
+    background-color: #663399;
+    color: #fff;
+  }
+
+
+
+
+
+  
+
+
+
+  /* Ensure the dropdown remains within the sidebar */
+.dropdown {
+  list-style: none;
+  padding-left: 20px;
+  background: #f4f4f4;
+  margin: 0;
+  display: block;
+  position: relative;
+}
+
+.dropdown li {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.dropdown li:hover {
+  background: #ddd;
+}
+
+/* Align dropdown arrow properly */
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.dropdown-arrow {
+  margin-left: auto;
+  font-size: 12px;
+}
+
+
+.resdes-sidebar {
+  overflow-y: scroll;
+  position: relative;
+}
+
+.resdes-dynamic-content{
+  max-height: 80vh !important;
+  overflow-y: scroll;
+}
+
+
+
+/* modal styling */
+/*  */
+
+.custom-modal .modal-content {
+  height: 600px; /* Set height */
+  overflow-y: auto; /* Enable vertical scrolling */
+}
+
+
+/* All Product image list */
+.all-pro-img{
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+}
+
+
+
+.del-pro-btn{
+  position: absolute;
+  right: 0px;
+  bottom: 6px;
+}
+
+.res-coloruser{
+  background-color: #663399 !important;
+}
+.text-sm{
+  font-size: 13px;
+}
+
+
+.welcome-admin{
+  background-color: #663399 !important;
+padding: 20px;
+border-radius: 10px;
+height: 100% !important;
+}
+
+.admin{
+  color: #fff;
+}
