@@ -1,10 +1,10 @@
-import React from 'react'
-import { Swiper, SwiperSlide } from 'swiper/react'
-import { Pagination, Autoplay } from 'swiper/modules'
-import 'swiper/css'
-import 'swiper/css/pagination'
-import { FaQuoteLeft } from 'react-icons/fa'
-import Image from 'next/image'; 
+import React from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination, Autoplay } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
+import { FaQuoteLeft } from "react-icons/fa";
+import Image from "next/image";
 
 const testimonials = [
   {
@@ -90,68 +90,75 @@ const testimonials = [
 
 const Testimonials = () => {
   return (
-   <section>
-     <div className="bg-gradient-to-r from-indigo-100 to-purple-100 py-16 px-4 md:px-20">
-      <h2 className="text-4xl font-bold text-center mb-12 text-purple-800">What Our Clients Say</h2>
-      <Swiper
-        spaceBetween={30}
-        autoplay={{
-          delay: 4000,
-          disableOnInteraction: false,
-        }}
-        pagination={{
-          clickable: true,
-        }}
-        breakpoints={{
-            320: {
-              slidesPerView: 1, // Mobile Portrait
-            },
-            576: {
-              slidesPerView: 1.5, // Small Phones landscape or slightly wider screens
-            },
-            768: {
-              slidesPerView: 2, // Tablets
-            },
-            992: {
-              slidesPerView: 3, // Small desktops
-            },
-            1200: {
-              slidesPerView: 4, // Medium desktops
-            },
-            1600: {
-              slidesPerView: 5, // Large screens
-            },
-          }}
-          
-        modules={[Autoplay, Pagination]}
-        className="max-w-8xl mx-auto"
-      >
-        {testimonials.map((testimonial, index) => (
-    <SwiperSlide key={index}>
-    <div className="bg-white shadow-md rounded-3xl p-8 sm:p-10 text-center transition-all duration-500 hover:shadow-purple-400 mb-5 ">
-      <div className="flex flex-col items-center justify-center">
-        <div className="relative w-24 h-24 mb-5">
-          <Image
-            src={testimonial.image}
-            alt={testimonial.name}
-            fill
-            className="rounded-full border-4 border-purple-300 shadow-lg object-cover"
-          />
+    <section className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-20">
+      <div className="max-w-7xl mx-auto px-4">
+        {/* Heading */}
+        <div className="text-center mb-14">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-800">
+            What Our Clients Say
+          </h2>
+          <p className="mt-3 text-gray-600 max-w-2xl mx-auto">
+            Trusted by businesses across India for quality, reliability, and growth.
+          </p>
         </div>
-        <FaQuoteLeft className="text-purple-400 text-3xl mb-4" />
-        <p className="text-lg sm:text-xl text-gray-700 italic mb-6 max-w-xl">
-          "{testimonial.content}"
-        </p>
-        <span className="text-2xl font-semibold text-purple-700">{testimonial.name}</span>
-        <p className="text-sm text-gray-500">{testimonial.title}</p>
-      </div>
-    </div>
-  </SwiperSlide>
-        ))}
-      </Swiper>
-    </div>
-   </section>
-  )
-}
 
-export default Testimonials
+        <Swiper
+          spaceBetween={30}
+          autoplay={{
+            delay: 3500,
+            disableOnInteraction: false,
+          }}
+          pagination={{ clickable: true }}
+          breakpoints={{
+            320: { slidesPerView: 1 },
+            640: { slidesPerView: 1.2 },
+            768: { slidesPerView: 2 },
+            1024: { slidesPerView: 3 },
+            1400: { slidesPerView: 4 },
+          }}
+          modules={[Autoplay, Pagination]}
+        >
+          {testimonials.map((item, index) => (
+            <SwiperSlide key={index}>
+              <div className="group h-full bg-white/80 backdrop-blur-md rounded-3xl p-8 shadow-sm border border-gray-100 transition-all duration-500 hover:-translate-y-2 hover:shadow-purple-300">
+                
+                {/* Quote Icon */}
+                <div className="absolute top-6 right-6 text-purple-200 text-5xl">
+                  <FaQuoteLeft />
+                </div>
+
+                {/* Image */}
+                <div className="flex justify-center mb-6">
+                  <div className="relative w-24 h-24 rounded-full p-[3px] bg-gradient-to-r from-purple-400 to-indigo-500">
+                    <div className="relative w-full h-full rounded-full overflow-hidden bg-white">
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <p className="text-gray-700 text-center italic leading-relaxed mb-6">
+                  “{item.content}”
+                </p>
+
+                <div className="text-center">
+                  <h4 className="text-lg font-semibold text-gray-800">
+                    {item.name}
+                  </h4>
+                  <p className="text-sm text-purple-600">{item.title}</p>
+                </div>
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
+    </section>
+  );
+};
+
+export default Testimonials;

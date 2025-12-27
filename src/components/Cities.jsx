@@ -14,11 +14,12 @@ const cities = [
 const Cities = () => {
 return (
     <>
-    <div className="bg-gray-100 p-6 rounded-lg mt-5">
+    <div className="mt-5">
       <h2 className="text-xl font-semibold text-gray-800 mb-6 text-center">
         Find Suppliers from Top Cities
       </h2>
 
+<div className="bg-gray-100 p-6 rounded-lg">
       <div className="city-scroll flex md:grid md:grid-cols-4 lg:grid-cols-6 gap-6 overflow-x-auto md:overflow-hidden justify-start">
         {cities.map((city, index) => (
           // 2. Replace <a> with <Link> and wrap the content inside
@@ -30,7 +31,7 @@ return (
           >
             {/* 3. Keep the <a> tag inside <Link> */}
             <a
-                className="flex flex-col items-center space-y-3 bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition duration-200 min-w-[100px] flex-shrink-0"
+                className="flex flex-col items-center space-y-3 bg-white p-5 my-2 rounded-lg shadow-md hover:shadow-lg transition duration-200 min-w-[100px] flex-shrink-0"
             >
                 {city.icon ? (
                   <Image
@@ -48,7 +49,8 @@ return (
           </Link>
         ))}
       </div>
-    
+</div>
+
     </div>
       {/* ✅ Internal CSS to hide scrollbars */}
       <style jsx>{`

@@ -151,8 +151,6 @@ export default async function CountryPage({ params, searchParams }) {
     )
   )}
 </div>
-
-
           {/* MOBILE */}
           <div className="flex md:hidden justify-center items-center gap-4">
             <Link

@@ -16,17 +16,18 @@ const countries = [
 const Countries = () => {
   return (
     <>
-      <div className="bg-gray-100 p-6 rounded-lg mt-5">
-        <h2 className="text-xl font-semibold text-gray-800 mb-6 text-center">
+      <div className="mt-5">
+      <h2 className="text-xl font-semibold text-gray-800 mb-6 text-center">
           Find Suppliers by Country or Region
         </h2>
 
+<div className="bg-gray-100 p-6 rounded-lg">
         <div className="country-scroll flex md:grid md:grid-cols-4 lg:grid-cols-8 gap-6 overflow-x-auto md:overflow-hidden justify-center">
           {countries.map((country, index) => (
             <Link
               key={index}
               href={country.link}
-              className="flex flex-col items-center space-y-3 bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-200 min-w-[100px] flex-shrink-0"
+              className="flex flex-col items-center space-y-3 bg-white p-4 my-2 rounded-lg shadow-md hover:shadow-lg transition duration-200 min-w-[100px] flex-shrink-0"
             >
               {country.flag ? (
                 <Image
@@ -46,6 +47,7 @@ const Countries = () => {
             </Link>
           ))}
         </div>
+</div>
       </div>
 
       {/* ✅ Hide scrollbar */}
