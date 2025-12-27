@@ -1,290 +1,191 @@
 import Link from "next/link";
 import Image from "next/image";
 
-// ✅ ISR: Revalidate every hour (3600 seconds)
 export const revalidate = 3600;
 
 /* ================================
    API CALL
 ================================ */
-async function getCountryData(country) {
+async function getCountryProducts(country, page) {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country?country=${country}`,
-    { next: { revalidate: 3600 } } // ✅ ISR: Revalidate every hour
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country?country=${country}&page=${page}`,
+    { next: { revalidate: 3600 } }
   );
+
+  if (!res.ok) return null;
   return res.json();
 }
 
 /* ================================
-   REUSABLE ICON IMAGE (FINAL)
+   UTILS – SMART PAGINATION
 ================================ */
-function IconImage({ src, alt, size = 32 }) {
-  let finalSrc = "/placeholder.png";
+function getPaginationRange(current, total) {
+  const delta = 2;
+  const range = [];
+  const rangeWithDots = [];
 
-  // ✅ If icon is present
-  if (src) {
-    // Case 1: Cloudinary / full URL
-    if (src.startsWith("http")) {
-      finalSrc = src;
-    }
-    // Case 2: local icon key (public/icons)
-    else {
-      finalSrc = `/icons/${src}`;
+  let l;
+
+  for (let i = 1; i <= total; i++) {
+    if (
+      i === 1 ||
+      i === total ||
+      (i >= current - delta && i <= current + delta)
+    ) {
+      range.push(i);
     }
   }
 
-  return (
-    <div
-      className="relative"
-      style={{ width: size, height: size }}
-    >
-      <Image
-        src={finalSrc}
-        alt={alt}
-        fill
-        sizes={`${size}px`}
-        className="object-contain"
-      />
-    </div>
-  );
+  for (let i of range) {
+    if (l) {
+      if (i - l === 2) {
+        rangeWithDots.push(l + 1);
+      } else if (i - l > 2) {
+        rangeWithDots.push("...");
+      }
+    }
+    rangeWithDots.push(i);
+    l = i;
+  }
+
+  return rangeWithDots;
 }
 
 /* ================================
    PAGE
 ================================ */
-export default async function CountryPage({ params }) {
-  // ✅ Next.js 15 FIX
+export default async function CountryPage({ params, searchParams }) {
   const { country } = await params;
+  const sp = await searchParams;   // ✅ MUST
+  const page = Number(sp?.page || 1);
 
-  if (!country) {
-    return null; // or notFound()
-  }
+  const cleanCountry = country?.toLowerCase();
+  if (!cleanCountry) return null;
 
-  const data = await getCountryData(country);
+  const data = await getCountryProducts(cleanCountry, page);
 
-  if (!data?.success) return null;
+  const products = data?.products ?? [];
+  const pagination = data?.pagination;
+  const pages = pagination
+    ? getPaginationRange(page, pagination.totalPages)
+    : [];
 
-  const grouped = {};
-  data.categories.forEach(cat => {
-    grouped[cat._id] = { ...cat, subs: [] };
-  });
-
-  data.subcategories.forEach(sub => {
-    if (grouped[sub.category]) {
-      grouped[sub.category].subs.push(sub);
-    }
-  });
   return (
-    <main className="bg-gray-50">
-
-      {/* ================= HERO ================= */}
-      <section className="container mx-auto px-4 py-10">
-        <h1 className="text-3xl font-bold">
-          Explore The Best Of{" "}
-          <span className="text-orange-500 capitalize">
-            {country}
-          </span>
+    <main className="bg-gray-50 min-h-screen">
+      {/* HERO */}
+      <section className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold capitalize">
+          Products from {cleanCountry}
         </h1>
-        <p className="text-gray-600 mt-2">
-          Manufacturers & Suppliers from {country.toUpperCase()}
+        <p className="text-gray-600 mt-1">
+          {pagination?.totalProducts || 0} products available
         </p>
       </section>
 
-      {/* ================= SEARCH ================= */}
-<section className="bg-white py-12 border-b">
-  <div className="container mx-auto px-4 text-center">
-
-    <h1 className="text-3xl md:text-4xl font-semibold leading-tight">
-      B2B Marketplace for Exporters in{" "}
-      <span className="text-blue-600 capitalize">
-        {country}
-      </span>
-    </h1>
-
-    <p className="text-gray-500 mt-2 text-sm md:text-base">
-      Connect with verified suppliers and grow your export business
-    </p>
-
-    {/* Search Box */}
-    <div className="mt-6 max-w-3xl mx-auto">
-      <div className="
-        flex items-center
-        bg-white
-        border border-gray-300
-        rounded-full
-        overflow-hidden
-        focus-within:border-blue-500
-        transition
-      ">
-        <select className="
-          px-4 py-3
-          text-sm
-          text-gray-600
-          bg-transparent
-          outline-none
-          border-r
-        ">
-          <option>All Categories</option>
-        </select>
-
-        <input
-          className="
-            flex-1
-            px-4 py-3
-            text-sm
-            outline-none
-            placeholder-gray-400
-          "
-          placeholder="Search products or suppliers"
-        />
-
-        <button className="
-          bg-blue-600
-          hover:bg-blue-700
-          text-white
-          text-sm
-          px-6 py-3
-          font-medium
-          transition
-        ">
-          Search
-        </button>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-
-{/* ================= TOP CATEGORIES ================= */}
-<section className="py-14 bg-gradient-to-b from-gray-50 to-white">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
-            {data.categories.slice(0, 4).map(cat => (
+      {/* PRODUCTS */}
+      <section className="container mx-auto px-4 pb-10">
+        {products.length === 0 ? (
+          <p className="text-gray-500">No products found</p>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            {products.map((product) => (
               <Link
-                key={cat._id}
-                href={`/category/${cat.categoryslug}`}
-                className="bg-white rounded-2xl p-8 text-center
-                border border-gray-100
-                shadow-[0_12px_30px_rgba(0,0,0,0.08)]
-                hover:shadow-[0_30px_70px_rgba(59,130,246,0.25)]
-                transition-all duration-300 hover:-translate-y-2"
+                key={product._id}
+                href={`/products/${product._id}`}
+                className="group bg-white rounded-xl border hover:shadow-lg transition"
               >
-                <div className="h-14 w-14 mx-auto mb-4 rounded-xl bg-blue-50 flex items-center justify-center">
-                  <IconImage src={cat.icon} alt={cat.name} size={32} />
+                <div className="relative h-40 bg-gray-100 rounded-t-xl overflow-hidden">
+                  <Image
+                    src={product.images?.[0]?.url || "/placeholder.png"}
+                    alt={product.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition"
+                  />
                 </div>
 
-                <h3 className="font-semibold text-gray-800">
-                  {cat.name}
-                </h3>
+                <div className="p-3 space-y-1">
+                  <h3 className="text-sm font-semibold line-clamp-2">
+                    {product.name}
+                  </h3>
+
+                  <p className="text-xs text-gray-500 capitalize">
+                    {product.city}
+                  </p>
+
+                  <p className="text-sm font-bold text-blue-600">
+                    {product.currency} {product.price}
+                  </p>
+                </div>
               </Link>
             ))}
           </div>
-        </div>
-</section>
+        )}
+      </section>
 
-{/* ================= CATEGORIES IN COUNTRY ================= */}
-   <section className="py-14 bg-gray-50">
-  <div className="container mx-auto px-4">
-    <h2 className="text-2xl font-semibold mb-8">
-      Categories in {country.toUpperCase()}
-    </h2>
+      {/* ================= PAGINATION ================= */}
+      {pagination?.totalPages > 1 && (
+        <section className="pb-16">
+          {/* DESKTOP */}
+<div className="hidden md:flex justify-center items-center gap-2">
+  {pages.map((p, index) =>
+    p === "..." ? (
+      <span
+        key={`dots-${index}`}   // ✅ UNIQUE
+        className="px-3 text-gray-400"
+      >
+        …
+      </span>
+    ) : (
+      <Link
+        key={`page-${p}-${index}`}  // ✅ UNIQUE
+        scroll={false}
+        href={`/country/${cleanCountry}?page=${p}`}
+        className={`px-4 py-2 rounded-md border text-sm ${
+          p === page
+            ? "bg-blue-600 text-white"
+            : "bg-white hover:bg-gray-100"
+        }`}
+      >
+        {p}
+      </Link>
+    )
+  )}
+</div>
 
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {Object.values(grouped).map((cat) => (
-        <div
-          key={cat._id}
-          className="
-            bg-white rounded-xl p-5
-            border border-gray-200
-            hover:border-blue-200
-            hover:shadow-sm
-            transition
-          "
-        >
-          {/* Category Header */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-10 w-10 rounded-lg bg-orange-50 flex items-center justify-center">
-              <IconImage src={cat.icon} alt={cat.name} size={22} />
-            </div>
+
+          {/* MOBILE */}
+          <div className="flex md:hidden justify-center items-center gap-4">
+            <Link
+              scroll={false}
+              href={`/country/${cleanCountry}?page=${Math.max(page - 1, 1)}`}
+              className={`px-4 py-2 rounded-md border ${
+                page === 1 ? "opacity-50 pointer-events-none" : ""
+              }`}
+            >
+              ← Prev
+            </Link>
+
+            <span className="text-sm font-medium">
+              Page {page} of {pagination.totalPages}
+            </span>
 
             <Link
-              href={`/category/${cat.categoryslug}`}
-              className="text-base font-semibold text-gray-800 hover:text-blue-600"
+              scroll={false}
+              href={`/country/${cleanCountry}?page=${Math.min(
+                page + 1,
+                pagination.totalPages
+              )}`}
+              className={`px-4 py-2 rounded-md border ${
+                page === pagination.totalPages
+                  ? "opacity-50 pointer-events-none"
+                  : ""
+              }`}
             >
-              {cat.name}
+              Next →
             </Link>
           </div>
-
-          {/* Subcategories */}
-          <ul className="grid grid-cols-2 gap-y-2 gap-x-4 text-[13px]">
-            {cat.subs.slice(0, 6).map((sub) => (
-              <li key={sub._id}>
-                <Link
-                  href={`/category/${cat.categoryslug}/${sub.subcategoryslug}`}
-                  className="
-                    flex items-center gap-2
-                    text-gray-600 hover:text-blue-600
-                    transition
-                  "
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-blue-400"></span>
-                  {sub.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-
-          {/* View All */}
-          {cat.subs.length > 6 && (
-            <Link
-              href={`/category/${cat.categoryslug}`}
-              className="
-                inline-block mt-4
-                text-xs font-medium text-blue-600
-                hover:underline
-              "
-            >
-              View all →
-            </Link>
-          )}
-        </div>
-      ))}
-    </div>
-  </div>
-</section>
-
-{/* ================= SUBCATEGORY TAG LIST ================= */}
-<section className="py-10 bg-white">
-  <div className="container mx-auto px-4">
-    <h2 className="text-3xl font-semibold mb-6">
-      Browse Products by Category
-    </h2>
-
-    <div className="flex flex-wrap gap-2">
-      {data.subcategories.map((sub) => (
-        <Link
-          key={sub._id}
-          href={`/category/${sub.category}/${sub.subcategoryslug}`}
-          className="
-            inline-flex items-center
-            px-3 py-1.5
-            rounded-full
-            bg-gray-100
-            text-[10px] font-normal text-gray-700
-            border border-gray-200
-            hover:bg-blue-50 hover:text-blue-600
-            transition
-          "
-        >
-          {sub.name}
-        </Link>
-      ))}
-    </div>
-  </div>
-</section>
-
-
+        </section>
+      )}
     </main>
   );
 }

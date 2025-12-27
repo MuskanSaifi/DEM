@@ -102,7 +102,6 @@ const CategoryGridSection = ({ categories }) => {
     e.currentTarget.src = "/placeholder.png";
   }}
 />
-
                     </div>
                   </div>
 
