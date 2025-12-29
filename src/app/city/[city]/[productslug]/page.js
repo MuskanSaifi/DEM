@@ -1,3 +1,4 @@
+// src/app/city/[city]/[productslug]/page.js
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";
 import User from "@/models/User"; // ✅ Required for populate("userId")

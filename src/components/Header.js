@@ -13,9 +13,6 @@ import { BsBriefcaseFill } from "react-icons/bs";
 import { logout, initializeUser } from "@/app/store/userSlice";
 import SmoothCounter from "./Counter";
 
-
-
-
 export default function Header() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -194,11 +191,15 @@ const handleLogout = () => {
 }, [searchTerm]);
 
 
- const handleSearchSelect = React.useCallback((product) => {
-  setSearchTerm(product.name);
-  setSuggestions([]);
+const handleSearchSelect = React.useCallback((product) => {
+  setSearchTerm("");        // ✅ input clear
+  setSuggestions([]);       // ✅ suggestions hide
+  setActiveIndex(-1);       // ✅ reset highlight
+
   router.push(`/manufacturers/${product.productslug}`);
 }, [router]);
+
+const itemRefs = useRef([]);
 
 
   const directoryLinks = [
@@ -374,7 +375,7 @@ const handleLogout = () => {
         <li key={index}>
           <button
             className="w-full text-left ps-2 p-1 hover:bg-gray-100"
-            onClick={() => router.push(`/city/${city.toLowerCase()}`)} // ✅ ALWAYS LOWERCASE URL
+            onClick={() => router.push(`/city/${city.toLowerCase()}`)} 
           >
             {city}
           </button>
@@ -384,15 +385,25 @@ const handleLogout = () => {
     <p className="text-gray-500 px-4 py-2">No cities found</p>
   )}
 </ul>
-
                     </div>
                   )}
                 </div>
+                
+                {/* 🔲 Global Search Overlay */}
+{searchTerm && (
+  <div
+    className="fixed inset-0 bg-opacity-40 z-40"
+    onClick={() => {
+      setSearchTerm("");
+      setSuggestions([]);
+      setActiveIndex(-1);
+    }}
+  />
+)}
+
+
        {/* Product Search */}
-<div
-  className="position-relative flex-grow-1 pro-ser-div"
-  ref={searchRef}
->
+<div className="position-relative flex-grow-1 pro-ser-div z-50" ref={searchRef}>
 <input
   className="product-search form-control"
   type="text"
@@ -402,31 +413,46 @@ const handleLogout = () => {
     setSearchTerm(e.target.value);
     setActiveIndex(-1); // reset on typing
   }}
-  onKeyDown={(e) => {
-    if (!suggestions.length) return;
+onKeyDown={(e) => {
+  if (!suggestions.length) return;
 
-    // ⬇️ Down Arrow
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setActiveIndex((prev) =>
-        prev < suggestions.length - 1 ? prev + 1 : 0
-      );
-    }
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
 
-    // ⬆️ Up Arrow
-    if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActiveIndex((prev) =>
-        prev > 0 ? prev - 1 : suggestions.length - 1
-      );
-    }
+    setActiveIndex((prev) => {
+      const next = prev < suggestions.length - 1 ? prev + 1 : 0;
 
-    // ⏎ Enter
-    if (e.key === "Enter" && activeIndex >= 0) {
-      e.preventDefault();
-      handleSearchSelect(suggestions[activeIndex]);
-    }
-  }}
+      itemRefs.current[next]?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+
+      return next;
+    });
+  }
+
+  if (e.key === "ArrowUp") {
+    e.preventDefault();
+
+    setActiveIndex((prev) => {
+      const next = prev > 0 ? prev - 1 : suggestions.length - 1;
+
+      itemRefs.current[next]?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+
+      return next;
+    });
+  }
+
+  if (e.key === "Enter" && activeIndex >= 0) {
+    e.preventDefault();
+    handleSearchSelect(suggestions[activeIndex]);
+  }
+}}
+
+
 />
 
 
@@ -444,16 +470,17 @@ const handleLogout = () => {
     {/* ✅ RESULTS */}
  {!isSearching && suggestions.length > 0 &&
   suggestions.map((product, index) => (
-    <li
-      key={product._id}
-      className={`list-group-item list-group-item-action cursor-pointer
-        ${index === activeIndex ? "bg-primary text-white" : ""}
-      `}
-      onMouseEnter={() => setActiveIndex(index)} // hover sync
-      onClick={() => handleSearchSelect(product)}
-    >
-      {product.name}
-    </li>
+<li
+  ref={(el) => (itemRefs.current[index] = el)}
+  key={product._id}
+  className={`cursor-pointer px-3 py-2 transition-all duration-150
+    ${index === activeIndex ? "bg-purple-600 text-white" : "bg-white"}
+  `}
+  onMouseEnter={() => setActiveIndex(index)}
+  onClick={() => handleSearchSelect(product)}
+>
+  {product.name}
+</li>
   ))}
 
 

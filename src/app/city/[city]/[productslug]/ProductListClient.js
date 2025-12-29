@@ -1,3 +1,4 @@
+// src/app/city/[city]/[productslug]/ProductListClient.js
 "use client";
 
 import { useEffect, useState } from "react";

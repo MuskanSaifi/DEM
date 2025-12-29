@@ -1,3 +1,4 @@
+// src/app/city/[city]/page.js
 import { redirect } from "next/navigation";
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";

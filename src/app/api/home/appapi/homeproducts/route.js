@@ -1,9 +1,10 @@
+// api/home/appapi/homeproducts/route.js
 import connectDB from "@/lib/dbConnect";
 import Category from "@/models/Category";
-import SubCategory from "@/models/SubCategory"; // ✅ MUST IMPORT
-import Product from "@/models/Product"; // ✅ because nested populate
+import SubCategory from "@/models/SubCategory";
+import Product from "@/models/Product";
 
-export async function GET() {
+export async function GET(req) {
   try {
     await connectDB();
 
@@ -12,13 +13,13 @@ export async function GET() {
       .limit(6)
       .populate({
         path: "subcategories",
-        model: "SubCategory", // ✅ explicit model
+        model: "SubCategory",
         select: "name icon subcategoryslug products",
         populate: {
           path: "products",
-          model: "Product", // ✅ explicit model
-          select: "name productslug",
-          options: { limit: 3 },
+          model: "Product",
+          select: "name productslug images",
+         options: { limit: 30 }, // ✅ mobile safe limit
         },
       })
       .lean();
@@ -26,7 +27,7 @@ export async function GET() {
     return Response.json(categories, {
       status: 200,
       headers: {
-        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600", // Cache for 5 minutes
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
       },
     });
   } catch (error) {

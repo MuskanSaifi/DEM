@@ -42,6 +42,13 @@ const ProductDetailClient = ({ productslug: propProductSlug }) => {
   const [showRelatedDropdown, setShowRelatedDropdown] = useState(false);
   const [showSubcategoryDropdown, setShowSubcategoryDropdown] = useState(false);
 
+  // FILTER STATES
+const [search, setSearch] = useState("");
+const [minPrice, setMinPrice] = useState("");
+const [maxPrice, setMaxPrice] = useState("");
+const [minMOQ, setMinMOQ] = useState("");
+
+
   // Redux
   const dispatch = useDispatch();
   const { items: wishlistItems, loading: wishlistLoading } = useSelector(
@@ -113,6 +120,23 @@ const ProductDetailClient = ({ productslug: propProductSlug }) => {
       dispatch(addProductToWishlist(productId));
     }
   };
+
+  const filteredProducts = products.filter((product) => {
+  const nameMatch = search
+    ? product.name?.toLowerCase().includes(search.toLowerCase())
+    : true;
+
+  const priceMatch =
+    (!minPrice || product.price >= Number(minPrice)) &&
+    (!maxPrice || product.price <= Number(maxPrice));
+
+  const moqMatch = minMOQ
+    ? product.minimumOrderQuantity >= Number(minMOQ)
+    : true;
+
+  return nameMatch && priceMatch && moqMatch;
+});
+
 
   // 🔒 Mask GST Number once businessProfile is available
   const maskedGstNumber = businessProfile 
@@ -208,7 +232,61 @@ const ProductDetailClient = ({ productslug: propProductSlug }) => {
             ) : (
               <p className="text-muted">No subcategories available.</p>
             )}
+
+            {/* FILTER SECTION */}
+<div className="mt-4 border-top pt-3">
+
+  <h6 className="fw-bold mb-2">Product Name</h6>
+  <input
+    type="text"
+    className="form-control mb-3"
+    placeholder="Search by name"
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+  />
+
+  <h6 className="fw-bold">Price Range (₹)</h6>
+  <div className="d-flex gap-2 mb-3">
+    <input
+      type="number"
+      className="form-control"
+      placeholder="Min"
+      value={minPrice}
+      onChange={(e) => setMinPrice(e.target.value)}
+    />
+    <input
+      type="number"
+      className="form-control"
+      placeholder="Max"
+      value={maxPrice}
+      onChange={(e) => setMaxPrice(e.target.value)}
+    />
+  </div>
+
+  <h6 className="fw-bold">MOQ</h6>
+  <input
+    type="number"
+    className="form-control mb-3"
+    placeholder="Min MOQ"
+    value={minMOQ}
+    onChange={(e) => setMinMOQ(e.target.value)}
+  />
+
+  <button
+    className="btn btn-outline-secondary w-100"
+    onClick={() => {
+      setSearch("");
+      setMinPrice("");
+      setMaxPrice("");
+      setMinMOQ("");
+    }}
+  >
+    Clear Filters
+  </button>
+</div>
+
           </div>
+          
         </aside>
 
       {/* Main Product Section */}
@@ -225,7 +303,7 @@ const ProductDetailClient = ({ productslug: propProductSlug }) => {
     <p className="text-danger">{error}</p>
   ) : products.length > 0 ? (
     <div className="row">
-      {products.map((product) => {
+      {filteredProducts.map((product) => {
         const isInWishlist = wishlistItems.some(
           (item) =>
             item._id === product._id || item.productId === product._id

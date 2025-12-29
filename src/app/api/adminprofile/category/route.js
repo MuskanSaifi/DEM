@@ -1,3 +1,4 @@
+// app/api/adminprofile/category/route.js
 import mongoose from "mongoose";
 import connectDB from "@/lib/dbConnect";
 import Category from "@/models/Category";
@@ -265,8 +266,6 @@ export async function POST(req) {
     );
   }
 }
-
-
 
 export async function DELETE(req) {
   try {
