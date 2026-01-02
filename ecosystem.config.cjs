@@ -8,8 +8,8 @@ module.exports = {
   apps: [
     {
       name: "dialexportmart",
-      script: "node",
-      args: ".next/standalone/server.js", // ✅ Next.js standalone mode requires direct node execution
+      script: "npm",
+      args: "start", // ✅ npm start automatically loads .env file
       cwd: process.cwd(),
       instances: 1, // ✅ Changed to 1 instance - MongoDB connection is bottleneck, not CPU
       exec_mode: "fork", // ✅ Fork mode - more stable with MongoDB connections
@@ -32,7 +32,7 @@ module.exports = {
       max_restarts: 10, // Max 10 restarts in 1 minute
       restart_delay: 5000, // 5 seconds wait before restart
       
-      // ✅ Environment variables
+      // ✅ Environment variables (.env file will be loaded automatically by Next.js)
       env: {
         NODE_ENV: "production",
         PORT: 3000,
