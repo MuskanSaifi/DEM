@@ -11,8 +11,8 @@ module.exports = {
       script: "npm",
       args: "start",
       cwd: process.cwd(),
-      instances: 4, // ✅ Use 4 instances (adjust based on CPU cores - recommended: CPU cores - 1)
-      exec_mode: "cluster", // ✅ Cluster mode to distribute load across multiple CPU cores
+      instances: 1, // ✅ Changed to 1 instance - MongoDB connection is bottleneck, not CPU
+      exec_mode: "fork", // ✅ Fork mode - more stable with MongoDB connections
       
       // ✅ Auto-restart settings - CRITICAL
       autorestart: true,
