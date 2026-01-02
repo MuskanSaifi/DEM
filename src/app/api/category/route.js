@@ -6,6 +6,8 @@ import Product from "@/models/Product";
 import User from "@/models/User";
 import BusinessProfile from "@/models/BusinessProfile";
 
+// ✅ Route segment config - API routes use cache headers for caching
+
 export async function GET() {
   try {
     await connectDB();

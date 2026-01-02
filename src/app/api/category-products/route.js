@@ -61,13 +61,21 @@ const products = await Product.find({
       p.businessProfile = bpMap[p.userId?._id] || null;
     });
 
-    return Response.json({
-      category,
-      products,
-      page,
-      totalPages: Math.ceil(totalProducts / limit),
-      totalProducts,
-    });
+    return Response.json(
+      {
+        category,
+        products,
+        page,
+        totalPages: Math.ceil(totalProducts / limit),
+        totalProducts,
+      },
+      {
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200', // ✅ Cache for 1 hour to reduce CPU spikes
+        },
+      }
+    );
   } catch (error) {
     console.error(error);
     return Response.json({ error: error.message }, { status: 500 });

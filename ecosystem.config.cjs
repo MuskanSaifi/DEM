@@ -11,8 +11,8 @@ module.exports = {
       script: "npm",
       args: "start",
       cwd: process.cwd(),
-      instances: 1, // Single instance for VPS
-      exec_mode: "fork",
+      instances: 4, // ✅ Use 4 instances (adjust based on CPU cores - recommended: CPU cores - 1)
+      exec_mode: "cluster", // ✅ Cluster mode to distribute load across multiple CPU cores
       
       // ✅ Auto-restart settings - CRITICAL
       autorestart: true,

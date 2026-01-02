@@ -8,6 +8,8 @@ import BlockedUser from "@/models/BlockedUser";
 import User from "@/models/User"; // ✅ Required for populate("userId")
 import Category from "@/models/Category"; // ✅ Required for populate("category")
 
+// ✅ Route segment config - API routes use cache headers for caching
+
 export async function GET(request) {
   await connectdb();
 
@@ -47,7 +49,12 @@ export async function GET(request) {
       relatedProducts: [],
       businessProfile: null,
     },
-    { status: 200 }
+    { 
+      status: 200,
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200', // Cache for 1 hour
+      },
+    }
   );
 }
 
@@ -76,7 +83,12 @@ export async function GET(request) {
         relatedProducts,
         businessProfile,
       },
-      { status: 200 }
+      { 
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200', // ✅ Cache for 1 hour to reduce CPU spikes
+        },
+      }
     );
   } catch (error) {
     console.error("Error fetching product details:", error);
