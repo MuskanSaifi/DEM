@@ -8,8 +8,8 @@ module.exports = {
   apps: [
     {
       name: "dialexportmart",
-      script: "npm",
-      args: "start",
+      script: "node",
+      args: ".next/standalone/server.js", // ✅ Next.js standalone mode requires direct node execution
       cwd: process.cwd(),
       instances: 1, // ✅ Changed to 1 instance - MongoDB connection is bottleneck, not CPU
       exec_mode: "fork", // ✅ Fork mode - more stable with MongoDB connections
