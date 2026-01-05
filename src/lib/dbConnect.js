@@ -70,13 +70,11 @@ const connectdb = async () => {
         bufferCommands: false,
         maxPoolSize: 10, // Maintain up to 10 socket connections
         minPoolSize: 2, // Keep at least 2 connections
-        serverSelectionTimeoutMS: 30000, // ✅ Increased to 30 seconds (was 5s)
+        serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
         socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-        connectTimeoutMS: 30000, // ✅ Increased to 30 seconds (was 10s) - fixes timeout errors
+        connectTimeoutMS: 10000, // Give up initial connection after 10 seconds
         family: 4, // Use IPv4, skip trying IPv6
         heartbeatFrequencyMS: 10000, // Check connection health every 10 seconds
-        retryWrites: true, // ✅ Retry writes on connection failures
-        retryReads: true, // ✅ Retry reads on connection failures
       };
 
       cached.promise = mongoose

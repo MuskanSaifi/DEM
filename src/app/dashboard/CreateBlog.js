@@ -245,6 +245,10 @@ const CreateBlog = () => {
                         const file = input.files[0];
                         if (!file) return;
 
+                        // ✅ Prompt for alt text before uploading
+                        const altText = prompt("Enter alt text for this image (for SEO and accessibility):", "");
+                        if (altText === null) return; // User cancelled
+
                         const formData = new FormData();
                         formData.append("file", file);
 
@@ -255,8 +259,12 @@ const CreateBlog = () => {
 
                         const data = await res.json();
                         if (data.url && data.public_id) {
-                          // Pass publicId to the CustomImage extension
-                          editor.chain().focus().setImage({ src: data.url, publicId: data.public_id }).run();
+                          // ✅ Pass alt text along with src and publicId
+                          editor.chain().focus().setImage({ 
+                            src: data.url, 
+                            publicId: data.public_id,
+                            alt: altText || "" // ✅ Include alt text
+                          }).run();
                         } else {
                             console.error("❌ Failed to get URL or public_id from inline image upload.");
                         }

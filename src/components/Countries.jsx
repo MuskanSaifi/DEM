@@ -17,10 +17,11 @@ const Countries = () => {
   return (
     <>
       <div className="mt-5">
-      <h2 className="text-xl font-semibold text-gray-800 mb-6 text-center">
-          Find Suppliers by Country or Region
+      <h2 className="text-xl font-semibold text-gray-800 mb-2 text-center">
+      Find Verified Suppliers by Country
         </h2>
-
+        <p className="text-gray-500 text-sm text-center mb-6">Explore verified manufacturers and exporters from India and other major
+        international trade hubs worldwide.</p>
 <div className="bg-gray-100 p-6 rounded-lg">
         <div className="country-scroll flex md:grid md:grid-cols-4 lg:grid-cols-8 gap-6 overflow-x-auto md:overflow-hidden justify-center">
           {countries.map((country, index) => (

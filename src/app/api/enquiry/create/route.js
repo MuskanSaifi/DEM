@@ -4,7 +4,7 @@ import connectdb from "@/lib/dbConnect";
 import purchaseRequestSchema from "@/models/purchaseRequestSchema";
 import PushToken from "@/models/PushToken";
 import { NextResponse } from 'next/server';
-import Expo from 'expo-server-sdk'; // Keep the import here
+import { Expo } from 'expo-server-sdk'; // ✅ Fixed: Use named import
 
 // REMOVE THIS LINE: let expo = new Expo(); // This caused the problem
 

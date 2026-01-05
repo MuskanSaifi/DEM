@@ -94,8 +94,8 @@ const res = await fetch("/api/adminprofile/sidebarmenu", {
     <div className="menu bg-white rounded-md w-64 d-none-mob" ref={menuRef}>
       {/* Top Categories */}
       <Link href="/industry">
-        <h2 className="category font-semibold text-lg text-web mb-2">
-          Top Categories
+        <h2 className="category font-normal text-lg text-web mb-2">
+          Top B2B Categories
         </h2>
       </Link>
 

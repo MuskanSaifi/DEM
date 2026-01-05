@@ -30,6 +30,18 @@ const uploadToCloudinary = async (image) => {
   }
 };
 
+// ✅ Get all blogs
+export async function GET() {
+  try {
+    await connectdb();
+    const blogs = await Blog.find().sort({ createdAt: -1 });
+    return NextResponse.json(blogs, { status: 200 });
+  } catch (error) {
+    console.error("❌ Server Error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
 // ✅ Create Blog
 export async function POST(req) {
   try {
@@ -124,15 +136,30 @@ export async function PATCH(req) {
     const metaKeywords = formData.get("metaKeywords")?.trim();
     const image = formData.get("image");
 
-    blog.title = title || blog.title;
-    blog.slug = slug || blog.slug;
-    blog.author = author || blog.author;
-    blog.content = content || blog.content;
+    // ✅ Validate required fields
+    if (!title || !slug || !author || !content) {
+      return NextResponse.json({ error: "Title, slug, author, and content are required" }, { status: 400 });
+    }
+
+    // ✅ Check if slug is changed and if new slug already exists
+    if (slug !== blog.slug) {
+      const existingBlog = await Blog.findOne({ slug, _id: { $ne: blogId } });
+      if (existingBlog) {
+        return NextResponse.json({ error: "Slug already in use by another blog" }, { status: 400 });
+      }
+    }
+
+    // ✅ Update fields (use provided values, not fallback to old values)
+    blog.title = title;
+    blog.slug = slug;
+    blog.author = author;
+    blog.content = content;
     blog.metaTitle = metaTitle || blog.metaTitle;
     blog.metaDescription = metaDescription || blog.metaDescription;
     blog.metaKeywords = metaKeywords || blog.metaKeywords;
 
-if (image && typeof image === "object" && "size" in image && image.size > 0) {
+    // ✅ Handle image upload
+    if (image && typeof image === "object" && "size" in image && image.size > 0) {
       // 🗑️ Delete old image from Cloudinary
       if (blog.imagePublicId) {
         try {
@@ -144,9 +171,15 @@ if (image && typeof image === "object" && "size" in image && image.size > 0) {
       }
 
       // 📤 Upload new image
-      const uploadResult = await uploadToCloudinary(image);
-      blog.image = uploadResult.imageUrl;
-      blog.imagePublicId = uploadResult.imagePublicId;
+      try {
+        const uploadResult = await uploadToCloudinary(image);
+        blog.image = uploadResult.imageUrl;
+        blog.imagePublicId = uploadResult.imagePublicId;
+        console.log("✅ New image uploaded:", uploadResult.imageUrl);
+      } catch (uploadError) {
+        console.error("❌ Image upload failed:", uploadError);
+        return NextResponse.json({ error: "Failed to upload image" }, { status: 500 });
+      }
     }
 
     await blog.save();
@@ -154,20 +187,7 @@ if (image && typeof image === "object" && "size" in image && image.size > 0) {
     return NextResponse.json({ success: true, message: "Blog updated successfully", blog }, { status: 200 });
   } catch (error) {
     console.error("❌ Server Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
-
-
-// ✅ Get all blogs
-export async function GET() {
-  try {
-    await connectdb();
-    const blogs = await Blog.find().sort({ createdAt: -1 });
-    return NextResponse.json(blogs, { status: 200 });
-  } catch (error) {
-    console.error("❌ Server Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to update blog" }, { status: 500 });
   }
 }
 

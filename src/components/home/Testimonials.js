@@ -147,9 +147,9 @@ const Testimonials = () => {
                 </p>
 
                 <div className="text-center">
-                  <h4 className="text-lg font-semibold text-gray-800">
+                  <strong className="text-lg font-semibold text-gray-800">
                     {item.name}
-                  </h4>
+                  </strong>
                   <p className="text-sm text-purple-600">{item.title}</p>
                 </div>
               </div>

@@ -23,13 +23,18 @@ const CategoryGridSection = ({ categories }) => {
         >
           {/* Header */}
           <div className="flex justify-between items-center border-b border-gray-200 pb-3 mb-6">
-            <h2 className="text-2xl font-semibold text-gray-800 capitalize flex items-center gap-2">
-              <span
-                className="inline-block w-1.5 h-6 rounded-full"
-                style={{ backgroundColor: "#6D4AAE" }}
-              ></span>
-              {category.name}
-            </h2>
+          <div
+  className="text-2xl font-semibold text-gray-800 capitalize flex items-center gap-2"
+  role="heading"
+  aria-level="2"
+>
+  <span
+    className="inline-block w-1.5 h-6 rounded-full"
+    style={{ backgroundColor: "#6D4AAE" }}
+  ></span>
+  {category.name}
+</div>
+
             <Link
               href={`/seller/${category.categoryslug}`}
               className="text-sm font-medium hover:underline transition"
@@ -107,9 +112,14 @@ const CategoryGridSection = ({ categories }) => {
 
                   {/* Subcategory Details */}
                   <div className="p-3 flex flex-col justify-center">
-                    <h3 className="font-semibold text-gray-800 text-base capitalize mb-1">
-                      {sub.name}
-                    </h3>
+                  <div
+  className="font-semibold text-gray-800 text-base capitalize mb-1"
+  role="heading"
+  aria-level="3"
+>
+  {sub.name}
+</div>
+
                     <ul className="space-y-0.5 text-sm" style={{ color: "#6D4AAE" }}>
                       {sub.products?.slice(0, 3).map((product) => (
                         <li key={product._id}>

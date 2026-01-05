@@ -2,6 +2,8 @@
 import { redirect } from "next/navigation";
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";
+import Category from "@/models/Category"; // ✅ Required for populate("category")
+import SubCategory from "@/models/SubCategory"; // ✅ Required for populate("subCategory")
 import Link from "next/link";
 import Image from "next/image";
 
@@ -43,25 +45,48 @@ export default async function CityPage({ params }) {
 
     await connectdb();
 
-    // ✅ FIXED: Add error handling and ensure efficient query
-    // ✅ CRITICAL: Reduced limit from 500 to 200 to prevent CPU spike
+    // ✅ Fetch products to get unique categories and subcategories with icons
     const products = await Product.find({ city })
-      .select("name price images productslug category subCategory moqUnit")
-      .populate("category", "name")
-      .populate("subCategory", "name")
-      .limit(200) // ✅ CRITICAL: Reduced from 500 to 200
+      .select("category subCategory")
+      .populate("category", "name icon categoryslug")
+      .populate("subCategory", "name subcategoryslug icon")
+      .limit(500) // Get enough to find all unique subcategories
       .lean();
 
-    // Group by category (JS-side, cheap)
-    const categories = {};
+    // Group by category and subcategory with icons
+    const categoryMap = {};
     for (const p of products) {
-      const cat = p.category?.name || "Other Products";
-      if (!categories[cat]) categories[cat] = [];
-      categories[cat].push(p);
+      const catId = p.category?._id?.toString();
+      const catName = p.category?.name || "Other Products";
+      const catIcon = p.category?.icon;
+      const catSlug = p.category?.categoryslug;
+      const subcatId = p.subCategory?._id?.toString();
+      const subcatName = p.subCategory?.name;
+      const subcatSlug = p.subCategory?.subcategoryslug;
+      const subcatIcon = p.subCategory?.icon;
+
+      if (!catId || !subcatId || !subcatSlug) continue;
+
+      if (!categoryMap[catId]) {
+        categoryMap[catId] = {
+          name: catName,
+          icon: catIcon,
+          slug: catSlug,
+          subcategories: new Map(),
+        };
+      }
+
+      if (!categoryMap[catId].subcategories.has(subcatId)) {
+        categoryMap[catId].subcategories.set(subcatId, {
+          name: subcatName,
+          slug: subcatSlug,
+          icon: subcatIcon,
+        });
+      }
     }
 
-    const displayCity =
-      city.charAt(0).toUpperCase() + city.slice(1);
+    const displayCity = city.charAt(0).toUpperCase() + city.slice(1);
+    const categoriesList = Object.values(categoryMap);
 
     return (
       <div className="container mx-auto p-4 max-w-7xl">
@@ -70,47 +95,68 @@ export default async function CityPage({ params }) {
           <span className="text-blue-600">{displayCity}</span>
         </h1>
 
-        {Object.entries(categories).map(([catName, catProducts]) => (
-          <div key={catName} className="mb-12 border-b pb-6">
-            <h2 className="text-2xl font-bold mb-4 border-l-4 pl-3 border-blue-600">
-              {catName}
-              <span className="text-sm text-gray-500 ml-3">
-                ({catProducts.length} unique products)
-              </span>
-            </h2>
+        {categoriesList.length === 0 ? (
+          <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+            <strong>No Categories Found!</strong>
+            <span className="ml-2">No products found in {displayCity}.</span>
+          </div>
+        ) : (
+          categoriesList.map((category, idx) => (
+          <div key={idx} className="mb-12 border-b pb-6">
+            {/* Category Header with Icon */}
+            <div className="flex items-center gap-3 mb-4 border-l-4 pl-3 border-blue-600">
+              {category.icon && (
+                <div className="relative w-10 h-10 flex-shrink-0">
+                  <Image
+                    src={category.icon}
+                    alt={category.name}
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              )}
+              <div>
+                <h2 className="text-2xl font-bold">
+                  {category.name}
+                  <span className="text-sm text-gray-500 ml-3 font-normal">
+                    ({category.subcategories.size} {category.subcategories.size === 1 ? "item" : "items"})
+                  </span>
+                </h2>
+              </div>
+            </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-              {catProducts.slice(0, 6).map((product) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {Array.from(category.subcategories.values()).map((subcat) => (
                 <Link
-                  key={product._id}
-                  href={`/city/${city}/${product.productslug}`}
+                  key={subcat.slug}
+                  href={`/city/${city}/${subcat.slug}`}
+                  className="bg-white border rounded-lg shadow hover:shadow-lg transition-all duration-300 p-4 text-center flex flex-col items-center"
                 >
-                  <div className="bg-white border rounded-lg shadow hover:shadow-lg transition">
-                    <div className="relative h-32">
+                  {/* Subcategory Image */}
+                  {subcat.icon ? (
+                    <div className="relative w-16 h-16 mb-3">
                       <Image
-                        src={product.images?.[0]?.url || "https://placehold.co/400x300"}
-                        alt={product.name}
+                        src={subcat.icon || "/placeholder.png"}
+                        alt={subcat.name}
                         fill
-                        className="object-cover"
+                        className="object-contain"
                       />
                     </div>
-                    <div className="p-3">
-                      <p className="font-semibold text-sm line-clamp-2">
-                        {product.name}
-                      </p>
-                      <p className="text-xs text-red-600 font-bold mt-1">
-                        ₹{product.price?.toLocaleString("en-IN") || "Price on Request"}
-                        <span className="text-gray-500 ml-1">
-                          /{product.moqUnit || "Unit"}
-                        </span>
-                      </p>
+                  ) : (
+                    <div className="w-16 h-16 mb-3 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <span className="text-2xl">📦</span>
                     </div>
-                  </div>
+                  )}
+                  <p className="font-semibold text-sm capitalize">
+                    {subcat.name}
+                  </p>
+                  <p className="text-xs text-blue-600 mt-2">View Products →</p>
                 </Link>
               ))}
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
     );
   } catch (error) {

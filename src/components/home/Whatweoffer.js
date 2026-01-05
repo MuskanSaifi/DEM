@@ -12,7 +12,7 @@ const services = [
   {
     icon: <FaHandshake className="text-3xl text-green-500" />,
     title: "Buyer Connect",
-    description: "Seamless connection between buyers and your platform.",
+    description: "Connect directly with genuine B2B buyers and bulk importers",
   },
   {
     icon: <FaGift className="text-3xl text-pink-500" />,
@@ -22,22 +22,22 @@ const services = [
   {
     icon: <FaHeadset className="text-3xl text-purple-500" />,
     title: "Customer Support Person",
-    description: "Dedicated support to solve all your queries promptly.",
+    description: "Dedicated account support for listings, inquiries, and lead management.",
   },
   {
     icon: <FaSearch className="text-3xl text-blue-500" />,
     title: "Digital Marketing Services",
-    description: "Maximize search visibility and attract the right audience.",
+    description: "Boost product visibility and generate high-intent B2B leads through digital marketing.",
   },
   {
     icon: <FaCode className="text-3xl text-orange-500" />,
     title: "Web Development",
-    description: "Custom-built web solutions tailored to your business.",
+    description: "Professional website development solutions for manufacturers and exporters.",
   },
   {
     icon: <FaDatabase className="text-3xl text-teal-500" />,
     title: "CMS",
-    description: "Easily manage your website content with robust systems.",
+    description: "Simple and powerful CMS to manage products, profiles, and content easily.",
   },
 ];
 

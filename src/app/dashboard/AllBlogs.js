@@ -119,9 +119,10 @@ const handleSave = async () => {
   try {
     const formData = new FormData();
     formData.append("id", selectedBlog._id);
-    formData.append("title", selectedBlog.title);
-    formData.append("author", selectedBlog.author);
-    formData.append("content", selectedBlog.content);
+    formData.append("title", selectedBlog.title || "");
+    formData.append("slug", selectedBlog.slug || ""); // ✅ CRITICAL: Add slug field
+    formData.append("author", selectedBlog.author || "");
+    formData.append("content", selectedBlog.content || "");
     formData.append("metaTitle", selectedBlog.metaTitle || "");
     formData.append("metaDescription", selectedBlog.metaDescription || "");
     formData.append("metaKeywords", selectedBlog.metaKeywords || "");
@@ -136,7 +137,10 @@ const handleSave = async () => {
       body: formData,
     });
 
-    if (!res.ok) throw new Error("Failed to update blog");
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || "Failed to update blog");
+    }
 
     const updated = await res.json();
 
@@ -151,7 +155,7 @@ const handleSave = async () => {
     Swal.fire("✅ Updated!", "Blog updated successfully", "success");
   } catch (error) {
     console.error("Update Error:", error);
-    Swal.fire("❌ Error", "Could not update the blog", "error");
+    Swal.fire("❌ Error", error.message || "Could not update the blog", "error");
   }
 };
 

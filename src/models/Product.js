@@ -141,6 +141,7 @@ productSchema.index({ userId: 1 }); // User products
 productSchema.index({ productslug: 1 }); // Slug queries (for single field lookups)
 productSchema.index({ country: 1 }); // Country queries
 productSchema.index({ state: 1 }); // State queries
+productSchema.index({ city: 1, subCategory: 1 });
 
 
 export default mongoose.models.Product || mongoose.model("Product", productSchema);

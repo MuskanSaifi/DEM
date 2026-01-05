@@ -595,7 +595,7 @@ const fetchData = useCallback(async () => {
                 </div>
 
                 {/* Container Type Filter */}
-                <h5 className="text-dark mb-3">Container Type</h5>
+                <p className="text-dark mb-3 font-bold">Container Type</p>
                 <div className="mb-3">
                   {loading ? (
                     <Skeleton count={3} height={20} />
@@ -632,7 +632,7 @@ const fetchData = useCallback(async () => {
                 </div>
 
                 {/* Brand Filter */}
-                <h5 className="text-dark mb-3">Brand</h5>
+                <p className="text-dark mb-3 font-bold">Brand</p>
                 <div className="mb-3">
                   <div className="input-group mb-2">
                     <input

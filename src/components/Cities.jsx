@@ -5,7 +5,7 @@ import Link from "next/link";
 const cities = [
   { name: "Delhi", icon: "/countries/cities/delhi.png", link: "/city/delhi" },
   { name: "Gurugram", icon: "/countries/cities/gurugram.png", link: "/city/gurgaon" },
-  { name: "kolkata", icon: "/countries/cities/kolkata.png", link: "/city/kolkata" },
+  { name: "Kolkata", icon: "/countries/cities/kolkata.png", link: "/city/kolkata" },
   { name: "Bijnor", icon: "/countries/cities/gurugram.png", link: "/city/bijnor" },
   { name: "Chennai", icon: "/countries/cities/chennai.png", link: "/city/chennai" },
   { name: "More Cities", icon: "", link: "#" },
@@ -15,10 +15,11 @@ const Cities = () => {
 return (
     <>
     <div className="mt-5">
-      <h2 className="text-xl font-semibold text-gray-800 mb-6 text-center">
-        Find Suppliers from Top Cities
+      <h2 className="text-xl font-semibold text-gray-800 mb-2 text-center">
+Top Cities in India to Find Verified B2B Suppliers
       </h2>
-
+      <p className="text-gray-500 text-sm text-center mb-6">Connect with verified manufacturers and suppliers from major industrial and
+      manufacturing hubs across India.</p>
 <div className="bg-gray-100 p-6 rounded-lg">
       <div className="city-scroll flex md:grid md:grid-cols-4 lg:grid-cols-6 gap-6 overflow-x-auto md:overflow-hidden justify-start">
         {cities.map((city, index) => (
@@ -44,7 +45,13 @@ return (
                 ) : (
                   <span className="text-4xl">⋯</span>
                 )}
-                <h3 className="text-sm text-gray-800">{city.name}</h3>
+                <h3
+  className="text-sm text-gray-800"
+  role="heading"
+  aria-level="3"
+>
+  {city.name}
+</h3>
             </a>
           </Link>
         ))}

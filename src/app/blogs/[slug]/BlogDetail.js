@@ -22,6 +22,15 @@ const BlogDetail = ({ blog }) => {
   const [recentBlogs, setRecentBlogs] = useState([]);
   const [email, setEmail] = useState("");
   const [loadingRecentBlogs, setLoadingRecentBlogs] = useState(true); // New loading state for recent blogs
+  const [processedContent, setProcessedContent] = useState("");
+
+  // ✅ Process content - preserve existing alt attributes (set in editor)
+  useEffect(() => {
+    if (blog?.content) {
+      // Just use the content as-is, preserving alt attributes set in editor
+      setProcessedContent(blog.content);
+    }
+  }, [blog]);
 
   useEffect(() => {
     const fetchRecentBlogs = async () => {
@@ -80,22 +89,24 @@ const handleSubscribe = async (e) => {
         {/* Blog Detail */}
         <Col lg={8} md={12}>
           {blog?.image && (
-            <Image
-              src={blog.image || "/placeholder.png"}
-              alt={blog.title}
-              width={840}
-              height={420}
-              priority
-              quality={100}
-              className="rounded shadow-sm mb-3 w-100 object-cover"
-            />
+       <Image
+       src={blog.image || "/placeholder.png"}
+       alt={blog.title}
+       width={840}
+       height={420}
+       priority
+       quality={70} // ✅ sweet spot
+       sizes="(max-width: 768px) 100vw, 840px"
+       className="rounded shadow-sm mb-3 w-100 object-cover"
+     />
+     
           )}
           <p className="text-muted text-center mb-2">
             <small>Published on {formattedDate}</small>
           </p>
           <div
             className="blog-content"
-            dangerouslySetInnerHTML={{ __html: blog.content }}
+            dangerouslySetInnerHTML={{ __html: processedContent || blog.content }}
           />
         </Col>
 
@@ -106,7 +117,9 @@ const handleSubscribe = async (e) => {
   style={{ top: '20px', zIndex: 1 }}
 >
             {/* Recent Blogs Section */}
-            <h5 className="mb-3 border-bottom pb-2 sidebar-heading">Recent Blogs</h5>
+            <p className="mb-3 border-bottom pb-2 sidebar-heading text-xl font-semibold">
+  Recent Blogs
+</p>
             <SkeletonTheme baseColor="#e0e0e0" highlightColor="#f5f5f5"> {/* Customize skeleton colors */}
               {loadingRecentBlogs ? (
                 // Show skeletons while loading
@@ -160,7 +173,7 @@ const handleSubscribe = async (e) => {
 
             {/* Subscribe Section */}
             <div className="sidebar-section mt-4 p-3 bg-light rounded shadow-sm">
-              <h5 className="mb-3 border-bottom pb-2 sidebar-heading">Subscribe for Updates</h5>
+              <p className="mb-3 border-bottom pb-2 sidebar-heading text-xl font-semibold">Subscribe for Updates</p>
               <p className="text-muted small">Get the latest blog posts directly in your inbox.</p>
               <Form onSubmit={handleSubscribe}>
                 <Form.Group className="mb-3" controlId="formBasicEmail">
@@ -180,7 +193,7 @@ const handleSubscribe = async (e) => {
 
             {/* Social Media Follow Section */}
             <div className="sidebar-section mt-4 p-3 bg-light rounded shadow-sm">
-              <h5 className="mb-3 border-bottom pb-2 sidebar-heading">Follow Us</h5>
+              <p className="mb-3 border-bottom pb-2 sidebar-heading text-xl font-semibold">Follow Us</p>
               <div className="d-flex justify-content-around social-icons-wrapper">
                 <Link href="https://www.instagram.com/dialexportmart" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Instagram" className="social-icon-link">
                   <FaInstagram size={30} color="#E1306C" />

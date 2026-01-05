@@ -89,11 +89,11 @@ const Footer = () => {
   };
 
 const socialLinks = [
-  { icon: <FaFacebookF />, link: "https://www.facebook.com/dialexportmart", colorClass: "bg-[#3b5998]" },
-  { icon: <FaYoutube />, link: "https://www.youtube.com/@DialExportMart", colorClass: "bg-[#ff0000]" },
-  { icon: <FaLinkedinIn />, link: "https://www.linkedin.com/company/dialexportmart", colorClass: "bg-[#0077b5]" },
-  { icon: <FaXTwitter />, link: "https://x.com/DialExportMart", colorClass: "bg-[#1da1f2]" },
-  { icon: <FaInstagram />, link: "https://www.instagram.com/dialexportmart", colorClass: "bg-[#e1306c]" },
+  { icon: <FaFacebookF />, link: "https://www.facebook.com/dialexportmart", colorClass: "bg-[#3b5998]", label: "Follow us on Facebook" },
+  { icon: <FaYoutube />, link: "https://www.youtube.com/@DialExportMart", colorClass: "bg-[#ff0000]", label: "Subscribe to our YouTube channel" },
+  { icon: <FaLinkedinIn />, link: "https://www.linkedin.com/company/dialexportmart", colorClass: "bg-[#0077b5]", label: "Follow us on LinkedIn" },
+  { icon: <FaXTwitter />, link: "https://x.com/DialExportMart", colorClass: "bg-[#1da1f2]", label: "Follow us on X (Twitter)" },
+  { icon: <FaInstagram />, link: "https://www.instagram.com/dialexportmart", colorClass: "bg-[#e1306c]", label: "Follow us on Instagram" },
 ];
 
 
@@ -184,6 +184,8 @@ const socialLinks = [
   key={index}
   href={social.link}
   target="_blank"
+  rel="noopener noreferrer"
+  aria-label={social.label}
   className={`rounded-full text-white hover:opacity-80 transition-all flex items-center justify-center w-10 h-10 ${social.colorClass}`}
 >
   {social.icon}
