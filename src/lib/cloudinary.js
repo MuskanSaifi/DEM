@@ -1,5 +1,5 @@
-  // import cloudinary from "cloudinary";
-  import { v2 as cloudinary } from "cloudinary";
+// src/lib/cloudinary.js
+import { v2 as cloudinary } from "cloudinary";
 
   // cloudinary.v2.config({
     cloudinary.config({

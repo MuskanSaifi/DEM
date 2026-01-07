@@ -172,3 +172,9 @@ const modalStyles = {
 
 export default Buyfrom;
 
+
+
+
+
+
+

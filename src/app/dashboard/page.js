@@ -33,6 +33,7 @@ import Report from "./Report";
 import Block from "./Block";
 import Banner from "./Banner";
 import Plans from "./Plans";
+import AddTemplate from "./ManageTemplates";
 
 function ResponsiveDashboard() {
   const router = useRouter();
@@ -125,6 +126,8 @@ function ResponsiveDashboard() {
           {activeContent === "Add Employee" && <AddEmployeeForm />}
           {activeContent === "Salary Report" && <SalaryReport />}
           {activeContent === "Leave Requests" && <LeaveRequests />}
+          {activeContent === "Web Templates" && <AddTemplate />}
+
           {activeContent === "Report" && <Report />}
           {activeContent === "Block" && <Block />}
         </div>

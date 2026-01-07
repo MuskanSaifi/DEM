@@ -75,6 +75,10 @@ export async function POST(req) {
       tradeShopping = {},
     } = body;
 
+    // ✅ Debug: Log moqUnit to verify it's being received
+    console.log("🔍 moqUnit received in API:", moqUnit);
+    console.log("🔍 Full body moqUnit:", body.moqUnit);
+
     // ✅ Validate Required Fields
     if (!name || !minimumOrderQuantity || !Array.isArray(images) || images.length === 0) {
       console.error("❌ Missing required fields:", { name, minimumOrderQuantity, images });
@@ -171,7 +175,7 @@ export async function POST(req) {
       price,
       currency,
       minimumOrderQuantity,
-      moqUnit,
+      moqUnit: moqUnit || "", // ✅ Ensure moqUnit is always included
       images: imageUrls.map(({ url, public_id }) => ({ url, public_id })),
       country,
       state,
@@ -203,7 +207,9 @@ export async function POST(req) {
     });
 
     console.log("Saving product with images:", imageUrls.map(({ url, public_id }) => ({ url, public_id })));
+    console.log("🔍 Saving product with moqUnit:", moqUnit);
     await newProduct.save();
+    console.log("✅ Product saved. moqUnit in saved product:", newProduct.moqUnit);
     await User.findByIdAndUpdate(user.id, { $push: { products: newProduct._id } });
 
     return NextResponse.json({ success: true, message: "Product created successfully", data: newProduct }, { status: 201 });

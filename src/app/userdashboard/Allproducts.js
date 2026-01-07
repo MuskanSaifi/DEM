@@ -1,3 +1,4 @@
+// src/app/userdashboard/Allproducts.js
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { FaTrash } from "react-icons/fa";
@@ -22,7 +23,7 @@ const AllProducts = () => {
       price: "",
       currency: "INR",
       minimumOrderQuantity: "",
-      moqUnit: "Number",
+      moqUnit: "",
       state: "",
       city: "",
       images: [],
@@ -181,7 +182,8 @@ const AllProducts = () => {
         price: product.price || "",
         currency: product.currency || "INR",
         minimumOrderQuantity: product.minimumOrderQuantity || "",
-        moqUnit: product.moqUnit || "Number",
+        moqUnit: product.moqUnit || "", // ✅ Fixed: Changed from "Number" to empty string
+        country: product.country || "", // ✅ Added country
         state: product.state || "",
         city: product.city || "",
         images: product.images || [], // Keep existing images
@@ -263,7 +265,8 @@ const AllProducts = () => {
           price: Number(formData.basicDetails.price),
           currency: formData.basicDetails.currency,
           minimumOrderQuantity: Number(formData.basicDetails.minimumOrderQuantity),
-          moqUnit: formData.basicDetails.moqUnit,
+          moqUnit: formData.basicDetails.moqUnit || "", // ✅ Ensure moqUnit is included
+          country: formData.basicDetails.country || selectedProduct.country || "", // ✅ Include country
           state: formData.basicDetails.state,
           city: formData.basicDetails.city,
           images: formData.basicDetails.images, // Send updated images
@@ -291,10 +294,15 @@ const AllProducts = () => {
           tradeInformation: { // Trade information is also updated here
             ...selectedProduct.tradeInformation,
             ...formData.tradeInformation,
-            // Convert supplyQuantity to number if it exists
-            supplyAbility: formData.tradeInformation?.supplyAbility, // This field is a string, not a number
-            // The schema has supplyAbility as a string, so no conversion needed for it directly.
-            // If you had separate supplyQuantity and supplyUnit, you'd convert supplyQuantity.
+            // ✅ Convert supplyQuantity to number if it exists
+            supplyQuantity: Number(formData.tradeInformation?.supplyQuantity) || null,
+            supplyAbility: formData.tradeInformation?.supplyAbility || "", // This field is a string
+            // ✅ Ensure mainExportMarkets is an array
+            mainExportMarkets: Array.isArray(formData.tradeInformation?.mainExportMarkets) 
+              ? formData.tradeInformation.mainExportMarkets 
+              : (formData.tradeInformation?.mainExportMarkets 
+                  ? [formData.tradeInformation.mainExportMarkets] 
+                  : []),
           }
         };
       } else if (selectedField === "tradeShopping") {
@@ -303,21 +311,38 @@ const AllProducts = () => {
           tradeShopping: {
             ...selectedProduct.tradeShopping, // Preserve existing tradeShopping
             ...formData.tradeShopping, // Apply changes from form
-            // Ensure numbers are converted
-            gst: Number(formData.tradeShopping.gst) || null,
+            // ✅ Ensure numbers are converted
+            gst: formData.tradeShopping.gst !== "" && formData.tradeShopping.gst !== null 
+              ? Number(formData.tradeShopping.gst) 
+              : null,
             mrp: Number(formData.tradeShopping.mrp) || null,
             fixedSellingPrice: Number(formData.tradeShopping.fixedSellingPrice) || null,
+            // ✅ Ensure slabPricing is properly formatted
+            slabPricing: Array.isArray(formData.tradeShopping.slabPricing) 
+              ? formData.tradeShopping.slabPricing.map(slab => ({
+                  minQuantity: Number(slab.minQuantity) || null,
+                  maxQuantity: Number(slab.maxQuantity) || null,
+                  price: Number(slab.price) || null,
+                }))
+              : [],
             packSize: Number(formData.tradeShopping.packSize) || null,
-            minOrderedPacks: Number(formData.tradeShopping.minOrderedPabs) || null,
+            minOrderedPacks: Number(formData.tradeShopping.minOrderedPacks) || null,
             stockQuantity: Number(formData.tradeShopping.stockQuantity) || null,
             weightPerUnit: Number(formData.tradeShopping.weightPerUnit) || null,
-            // Handle nested packageDimensions
+            // ✅ Handle nested packageDimensions
             packageDimensions: {
               ...selectedProduct.tradeShopping?.packageDimensions,
               ...formData.tradeShopping?.packageDimensions,
-              length: Number(formData.tradeShopping.packageDimensions?.length) || null,
-              width: Number(formData.tradeShopping.packageDimensions?.width) || null,
-              height: Number(formData.tradeShopping.packageDimensions?.height) || null,
+              length: formData.tradeShopping.packageDimensions?.length 
+                ? Number(formData.tradeShopping.packageDimensions.length) 
+                : null,
+              width: formData.tradeShopping.packageDimensions?.width 
+                ? Number(formData.tradeShopping.packageDimensions.width) 
+                : null,
+              height: formData.tradeShopping.packageDimensions?.height 
+                ? Number(formData.tradeShopping.packageDimensions.height) 
+                : null,
+              unit: formData.tradeShopping.packageDimensions?.unit || "cm",
             },
           },
         };

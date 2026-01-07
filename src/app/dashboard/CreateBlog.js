@@ -150,7 +150,6 @@ const CreateBlog = () => {
         confirmButtonColor: "#d33",
       });
     }
-
     setLoading(false);
   };
 

@@ -1,5 +1,6 @@
 import connectDB from "@/lib/dbConnect";
 import Category from "@/models/Category";
+import SubCategory from "@/models/SubCategory"; // ✅ MUST IMPORT for populate to work
 
 export async function GET() {
   try {

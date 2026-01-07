@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";
 import SubCategory from "@/models/SubCategory";
+import User from "@/models/User";
 import Link from "next/link";
 import ProductCardClient from "./ProductCardClient";
 
@@ -118,7 +119,7 @@ export default async function SubcategoryPage({
         city: normalizedCity,
       })
         .select(
-          "name price currency images city state minimumOrderQuantity moqUnit specifications userId productslug"
+          "name price currency images city state minimumOrderQuantity moqUnit specifications userId productslug description moqUnit"
         )
         .populate("userId", "companyName")
         .skip(skip)

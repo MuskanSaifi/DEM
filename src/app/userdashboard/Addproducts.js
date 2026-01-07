@@ -1,3 +1,4 @@
+// src/app/userdashboard/Addproducts.js
 import { useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -280,6 +281,12 @@ const handleSubmit = async (e) => {
     return;
   }
 
+  // ✅ Validate moqUnit
+  if (!product.moqUnit || product.moqUnit.trim() === "") {
+    toast.error("Please select MOQ Unit (e.g., Kilogram, Piece, etc.).");
+    return;
+  }
+
     setLoading(true);
 
     try {
@@ -292,6 +299,8 @@ const handleSubmit = async (e) => {
 
         const formattedProduct = {
             ...product,
+            // ✅ Explicitly include moqUnit to ensure it's saved
+            moqUnit: product.moqUnit || "",
             images: product?.images.map((img) => ({ url: img })),  // ✅ Convert strings to objects
             specifications: {
                 ...product.specifications,
@@ -324,6 +333,9 @@ const handleSubmit = async (e) => {
                 },
             },
         };
+        
+        // ✅ Debug: Log moqUnit to verify it's being sent
+        console.log("🔍 moqUnit being sent:", formattedProduct.moqUnit);
       
         const response = await axios.post(
             `/api/userprofile/manageproducts`,
@@ -508,11 +520,12 @@ const handleSubmit = async (e) => {
                                             <select
                                                 className="text-sm bg-transparent outline-none h-full appearance-none"
                                                 name="moqUnit"
-                                                value={product.moqUnit}
+                                                value={product.moqUnit || ""}
                                                 onChange={handleChange}
                                                 required
                                             >
-  <option value="Kilograms">Kg</option>
+  <option value="">Select Unit</option>
+  <option value="Kilogram">Kg</option>
 <option value="Grams">Gram</option>
 <option value="Metric Tons">Metric Ton</option>
 <option value="Ton/Tons">Ton</option>
@@ -909,7 +922,7 @@ const handleSubmit = async (e) => {
                                         onChange={(e) => handleNestedChange(e, "specifications")}
                                     >
                                         <option value="">Select</option>
-                                        <option value="Kilograms">Kg</option>
+                                        <option value="Kilogram">Kg</option>
                                         <option value="Grams">Grams</option>
                                         <option value="Mg">Mg</option>
                                     </select>
@@ -1261,7 +1274,7 @@ const handleSubmit = async (e) => {
     onChange={(e) => handleNestedChange(e, "tradeShopping")}
   >
 <option value="">Select Unit</option>
-<option value="Kilograms/Kilograms">Kilograms/Kilograms</option>
+<option value="Kilogram">Kilogram</option>
 <option value="Grams">Grams</option>
 <option value="Metric Tons">Metric Tons</option>
 <option value="Ton/Tons">Ton/Tons</option>
