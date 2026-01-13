@@ -98,6 +98,17 @@ export async function PATCH(req) {
 
         updateFields.images = finalImages;
 
+        // ✅ Normalize country, state, and city to lowercase to prevent duplicates
+        if (updateFields.country) {
+            updateFields.country = updateFields.country.toLowerCase().trim();
+        }
+        if (updateFields.state) {
+            updateFields.state = updateFields.state.toLowerCase().trim();
+        }
+        if (updateFields.city) {
+            updateFields.city = updateFields.city.toLowerCase().trim();
+        }
+
         const updatedProduct = await Product.findOneAndUpdate(
             { _id: productId, userId: user.id },
             { $set: updateFields },

@@ -167,6 +167,11 @@ export async function POST(req) {
 
     const imageUrls = await Promise.all(validImages.map(uploadToCloudinary));
 
+    // ✅ Normalize country, state, and city to lowercase to prevent duplicates
+    const normalizedCountry = country ? country.toLowerCase().trim() : "";
+    const normalizedState = state ? state.toLowerCase().trim() : "";
+    const normalizedCity = city ? city.toLowerCase().trim() : "";
+
     // ✅ Create & Save Product
     const newProduct = new Product({
       userId: user.id,
@@ -177,9 +182,9 @@ export async function POST(req) {
       minimumOrderQuantity,
       moqUnit: moqUnit || "", // ✅ Ensure moqUnit is always included
       images: imageUrls.map(({ url, public_id }) => ({ url, public_id })),
-      country,
-      state,
-      city,
+      country: normalizedCountry,
+      state: normalizedState,
+      city: normalizedCity,
       description,
       category: categoryExists._id,
       subCategory: subCategoryExists ? subCategoryExists._id : null,

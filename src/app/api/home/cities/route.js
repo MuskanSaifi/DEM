@@ -11,9 +11,9 @@ export async function GET(req) {
 
     const query = {};
 
-    // ✅ City filter
+    // ✅ City filter - case-insensitive to handle both old (capitalized) and new (lowercase) data
     if (city && city !== "all") {
-      query.city = city.toLowerCase();
+      query.city = { $regex: new RegExp(`^${city.toLowerCase()}$`, 'i') };
     }
 
     // ✅ Product filter only if NOT "all"

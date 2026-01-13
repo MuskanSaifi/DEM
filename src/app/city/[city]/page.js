@@ -7,8 +7,12 @@ import SubCategory from "@/models/SubCategory"; // ✅ Required for populate("su
 import Link from "next/link";
 import Image from "next/image";
 
-// ✅ ISR: Revalidate every hour (3600 seconds)
-export const revalidate = 3600;
+// ✅ ISR: Revalidate every 10 minutes (600 seconds) - optimized for performance
+export const revalidate = 600;
+
+// ✅ Dynamic route segment config
+export const dynamic = 'force-static';
+export const dynamicParams = true;
 
 /* ⭐ SEO METADATA (FIXED) */
 export async function generateMetadata({ params }) {
@@ -45,48 +49,99 @@ export default async function CityPage({ params }) {
 
     await connectdb();
 
-    // ✅ Fetch products to get unique categories and subcategories with icons
-    const products = await Product.find({ city })
-      .select("category subCategory")
-      .populate("category", "name icon categoryslug")
-      .populate("subCategory", "name subcategoryslug icon")
-      .limit(500) // Get enough to find all unique subcategories
-      .lean();
+    // ✅ OPTIMIZED: Use aggregation pipeline for better performance
+    // This is much faster than find + populate + loop
+    const categorySubcategoryData = await Product.aggregate([
+      {
+        // ✅ Match products by city (case-insensitive) with subcategory
+        $match: {
+          city: { $regex: new RegExp(`^${city}$`, 'i') },
+          subCategory: { $ne: null },
+          category: { $ne: null }
+        }
+      },
+      // ✅ Limit to prevent CPU spike (1000 products max per city)
+      { $limit: 1000 },
+      // ✅ Lookup category
+      {
+        $lookup: {
+          from: 'categories',
+          localField: 'category',
+          foreignField: '_id',
+          as: 'categoryData',
+          pipeline: [
+            { $project: { name: 1, icon: 1, categoryslug: 1 } }
+          ]
+        }
+      },
+      // ✅ Lookup subcategory
+      {
+        $lookup: {
+          from: 'subcategories',
+          localField: 'subCategory',
+          foreignField: '_id',
+          as: 'subCategoryData',
+          pipeline: [
+            { $project: { name: 1, subcategoryslug: 1, icon: 1 } }
+          ]
+        }
+      },
+      // ✅ Unwind arrays
+      { $unwind: { path: '$categoryData', preserveNullAndEmptyArrays: false } },
+      { $unwind: { path: '$subCategoryData', preserveNullAndEmptyArrays: false } },
+      // ✅ Group by category and subcategory to get unique pairs
+      {
+        $group: {
+          _id: {
+            categoryId: '$category',
+            subCategoryId: '$subCategory'
+          },
+          categoryName: { $first: '$categoryData.name' },
+          categoryIcon: { $first: '$categoryData.icon' },
+          categorySlug: { $first: '$categoryData.categoryslug' },
+          subCategoryName: { $first: '$subCategoryData.name' },
+          subCategorySlug: { $first: '$subCategoryData.subcategoryslug' },
+          subCategoryIcon: { $first: '$subCategoryData.icon' }
+        }
+      },
+      // ✅ Sort for consistent output
+      { $sort: { categoryName: 1, subCategoryName: 1 } }
+    ]).allowDiskUse(true); // ✅ Allow disk use for large datasets
 
-    // Group by category and subcategory with icons
-    const categoryMap = {};
-    for (const p of products) {
-      const catId = p.category?._id?.toString();
-      const catName = p.category?.name || "Other Products";
-      const catIcon = p.category?.icon;
-      const catSlug = p.category?.categoryslug;
-      const subcatId = p.subCategory?._id?.toString();
-      const subcatName = p.subCategory?.name;
-      const subcatSlug = p.subCategory?.subcategoryslug;
-      const subcatIcon = p.subCategory?.icon;
-
-      if (!catId || !subcatId || !subcatSlug) continue;
-
-      if (!categoryMap[catId]) {
-        categoryMap[catId] = {
-          name: catName,
-          icon: catIcon,
-          slug: catSlug,
+    // ✅ Group by category (optimized Map structure)
+    const categoryMap = new Map();
+    
+    for (const item of categorySubcategoryData) {
+      const catId = item._id.categoryId.toString();
+      const subcatId = item._id.subCategoryId.toString();
+      
+      // Skip if essential data is missing
+      if (!item.categoryName || !item.subCategoryName) continue;
+      
+      // Get or create category
+      if (!categoryMap.has(catId)) {
+        categoryMap.set(catId, {
+          name: item.categoryName,
+          icon: item.categoryIcon,
+          slug: item.categorySlug,
           subcategories: new Map(),
-        };
+        });
       }
-
-      if (!categoryMap[catId].subcategories.has(subcatId)) {
-        categoryMap[catId].subcategories.set(subcatId, {
-          name: subcatName,
-          slug: subcatSlug,
-          icon: subcatIcon,
+      
+      // Add subcategory if not already present
+      const category = categoryMap.get(catId);
+      if (!category.subcategories.has(subcatId)) {
+        category.subcategories.set(subcatId, {
+          name: item.subCategoryName,
+          slug: item.subCategorySlug || subcatId,
+          icon: item.subCategoryIcon,
         });
       }
     }
-
+    
+    // Convert Map to array for rendering
+    const categoriesList = Array.from(categoryMap.values());
     const displayCity = city.charAt(0).toUpperCase() + city.slice(1);
-    const categoriesList = Object.values(categoryMap);
 
     return (
       <div className="container mx-auto p-4 max-w-7xl">

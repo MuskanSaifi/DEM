@@ -16,7 +16,10 @@ export async function GET(req) {
       );
     }
 
-    const products = await Product.find({ city })
+    // ✅ Case-insensitive city query to handle both old (capitalized) and new (lowercase) data
+    const products = await Product.find({
+      city: { $regex: new RegExp(`^${city}$`, 'i') }
+    })
       .select("name productslug price images")
       .limit(50)
       .lean();

@@ -1,13 +1,19 @@
+// app/city/[city]/[subcategory]/page.js
 import mongoose from "mongoose";
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";
 import SubCategory from "@/models/SubCategory";
 import User from "@/models/User";
+import BusinessProfile from "@/models/BusinessProfile";
 import Link from "next/link";
-import ProductCardClient from "./ProductCardClient";
+import ProductListingClient from "./ProductListingClient";
 
-// ✅ ISR: Revalidate every hour
-export const revalidate = 3600;
+// ✅ ISR: Revalidate every 10 minutes (600 seconds) - optimized for performance
+export const revalidate = 600;
+
+// ✅ Dynamic route segment config
+export const dynamic = 'force-static';
+export const dynamicParams = true;
 
 /* =========================
    Generate Metadata
@@ -32,8 +38,8 @@ export async function generateMetadata({ params: rawParams }) {
       subcat?.name || subcategory.replace(/-/g, " ");
 
     return {
-      title: `${displaySubcategory} in ${displayCity} | Dial Export Mart`,
-      description: `Find ${displaySubcategory} products in ${displayCity}. Browse verified suppliers and manufacturers.`,
+      title: `${displaySubcategory}  Manufacturers, Suppliers & Wholesalers in ${displayCity}`,
+      description: `Find verified  ${displaySubcategory} manufacturers, suppliers & wholesalers in ${displayCity}. Compare bulk pricing, MOQ & supplier details to connect with truster sellers.`,
       alternates: {
         canonical: `https://www.dialexportmart.com/city/${normalizedCity}/${normalizedSubcategory}`,
       },
@@ -112,43 +118,93 @@ export default async function SubcategoryPage({
         ? new mongoose.Types.ObjectId(subcat._id)
         : subcat._id;
 
-    /* ---------- Products + Count ---------- */
-    const [products, totalCount] = await Promise.all([
-      Product.find({
-        subCategory: subcatObjectId,
-        city: normalizedCity,
-      })
-        .select(
-          "name price currency images city state minimumOrderQuantity moqUnit specifications userId productslug description moqUnit"
-        )
-        .populate("userId", "companyName")
-        .skip(skip)
-        .limit(limit)
-        .lean(),
+    /* ---------- Get Products with Limit (CPU Optimization) ---------- */
+    // ✅ CRITICAL: Limit products to prevent CPU spike (500 max per subcategory)
+    // Client-side filtering will work on this limited set
+    const allProducts = await Product.find({
+      subCategory: subcatObjectId,
+      city: { $regex: new RegExp(`^${normalizedCity}$`, 'i') },
+    })
+      .select(
+        "name price currency images city state minimumOrderQuantity moqUnit specifications userId productslug description tradeShopping tradeInformation"
+      )
+      .populate("userId", "companyName")
+      .limit(500) // ✅ CRITICAL: Limit to prevent CPU spike
+      .lean();
 
-      Product.countDocuments({
-        subCategory: subcatObjectId,
-        city: normalizedCity,
-      }),
-    ]);
+    const totalCount = allProducts.length;
 
-    const totalPages = Math.ceil(totalCount / limit);
+    /* ---------- Fetch Business Profiles (Optimized) ---------- */
+    // ✅ Extract unique user IDs efficiently
+    const userIds = new Set();
+    allProducts.forEach(p => {
+      const userId = p.userId?._id?.toString() || p.userId?.toString();
+      if (userId) userIds.add(userId);
+    });
+
+    // ✅ Fetch business profiles only if we have user IDs (batch query)
+    const businessProfiles = userIds.size > 0
+      ? await BusinessProfile.find({
+          userId: { $in: Array.from(userIds).map(id => new mongoose.Types.ObjectId(id)) }
+        })
+          .select("userId businessType")
+          .lean()
+      : [];
+
+    // Create a map for quick lookup
+    const businessProfileMap = {};
+    businessProfiles.forEach(bp => {
+      const userId = bp.userId?.toString();
+      if (userId) {
+        businessProfileMap[userId] = bp;
+      }
+    });
 
     /* ---------- Serialize ---------- */
-    const serializedProducts = products.map((product) => ({
+    const serializedProducts = allProducts.map((product) => {
+      const userId = product.userId?._id?.toString() || product.userId?.toString();
+      const businessProfile = userId ? businessProfileMap[userId] : null;
+
+      return {
+        ...product,
+        _id: product._id.toString(),
+        userId: product.userId
+          ? {
+              _id: product.userId._id.toString(),
+              companyName: product.userId.companyName,
+            }
+          : null,
+        businessProfile: businessProfile ? {
+          businessType: businessProfile.businessType || []
+        } : null,
+        images:
+          product.images?.map((img) => ({
+            ...img,
+            _id: img._id?.toString(),
+          })) || [],
+        specifications: product.specifications || {},
+        tradeShopping: product.tradeShopping || {},
+        tradeInformation: product.tradeInformation || {},
+      };
+    });
+
+    /* ---------- Get Related Products (Optimized) ---------- */
+    // ✅ Use case-insensitive query and limit for performance
+    const relatedProducts = await Product.find({
+      city: { $regex: new RegExp(`^${normalizedCity}$`, 'i') },
+      subCategory: { $ne: subcatObjectId }, // Different subcategory
+    })
+      .select("name productslug images price city state")
+      .limit(4)
+      .lean();
+
+    const serializedRelatedProducts = relatedProducts.map((product) => ({
       ...product,
       _id: product._id.toString(),
-      userId: product.userId
-        ? {
-            _id: product.userId._id.toString(),
-            companyName: product.userId.companyName,
-          }
-        : null,
-      images:
-        product.images?.map((img) => ({
-          ...img,
-          _id: img._id?.toString(),
-        })) || [],
+      images: product.images?.map((img) => ({
+        ...img,
+        _id: img._id?.toString(),
+      })) || [],
     }));
 
     const displayCity =
@@ -156,93 +212,18 @@ export default async function SubcategoryPage({
     const displaySubcategory = subcat.name;
 
     /* =========================
-       UI
+       UI - Use Client Component for Filtering
     ========================= */
     return (
-      <div className="container mx-auto p-4 max-w-7xl">
-        {/* Breadcrumb */}
-        <nav className="mb-4 text-sm">
-          <Link href="/" className="text-blue-600 hover:underline">
-            Home
-          </Link>{" "}
-          /{" "}
-          <Link
-            href={`/city/${normalizedCity}`}
-            className="text-blue-600 hover:underline"
-          >
-            {displayCity}
-          </Link>{" "}
-          / <span className="text-gray-600">{displaySubcategory}</span>
-        </nav>
-
-        <h1 className="text-3xl font-bold mb-2">
-          {displaySubcategory} in {displayCity}
-        </h1>
-
-        <p className="text-gray-600 mb-6">
-          {totalCount} {totalCount === 1 ? "product" : "products"} found
-        </p>
-
-        {serializedProducts.length === 0 ? (
-          <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 p-4 rounded">
-            No products found in this category.
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {serializedProducts.map((product) => (
-                <ProductCardClient key={product._id} product={product} />
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center gap-2 mt-10 flex-wrap">
-                {page > 1 && (
-                  <Link
-                    href={`/city/${normalizedCity}/${normalizedSubcategory}?page=${
-                      page - 1
-                    }`}
-                    className="px-3 py-1 border rounded hover:bg-gray-100"
-                  >
-                    ← Prev
-                  </Link>
-                )}
-
-                {Array.from({ length: totalPages })
-                  .slice(0, 10)
-                  .map((_, i) => {
-                    const pageNum = i + 1;
-                    return (
-                      <Link
-                        key={pageNum}
-                        href={`/city/${normalizedCity}/${normalizedSubcategory}?page=${pageNum}`}
-                        className={`px-3 py-1 border rounded ${
-                          page === pageNum
-                            ? "bg-blue-600 text-white"
-                            : "hover:bg-gray-100"
-                        }`}
-                      >
-                        {pageNum}
-                      </Link>
-                    );
-                  })}
-
-                {page < totalPages && (
-                  <Link
-                    href={`/city/${normalizedCity}/${normalizedSubcategory}?page=${
-                      page + 1
-                    }`}
-                    className="px-3 py-1 border rounded hover:bg-gray-100"
-                  >
-                    Next →
-                  </Link>
-                )}
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      <ProductListingClient
+        initialProducts={serializedProducts}
+        city={normalizedCity}
+        subcategory={normalizedSubcategory}
+        displayCity={displayCity}
+        displaySubcategory={displaySubcategory}
+        totalCount={totalCount}
+        relatedProducts={serializedRelatedProducts}
+      />
     );
   } catch (error) {
     console.error("Subcategory page error:", error);

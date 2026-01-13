@@ -147,6 +147,7 @@ const BusinessProfile = () => {
     { value: 'Manufacturer', label: 'Manufacturer' },
     { value: 'Wholesaler', label: 'Wholesaler' },
     { value: 'Retailer', label: 'Retailer' },
+    { value: 'Supplier', label: 'Supplier' },
   ];
 
   const [loading, setLoading] = useState(true);

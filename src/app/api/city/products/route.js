@@ -22,8 +22,9 @@ export async function GET(req) {
     const limit = 20;
     const skip = (page - 1) * limit;
 
+    // ✅ Case-insensitive city query to handle both old (capitalized) and new (lowercase) data
     const products = await Product.find({
-      city: city.toLowerCase(),
+      city: { $regex: new RegExp(`^${city.toLowerCase()}$`, 'i') },
       productslug: productSlug.toLowerCase(),
     })
       .select(`

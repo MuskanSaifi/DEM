@@ -373,12 +373,22 @@ const itemRefs = useRef([]);
   )
       .map((city, index) => (
         <li key={index}>
-          <button
-            className="w-full text-left ps-2 p-1 hover:bg-gray-100"
-            onClick={() => router.push(`/city/${city.toLowerCase()}`)} 
-          >
-            {city}
-          </button>
+<button
+  className="w-full text-left ps-2 p-1 hover:bg-gray-100"
+  onClick={() => {
+    setSelectedCity(city);        // ✅ selected city update
+    setCityDropdownOpen(false);  // ✅ dropdown close
+    setCitySearch("");           // ✅ search clear (optional)
+    if (city === "All City") {
+   router.push("/city/all-city");
+} else {
+  router.push(`/city/${city.toLowerCase()}`);
+}
+
+  }}
+>
+  {city}
+</button>
         </li>
       ))
   ) : (

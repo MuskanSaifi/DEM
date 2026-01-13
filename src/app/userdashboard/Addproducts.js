@@ -132,7 +132,7 @@ const [availableCities, setAvailableCities] = useState([]);
         
           setProduct((prev) => ({
             ...prev,
-            country: countryCode, // ✅ This is perfect
+            country: countryCode.toLowerCase().trim(), // ✅ Normalize to lowercase
             state: "",
             city: "",
           }));
@@ -148,7 +148,7 @@ const [availableCities, setAvailableCities] = useState([]);
             const stateCode = e.target.value;
             setProduct((prev) => ({
               ...prev,
-              state: stateCode,
+              state: stateCode.toLowerCase().trim(), // ✅ Normalize to lowercase
               city: "", // Reset city
             }));
           
@@ -160,7 +160,7 @@ const [availableCities, setAvailableCities] = useState([]);
   const handleCityChange = (e) => {
     setProduct((prev) => ({
       ...prev,
-      city: e.target.value,
+      city: e.target.value.toLowerCase().trim(), // ✅ Normalize to lowercase
     }));
   };
   

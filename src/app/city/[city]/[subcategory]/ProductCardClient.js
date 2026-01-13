@@ -1,14 +1,12 @@
+// app/city/[city]/[subcategory]/ProductCardClient.js
 "use client";
-
 import Link from "next/link";
 import Image from "next/image";
 import Buyfrom from "./Buyfrom";
-import { MapPin } from "lucide-react";
-import { useState } from "react";
+import { MapPin, CheckCircle2 } from "lucide-react";
+import { memo } from "react";
 
-
-export default function ProductCardClient({ product }) {
-    const [expanded, setExpanded] = useState(false);
+function ProductCardClient({ product }) {
   const images = product.images?.length
     ? product.images
     : [{ url: "https://placehold.co/400x300" }];
@@ -23,18 +21,38 @@ export default function ProductCardClient({ product }) {
 
   const sellerId = product.userId?._id || product.userId;
 
+  // Get certification info
+  const hasGST = product.tradeShopping?.gst !== null && product.tradeShopping?.gst !== undefined;
+  const hasCertification = hasGST || product.tradeInformation?.certifications;
+
+  // Get packaging info - Check multiple sources
+  const packagingType = product.tradeInformation?.packagingDetails 
+    ? product.tradeInformation.packagingDetails.split(',')[0].trim() // Get first packaging type
+    : product.tradeShopping?.unit 
+    ? product.tradeShopping.unit 
+    : null;
+
+  // Get usage/type info
+  const usage = product.specifications?.usage || 
+               product.specifications?.application || 
+               product.specifications?.productType || 
+               product.specifications?.type || 
+               "";
+
   return (
-    <div className="group bg-white border rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col">
+    <div className="group bg-white border rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full">
       
       {/* IMAGE */}
-      <Link href={`/products/${product._id}`} className="relative h-52 overflow-hidden">
+      <Link href={`/products/${product._id}`} className="relative h-48 overflow-hidden bg-gray-50">
         <Image
-          src={images[0].url}
+          src={images[0]?.url || images[0] || "https://placehold.co/400x300"}
           alt={product.name}
           fill
-          className="object-contain transition-transform duration-500 group-hover:scale-110"
+          className="object-contain transition-transform duration-500 group-hover:scale-110 p-2"
+          unoptimized
         />
-        <span className="absolute top-3 left-3 bg-white/90 text-xs px-2 py-1 rounded-full font-medium shadow">
+        <span className="absolute top-3 left-3 bg-green-600 text-white text-xs px-2 py-1 rounded-full font-medium shadow-md flex items-center gap-1">
+          <CheckCircle2 size={12} />
           Verified
         </span>
       </Link>
@@ -42,64 +60,106 @@ export default function ProductCardClient({ product }) {
       {/* CONTENT */}
       <div className="p-4 flex-1 flex flex-col">
         <Link href={`/products/${product._id}`}>
-          <h2 className="font-semibold text-sm capitalize line-clamp-2  hover:text-red-600">
+          <div className="font-semibold text-base capitalize line-clamp-2 hover:text-red-600 mb-2">
             {product.name}
-          </h2>
+          </div>
         </Link>
 
-        {/* PRICE */}
-        <p className="text-xl font-bold text-red-600 mb-1">
-          {displayPrice}
-        </p>
+     {/* PRICE */}
+<p className="text-2xl font-bold text-red-600 mb-2 flex items-end gap-2">
+  <span>{displayPrice}</span>
+</p>
 
-<div className="text-xs text-gray-600 mb-0">
-  <p className={`${expanded ? "" : "line-clamp-3"}`}>
-    {product.description}
-  </p>
-
-  {product.description?.length > 120 && (
-    <button
-      onClick={() => setExpanded(!expanded)}
-      className="text-red-600 font-medium hover:underline"
-    >
-      {expanded ? "read less" : "read more..."}
-    </button>
-  )}
-</div>
-
-
-        {/* MOQ */}
-        {product.minimumOrderQuantity > 0 && (
-          <p className="text-xs text-gray-600 mb-1">
-            MOQ: <b>{product.minimumOrderQuantity} {product.moqUnit}</b>
+   {/* MOQ */}
+   {product.minimumOrderQuantity > 0 && (
+          <p className="text-xs text-gray-600 mb-2">
+            <span className="font-medium">MOQ:</span> <b>{product.minimumOrderQuantity} {product.moqUnit || ""}</b>
           </p>
         )}
 
-        {/* LOCATION */}
-        <div className="flex items-center gap-1 text-xs text-gray-600">
-          <MapPin size={14} />
-          <span>{product.city}, {product.state}</span>
-        </div>
+        {/* CERTIFICATION */}
+        {hasCertification && (
+          <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
+            {hasGST && (
+              <span className="bg-green-50 text-green-700 px-2 py-1 rounded flex items-center gap-1">
+                <CheckCircle2 size={12} />
+                GST Certified
+              </span>
+            )}
+            {product.tradeInformation?.certifications && (
+              <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded flex items-center gap-1">
+                <CheckCircle2 size={12} />
+                {product.tradeInformation.certifications}
+              </span>
+            )}
+          </div>
+        )}
 
-        {/* SPEC TAG */}
+     
+
+        {/* USAGE/TYPE */}
+        {usage && (
+          <p className="text-xs text-gray-600 mb-1">
+            <span className="font-medium">Usage:</span> {usage}
+          </p>
+        )}
+        
+
+        {/* MATERIAL TAG */}
         {product.specifications?.material && (
           <div className="my-2">
-            <span className="inline-block text-xs bg-gray-100 px-3 py-1 rounded-full">
-              {product.specifications.material}
+            <span className="inline-block text-xs bg-gray-100 px-3 py-1 rounded-full border">
+              Material: {product.specifications.material}
             </span>
           </div>
         )}
 
-        {/* SELLER */}
-        <div className="mt-auto pt-3 border-t text-xs font-medium text-gray-800">
-          {product.userId?.companyName || "Verified Supplier"}
+{product.description && (
+  <p className="text-xs text-gray-600 mb-3 flex-1">
+    {product.description.split(" ").slice(0, 15).join(" ")}...
+  </p>
+)}
+
+
+        {/* SELLER INFO */}
+        <div className="mt-auto pt-3 border-t">
+          <div className="text-xs font-medium text-gray-800 mb-1">
+            Seller: {product.userId?.companyName || "Verified Supplier"}
+          </div>
+
+              {/* LOCATION */}
+    <div className="flex items-center px-4 text-xs text-gray-600 mb-2">
+          <MapPin size={14} />
+          <span className="capitalize">{product.city}, {product.state}</span>
+        </div>
+          
+          {/* BUSINESS TYPE / SUPPLIER TYPE */}
+          {product.businessProfile?.businessType && 
+           Array.isArray(product.businessProfile.businessType) && 
+           product.businessProfile.businessType.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {product.businessProfile.businessType.map((type, index) => (
+                <span
+                  key={index}
+                  className="inline-block text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full border border-blue-200 font-medium"
+                >
+                  {type}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
+
+
       {/* CTA */}
-      <div className="p-4 pt-0">
+      <div className="p-4 pt-0 border-t">
         <Buyfrom product={product} sellerId={sellerId} />
       </div>
     </div>
   );
 }
+
+// ✅ Optimize with React.memo to prevent unnecessary re-renders
+export default memo(ProductCardClient);
