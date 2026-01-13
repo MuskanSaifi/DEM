@@ -98,15 +98,16 @@ export async function PATCH(req) {
 
         updateFields.images = finalImages;
 
-        // ✅ Normalize country, state, and city to lowercase to prevent duplicates
+        // ✅ Normalize country to lowercase (ISO codes should be lowercase)
+        // ✅ Keep state and city in original case (full names should be preserved)
         if (updateFields.country) {
             updateFields.country = updateFields.country.toLowerCase().trim();
         }
         if (updateFields.state) {
-            updateFields.state = updateFields.state.toLowerCase().trim();
+            updateFields.state = updateFields.state.trim(); // Keep original case for full state names
         }
         if (updateFields.city) {
-            updateFields.city = updateFields.city.toLowerCase().trim();
+            updateFields.city = updateFields.city.trim(); // Keep original case for city names
         }
 
         const updatedProduct = await Product.findOneAndUpdate(

@@ -132,7 +132,7 @@ const [availableCities, setAvailableCities] = useState([]);
         
           setProduct((prev) => ({
             ...prev,
-            country: countryCode.toLowerCase().trim(), // ✅ Normalize to lowercase
+            country: countryCode, // Keep original case to match option values
             state: "",
             city: "",
           }));
@@ -145,22 +145,28 @@ const [availableCities, setAvailableCities] = useState([]);
           
   // Handle state change
           const handleStateChange = (e) => {
-            const stateCode = e.target.value;
+            const stateName = e.target.value; // This will be the full state name
+            // Find the state object to get its ISO code for fetching cities
+            const selectedStateObj = availableStates.find(state => state.name === stateName);
+            const stateCode = selectedStateObj ? selectedStateObj.isoCode : "";
+            
             setProduct((prev) => ({
               ...prev,
-              state: stateCode.toLowerCase().trim(), // ✅ Normalize to lowercase
+              state: stateName, // Save full state name instead of ISO code
               city: "", // Reset city
             }));
           
-            const cities = City.getCitiesOfState(selectedCountry, stateCode);
-            setAvailableCities(cities);
+            if (stateCode) {
+              const cities = City.getCitiesOfState(product.country || selectedCountry, stateCode);
+              setAvailableCities(cities);
+            }
           };
           
   // Handle city change
   const handleCityChange = (e) => {
     setProduct((prev) => ({
       ...prev,
-      city: e.target.value.toLowerCase().trim(), // ✅ Normalize to lowercase
+      city: e.target.value, // Keep original case to match option values
     }));
   };
   
@@ -608,11 +614,11 @@ const handleSubmit = async (e) => {
     className="w-full pl-3 pr-3 py-2 appearance-none bg-transparent outline-none border focus:border-slate-600 shadow-sm rounded-lg"
     value={product.state}
     onChange={handleStateChange}
-    disabled={!selectedCountry}
+    disabled={!product.country}
   >
     <option value="">Select State</option>
     {availableStates.map((state) => (
-      <option key={state.isoCode} value={state.isoCode}>
+      <option key={state.isoCode} value={state.name}>
         {state.name}
       </option>
     ))}

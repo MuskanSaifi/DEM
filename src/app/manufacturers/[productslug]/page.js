@@ -109,11 +109,11 @@ export async function generateMetadata({ params }) {
         images: [{ url: imageUrl }],
         title: metaTitle || getOptimizedTitle(),
         description: generateMetaDescription(),
-        url: `${process.env.NEXT_PUBLIC_BASE_URL}/manufacturers/${productslug}`,
+        url: `https://www.dialexportmart.com/manufacturers/${productslug}`,
         type: 'website', // or 'product'
       },
       alternates: {
-        canonical: `${process.env.NEXT_PUBLIC_BASE_URL}/manufacturers/${productslug}`,
+        canonical: `https://www.dialexportmart.com/manufacturers/${productslug}`,
       },
     };
   } catch (err) {
@@ -122,7 +122,7 @@ export async function generateMetadata({ params }) {
       title: "Product Not Found",
       description: "The product you're looking for could not be found due to a server error.",
       alternates: {
-        canonical: `${process.env.NEXT_PUBLIC_BASE_URL}/products/not-found`,
+        canonical: `https://www.dialexportmart.com/products/not-found`,
       },
     };
   }

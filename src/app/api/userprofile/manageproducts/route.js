@@ -167,10 +167,11 @@ export async function POST(req) {
 
     const imageUrls = await Promise.all(validImages.map(uploadToCloudinary));
 
-    // ✅ Normalize country, state, and city to lowercase to prevent duplicates
+    // ✅ Normalize country to lowercase (ISO codes should be lowercase)
+    // ✅ Keep state and city in original case (full names should be preserved)
     const normalizedCountry = country ? country.toLowerCase().trim() : "";
-    const normalizedState = state ? state.toLowerCase().trim() : "";
-    const normalizedCity = city ? city.toLowerCase().trim() : "";
+    const normalizedState = state ? state.trim() : ""; // Keep original case for full state names
+    const normalizedCity = city ? city.trim() : ""; // Keep original case for city names
 
     // ✅ Create & Save Product
     const newProduct = new Product({
