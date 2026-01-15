@@ -6,6 +6,7 @@ import User from "@/models/User";
 import cloudinary from "@/lib/cloudinary"; // This imports the configured cloudinary.v2 instance
 import SubCategory from "@/models/SubCategory";
 import mongoose from "mongoose"; // Import mongoose for ObjectId validation
+import { validateContent } from "@/middleware/contentValidation";
 // ✅ Upload Image to Cloudinary Function
 const uploadToCloudinary = async (image) => {
     // This check is refined: Ensure it's a string and starts with data:image
@@ -49,6 +50,21 @@ export async function PATCH(req) {
 
         if (!productId) {
             return NextResponse.json({ success: false, message: "Product ID is required" }, { status: 400 });
+        }
+
+        // ✅ SECURITY: Validate content for malicious patterns
+        try {
+          if (updateFields.name) validateContent(updateFields.name, 'name');
+          if (updateFields.description) validateContent(updateFields.description, 'description');
+          if (updateFields.metaTitle) validateContent(updateFields.metaTitle, 'metaTitle');
+          if (updateFields.metaDescription) validateContent(updateFields.metaDescription, 'metaDescription');
+          if (updateFields.metaKeywords) validateContent(updateFields.metaKeywords, 'metaKeywords');
+        } catch (validationError) {
+          console.error("❌ Content validation failed:", validationError.message);
+          return NextResponse.json({ 
+            success: false, 
+            message: validationError.message || "Malicious content detected. Please remove inappropriate content." 
+          }, { status: 400 });
         }
 
         const existingProduct = await Product.findById(productId);

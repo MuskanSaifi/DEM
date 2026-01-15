@@ -35,7 +35,7 @@ const Sidebar = ({ isSidebarOpen, setActiveContent, activeContent }) => {
       label: "Manage Blogs",
       subItems: ["All Blogs", "Create Blogs"],
     },
-        { icon: "/assets/dashboardicons/Report.png", label: "Web Templates" },
+        { icon: "/assets/dashboardicons/web-template.png", label: "Web Templates" },
     { icon: "/assets/dashboardicons/Report.png", label: "Report" },
 
     { icon: "/assets/dashboardicons/Block.png", label: "Block" },

@@ -5,6 +5,7 @@ import Product from "@/models/Product";
 import Category from "@/models/Category";
 import SubCategory from "@/models/SubCategory";
 import User from "@/models/User";
+import { validateContent } from "@/middleware/contentValidation";
 
 import cloudinary from "@/lib/cloudinary"; // Import Cloudinary config
 
@@ -78,6 +79,21 @@ export async function POST(req) {
     // ✅ Debug: Log moqUnit to verify it's being received
     console.log("🔍 moqUnit received in API:", moqUnit);
     console.log("🔍 Full body moqUnit:", body.moqUnit);
+
+    // ✅ SECURITY: Validate content for malicious patterns
+    try {
+      if (name) validateContent(name, 'name');
+      if (description) validateContent(description, 'description');
+      if (body.metaTitle) validateContent(body.metaTitle, 'metaTitle');
+      if (body.metaDescription) validateContent(body.metaDescription, 'metaDescription');
+      if (body.metaKeywords) validateContent(body.metaKeywords, 'metaKeywords');
+    } catch (validationError) {
+      console.error("❌ Content validation failed:", validationError.message);
+      return NextResponse.json({ 
+        success: false, 
+        message: validationError.message || "Malicious content detected. Please remove inappropriate content." 
+      }, { status: 400 });
+    }
 
     // ✅ Validate Required Fields
     if (!name || !minimumOrderQuantity || !Array.isArray(images) || images.length === 0) {

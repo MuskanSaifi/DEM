@@ -25,6 +25,33 @@ const nextConfig = {
   output: 'standalone', // For better VPS deployment
   reactStrictMode: true,
   // ✅ instrumentationHook removed - no longer needed in Next.js 15
+  
+  // ✅ Security headers to prevent malicious redirects
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
