@@ -123,12 +123,12 @@ function ProductCardClient({ product }) {
 
         {/* SELLER INFO */}
         <div className="mt-auto pt-3 border-t">
-          <div className="text-xs font-medium text-gray-800 mb-1">
-            Seller: {product.userId?.companyName || "Verified Supplier"}
-          </div>
+          {/* <div className="text-xs font-medium text-gray-800 mb-1">
+            Seller: {product.userId?.fullname || "Verified Supplier"}
+          </div> */}
 
               {/* LOCATION */}
-    <div className="flex items-center px-4 text-xs text-gray-600 mb-2">
+    <div className="flex items-center px-2 text-xs text-gray-600">
           <MapPin size={14} />
           <span className="capitalize">{product.city}, {product.state}</span>
         </div>
