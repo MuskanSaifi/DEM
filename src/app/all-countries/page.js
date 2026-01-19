@@ -15,7 +15,7 @@ export async function generateMetadata() {
   const description =
     "Browse verified manufacturers and suppliers by country. Connect with exporters and wholesalers from India, USA, UAE, China, and more global markets.";
 
-  const url = `${process.env.NEXT_PUBLIC_BASE_URL}/all-countries`;
+  const url = `https://www.dialexportmart.com/all-countries`;
 
   return {
     title,

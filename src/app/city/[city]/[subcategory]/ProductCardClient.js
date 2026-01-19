@@ -95,8 +95,6 @@ function ProductCardClient({ product }) {
           </div>
         )}
 
-     
-
         {/* USAGE/TYPE */}
         {usage && (
           <p className="text-xs text-gray-600 mb-1">
@@ -127,6 +125,8 @@ function ProductCardClient({ product }) {
             Seller: {product.userId?.fullname || "Verified Supplier"}
           </div> */}
 
+          
+
               {/* LOCATION */}
     <div className="flex items-center px-2 text-xs text-gray-600">
           <MapPin size={14} />
@@ -150,7 +150,6 @@ function ProductCardClient({ product }) {
           )}
         </div>
       </div>
-
 
 
       {/* CTA */}

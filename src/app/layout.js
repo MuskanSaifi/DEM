@@ -2,13 +2,54 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import Providers from "./store/providers";
 import LayoutWrapper from "../components/LayoutWrapper";
-import AnalyticsScripts from "../components/AnalyticsScripts";
 import "./globals.css";
 import "../components/styles/header.css";
 import "../components/styles/footer.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import AppInitializer from "./store/AppInitializer"; // ✅ import added
 
+// JSON-LD: Organization
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": "https://www.dialexportmart.com/#organization",
+  name: "Dial Export Mart",
+  url: "https://www.dialexportmart.com/",
+  logo: "https://www.dialexportmart.com/assets/logo1234.png",
+  description:
+    "Dial Export Mart is a leading B2B marketplace in India connecting manufacturers, suppliers, exporters, and buyers worldwide.",
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "customer service",
+    telephone: "+91 8448668076",
+    email: "info@dialexportmart.com",
+    url: "https://www.dialexportmart.com/contact-us",
+    areaServed: "IN",
+    availableLanguage: ["English", "Hindi"],
+  },
+  sameAs: [
+    "https://www.facebook.com/dialexportmart",
+    "https://www.youtube.com/@DialExportMart",
+    "https://www.linkedin.com/company/dialexportmart",
+    "https://x.com/DialExportMart",
+    "https://www.instagram.com/dialexportmart/",
+  ],
+};
+
+// JSON-LD: WebSite
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://www.dialexportmart.com/#website",
+  url: "https://www.dialexportmart.com/",
+  name: "Dial Export Mart",
+  publisher: { "@id": "https://www.dialexportmart.com/#organization" },
+  potentialAction: {
+    "@type": "SearchAction",
+    target: "https://www.dialexportmart.com/search?q={search_term_string}",
+    "query-input": "required name=search_term_string",
+  },
+};
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -60,31 +101,16 @@ export default function RootLayout({ children }) {
       <head>
         <meta name="google-site-verification" content="R9WyXTgozYVTSKMCjWbQZkact5ZWyCqa9sMQGmKhwnY" />
         <meta name="p:domain_verify" content="d98356c446071847eac6ef2c6611c6cf"/>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {/* ✅ GTM Fallback */}
-        <noscript>
-          <iframe
-            src="https://www.googletagmanager.com/ns.html?id=GTM-PHL73GLL"
-            height="0"
-            width="0"
-            className="hidden invisible"
-            title="Google Tag Manager"
-          ></iframe>
-        </noscript>
-
-        {/* ✅ Meta Pixel Fallback */}
-        <noscript>
-          <img
-            height="1"
-            width="1"
-            className="hidden"
-            src="https://www.facebook.com/tr?id=1743615176583640&ev=PageView&noscript=1"
-            alt="Meta Pixel"
-          />
-        </noscript>
-
-        <AnalyticsScripts />
         <Providers>
          <AppInitializer> 
             <LayoutWrapper>{children}</LayoutWrapper>

@@ -64,24 +64,24 @@ const Faq = () => {
 
           {/* LEFT CONTENT */}
           <div className="bg-white rounded-3xl p-10 border border-gray-100 shadow-[0_10px_35px_rgba(0,0,0,0.06)]">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              Dial Export Mart –{" "}
-              <span className="text-indigo-600">India’s Leading B2B Marketplace</span>
-            </h3>
+            <div className="text-2xl font-bold text-gray-900 mb-4">
+              <span className="text-indigo-600">India’s Leading B2B Marketplace for Manufacturers & Suppliers
+              </span>
+            </div>
 
             <p className="text-gray-700 leading-relaxed mb-4">
-              Dial Export Mart connects verified manufacturers, exporters, and suppliers with buyers worldwide.
+            Dial Export Mart connects verified manufacturers, exporters, and suppliers with global buyers through a trusted B2B marketplace in India.
             </p>
 
             <p className="text-gray-700 leading-relaxed mb-6">
-              Our platform helps businesses grow globally with trust, transparency, and smart digital solutions.
+            Our B2B platform helps Indian manufacturers, suppliers, and exporters grow globally with trust, transparency, and smart digital solutions.
             </p>
 
             <ul className="space-y-3 text-gray-700">
-              <li>✅ Increased global brand visibility</li>
-              <li>✅ Verified international buyers</li>
-              <li>✅ Cost-effective marketing solutions</li>
-              <li>✅ Multi-category product listings</li>
+              <li>✔ Increased global brand visibility for manufacturers</li>
+              <li>✔ Verified international buyers and importers </li>
+              <li>✔ Cost-effective B2B marketing solutions</li>
+              <li>✔ Multi-category product listings across industries</li>
             </ul>
           </div>
 

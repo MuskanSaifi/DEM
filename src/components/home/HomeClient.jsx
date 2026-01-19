@@ -36,7 +36,7 @@ const SectionLoader = () => (
 export default function HomeClient() {
   return (
     <>
-      <h1 className="hidden">Best B2B Marketplace in India for Verified Suppliers & Buyers</h1>
+      <h1 className="hidden">Best B2B Marketplace in India for Verified Manufacturers, Suppliers & Buyers</h1>
       
       {/* ✅ Above the fold - Load immediately */}
       <Bannerslider />
