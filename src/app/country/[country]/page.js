@@ -3,6 +3,20 @@ import Image from "next/image";
 
 export const revalidate = 3600;
 
+const BASE = "https://www.dialexportmart.com";
+
+export async function generateMetadata({ params }) {
+  const { country } = await params;
+  const slug = country?.toLowerCase() || "";
+  return {
+    title: `Exporters & Suppliers in ${slug.toUpperCase()} | Dial Export Mart`,
+    description: `Find exporters, manufacturers and suppliers in ${slug.toUpperCase()}.`,
+    alternates: {
+      canonical: `${BASE}/country/${slug}`,
+    },
+  };
+}
+
 /* ================================
    API CALL
 ================================ */

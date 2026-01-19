@@ -25,9 +25,11 @@ export default function Header() {
 
   const [isSearching, setIsSearching] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const TOTAL_USERS = 120072;
 
-const abortRef = useRef(null);
+  const PREFIX = 120000;
+  const [totalUsers, setTotalUsers] = useState(null); // 120000 + DB count when loaded
+
+  const abortRef = useRef(null);
 
 
   const togglepopup = () => {
@@ -83,6 +85,33 @@ useEffect(() => {
     }
   })();
 }, []);
+
+  // Total users: 120000 (prefix) + DB count (User + Buyer). Cache 10 min.
+  useEffect(() => {
+    const CACHE_KEY = "headerUserCountV2";
+    const CACHE_TIME_KEY = "headerUserCountTimeV2";
+    const TTL_MS = 30 * 60 * 1000; // 30 min – API/CPU load kam, count is interval ke baad refresh
+
+    const cached = sessionStorage.getItem(CACHE_KEY);
+    const cachedTime = sessionStorage.getItem(CACHE_TIME_KEY);
+    if (cached != null && cachedTime != null && Date.now() - parseInt(cachedTime, 10) < TTL_MS) {
+      setTotalUsers(PREFIX + parseInt(cached, 10));
+      return;
+    }
+
+    (async () => {
+      try {
+        const res = await fetch("/api/stats/total-users");
+        const data = await res.json();
+        const count = res.ok && data.success ? (data.count || 0) : 0;
+        sessionStorage.setItem(CACHE_KEY, String(count));
+        sessionStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
+        setTotalUsers(PREFIX + count);
+      } catch (err) {
+        setTotalUsers(PREFIX);
+      }
+    })();
+  }, []);
 
 
 
@@ -510,7 +539,7 @@ onKeyDown={(e) => {
                   <div>Registered Users</div>
                   <p>
                     {" "}
-<SmoothCounter end={TOTAL_USERS} />
+{totalUsers == null ? PREFIX.toLocaleString("en-IN") : <SmoothCounter end={totalUsers} duration={2} />}
                   </p>
                 </div>
               </div>
@@ -783,7 +812,7 @@ onKeyDown={(e) => {
       <p className="mt-4 text-center text-sm text-gray-500">
         Registered Users:{" "}
         <span className="text-green-600">
-<SmoothCounter end={TOTAL_USERS} duration={2} />
+{totalUsers == null ? PREFIX.toLocaleString("en-IN") : <SmoothCounter end={totalUsers} duration={2} />}
         </span>
       </p>
     </>
