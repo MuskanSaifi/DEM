@@ -776,6 +776,9 @@ const AllProducts = () => {
   <option value="Milliliters">Milliliter</option>
   <option value="Gallon/Gallons">Gallon</option>
   <option value="Barrel/Barrels">Barrel</option>
+  <option value="Pack">Pack</option>
+<option value="Pouch">Pouch</option>
+<option value="Bottle">Bottle</option>
                 </select>
               </div>
               <LocationSelector formData={formData} setFormData={setFormData} />

@@ -557,6 +557,11 @@ const handleSubmit = async (e) => {
 <option value="Milliliter">Milliliter</option>
 <option value="Gallon/Gallons">Gallon</option>
 <option value="Barrel/Barrels">Barrel</option>
+
+<option value="Pack">Pack</option>
+<option value="Pouch">Pouch</option>
+<option value="Bottle">Bottle</option>
+
                                             </select>
                                         </div>
                                     </div>
