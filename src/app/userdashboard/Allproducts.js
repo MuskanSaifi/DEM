@@ -782,7 +782,6 @@ const AllProducts = () => {
                 </select>
               </div>
               <LocationSelector formData={formData} setFormData={setFormData} />
-
             </div>
           )}
 

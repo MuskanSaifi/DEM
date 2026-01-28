@@ -1,5 +1,6 @@
 // app/page.js
 import HomeClient from "@/components/home/HomeClient";
+import { organizationSchema, websiteSchema } from "@/lib/schemas";
 
 // JSON-LD: FAQPage (homepage only)
 const faqSchema = {
@@ -112,6 +113,14 @@ export const metadata = {
 export default function Home() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}

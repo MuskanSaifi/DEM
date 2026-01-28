@@ -66,7 +66,8 @@
     "sweetalert2": "^11.17.2",
     "swiper": "^11.2.6",
     "trim-canvas": "^0.1.1",
-    "twilio": "^5.4.4"
+    "twilio": "^5.4.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",

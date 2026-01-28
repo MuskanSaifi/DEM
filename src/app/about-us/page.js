@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { organizationSchema } from "@/lib/schemas";
 
 export const metadata = {
   title: "About Dial Export Mart | Trusted Global Export Solutions Provider",
@@ -52,6 +53,10 @@ export const metadata = {
 const Page = () => {
 return (
   <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+    />
     <div className="text-center">
       <Image
         src={"/assets/pagesbanner/About-Us.png"}

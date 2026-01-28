@@ -124,8 +124,21 @@ const [totalPages, setTotalPages] = useState(1);
 
   // Mobile filter sidebar state
   const [showFilterSidebar, setShowFilterSidebar] = useState(false);
+  
+  // FAQ accordion state
+  const [openFaq, setOpenFaq] = useState(null);
 
   const decode = (str) => decodeURIComponent(str).toLowerCase();
+  
+  // Format subcategory name for display (capitalize first letter of each word)
+  const formatSubcategoryName = (slug) => {
+    if (!slug) return "";
+    const decoded = decodeURIComponent(slug);
+    return decoded
+      .split(/[-_\s]+/)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  };
 
   // Redux Hooks
   const dispatch = useDispatch();
@@ -194,7 +207,6 @@ const fetchData = useCallback(async () => {
     setLoading(false);
   }
 }, [categorySlug, subcategorySlug, page]);
-
 
   useEffect(() => {
     fetchData();
@@ -491,7 +503,6 @@ const fetchData = useCallback(async () => {
                   </div>
                 </div>
 
-
                 {/* MOQ Range */}
                 <div className="mb-3">
                   <label className="form-label fw-bold">MOQ Range</label>
@@ -687,11 +698,16 @@ const fetchData = useCallback(async () => {
 
         {/* Product Listing */}
         <main className="col-md-9 common-shad rounded-2 p-3">
+          {/* H1 Heading */}
+          <h1 className="mb-3 text-primary text-sm fw-bold">
+            {loading ? (
+              <Skeleton width={400} />
+            ) : (
+              `${formatSubcategoryName(subcategorySlug)} Manufacturers & Suppliers in India`
+            )}
+          </h1>
+
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h1 className="text-uppercase text-lg text-secondary">
-              {loading ? <Skeleton width={200} /> : decode(subcategorySlug)}{" "}
-              Products
-            </h1>
             <span className="badge text-dark text-sm">
               {loading ? (
                 <Skeleton width={30} />
@@ -764,12 +780,12 @@ const fetchData = useCallback(async () => {
                               {product.businessProfile.companyName}
                             </h3> */}
                             <div className="d-flex flex-wrap align-items-center text-sm">
-                              {/* Location */}
+                              {/* Location - H3 */}
                               {(shouldDisplay(product.businessProfile.city) ||
                                 shouldDisplay(
                                   product.businessProfile.state
                                 )) && (
-                                <div className="d-flex align-items-center text-muted me-3">
+                                <h3 className="h6 d-flex align-items-center text-muted me-3 mb-0">
                                   <FaMapMarkerAlt className="me-1 text-secondary" />
                                   <span>
                                     {product.businessProfile.city}
@@ -779,7 +795,7 @@ const fetchData = useCallback(async () => {
                                       : ""}
                                     {product.businessProfile.state}
                                   </span>
-                                </div>
+                                </h3>
                               )}
                               {/* GST */}
                               {shouldDisplay(
@@ -812,50 +828,41 @@ const fetchData = useCallback(async () => {
                           </div>
                         )}
 
-                      <table className="table table-sm mt-2 text-sm">
-                        <tbody>
-                          {shouldDisplay(
-                            product.tradeShopping?.fixedSellingPrice ||
-                              product.price
-                          ) && (
-                            <tr>
-                              <th>Price:</th>
-                              <td>
-                                ₹
-                                {product.tradeShopping?.fixedSellingPrice ||
-                                  product.price}{" "}
-                                {product.currency || "INR"}
-                              </td>
-                            </tr>
-                          )}
-                          {shouldDisplay(product.minimumOrderQuantity) && (
-                            <tr>
-                              <th>MOQ:</th>
-                              <td>{product.minimumOrderQuantity}</td>
-                            </tr>
-                          )}
-                          {shouldDisplay(product.tradeShopping?.brandName) && (
-                            <tr>
-                              <th>Brand:</th>
-                              <td>{product.tradeShopping.brandName}</td>
-                            </tr>
-                          )}
-                          {shouldDisplay(product.tradeShopping?.unit) && (
-                            <tr>
-                              <th>Unit:</th>
-                              <td>{product.tradeShopping.unit}</td>
-                            </tr>
-                          )}
-                          {shouldDisplay(
-                            product.tradeShopping?.stockQuantity
-                          ) && (
-                            <tr>
-                              <th>Stock:</th>
-                              <td>{product.tradeShopping.stockQuantity}</td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
+                      <div className="mt-2 text-sm">
+                        {shouldDisplay(
+                          product.tradeShopping?.fixedSellingPrice ||
+                            product.price
+                        ) && (
+                          <div className="mb-1 text-muted">
+                            <span className="fw-normal">Price:</span> ₹
+                            {product.tradeShopping?.fixedSellingPrice ||
+                              product.price}{" "}
+                            {product.currency || "INR"}
+                          </div>
+                        )}
+                        {shouldDisplay(product.minimumOrderQuantity) && (
+                          <div className="mb-1 text-muted">
+                            <span className="fw-normal">MOQ:</span> {product.minimumOrderQuantity}
+                          </div>
+                        )}
+                        {/* {shouldDisplay(product.tradeShopping?.brandName) && (
+                          <div className="mb-1 text-muted">
+                            <span className="fw-normal">Brand:</span> {product.tradeShopping.brandName}
+                          </div>
+                        )} */}
+                        {shouldDisplay(product.tradeShopping?.unit) && (
+                          <div className="mb-1 text-muted">
+                            <span className="fw-normal">Unit:</span> {product.tradeShopping.unit}
+                          </div>
+                        )}
+                        {shouldDisplay(
+                          product.tradeShopping?.stockQuantity
+                        ) && (
+                          <div className="mb-1 text-muted">
+                            <span className="fw-normal">Stock:</span> {product.tradeShopping.stockQuantity}
+                          </div>
+                        )}
+                      </div>
 
                       <Link
                         href={`/products/${product._id}`}
@@ -898,7 +905,113 @@ const fetchData = useCallback(async () => {
   </div>
 )}
 
+          {/* SEO Content Section - Moved after products, before FAQ */}
+          {!loading && subcategorySlug && (
+            <div className="mt-5 mb-4">
+              <p className="text-muted mb-3">
+                <strong>{formatSubcategoryName(subcategorySlug)}</strong> are widely used across various industries and applications. India has a strong network of manufacturers and suppliers offering <strong>{formatSubcategoryName(subcategorySlug)}</strong> in different designs, materials, and price ranges.
+              </p>
+              <p className="text-muted mb-3">
+                On Dial Export Mart, buyers can explore verified <strong>{formatSubcategoryName(subcategorySlug)}</strong> manufacturers, suppliers, and exporters from different parts of India. The platform provides access to suppliers offering quality products, bulk order availability, and the best pricing to help businesses identify suitable sellers based on their specific requirements.
+              </p>
+              <p className="text-muted mb-4">
+                Whether you are a wholesaler, retailer, distributor, or international buyer, you can find multiple <strong>{formatSubcategoryName(subcategorySlug)}</strong> suppliers catering to different business needs and order volumes.
+              </p>
 
+              {/* Sub Heading - Manufacturing in India */}
+              <h2 className="h4 fw-bold mb-3 text-secondary">
+                {formatSubcategoryName(subcategorySlug)} Manufacturing in India
+              </h2>
+              <p className="text-muted mb-3">
+                India is renowned for its robust manufacturing infrastructure and skilled workforce across various industries. <strong>{formatSubcategoryName(subcategorySlug)}</strong> manufacturers in India offer a wide range based on market demand and industry standards.
+              </p>
+              <p className="text-muted mb-4">
+                Many suppliers follow standard quality practices and support both domestic distribution and export requirements, making India a reliable market for <strong>{formatSubcategoryName(subcategorySlug)}</strong> manufacturing and supply.
+              </p>
+
+              {/* Why Choose Dial Export Mart */}
+              <h2 className="h4 fw-bold mb-3 text-secondary">
+                Why Choose Dial Export Mart
+              </h2>
+              <ul className="text-muted mb-4" style={{ listStyleType: 'disc', paddingLeft: '20px' }}>
+                <li className="mb-2">Verified <strong>{formatSubcategoryName(subcategorySlug)}</strong> manufacturers and suppliers</li>
+                <li className="mb-2">Availability of bulk and wholesale suppliers</li>
+                <li className="mb-2">Multiple sellers for easy comparison</li>
+                <li className="mb-2">Direct communication between buyers and sellers</li>
+                <li className="mb-2">Transparent and reliable B2B interactions</li>
+              </ul>
+            </div>
+          )}
+
+          {/* FAQ Section */}
+          {!loading && subcategorySlug && (
+            <div className="mt-5 mb-4">
+              <h2 className="h3 fw-bold mb-4 text-primary">
+                Frequently Asked Questions - {formatSubcategoryName(subcategorySlug)}
+              </h2>
+              <div className="faq-container">
+                <div className="border rounded mb-3">
+                  <button
+                    className="w-100 text-start p-3 bg-light border-0 d-flex justify-content-between align-items-center"
+                    onClick={() => setOpenFaq(openFaq === 1 ? null : 1)}
+                  >
+                    <strong>Where can I find verified {formatSubcategoryName(subcategorySlug)} manufacturers in India?</strong>
+                    <span>{openFaq === 1 ? "−" : "+"}</span>
+                  </button>
+                  {openFaq === 1 && (
+                    <div className="p-3 border-top">
+                      Dial Export Mart connects buyers with verified and trusted {formatSubcategoryName(subcategorySlug)} manufacturers across India.
+                    </div>
+                  )}
+                </div>
+
+                <div className="border rounded mb-3">
+                  <button
+                    className="w-100 text-start p-3 bg-light border-0 d-flex justify-content-between align-items-center"
+                    onClick={() => setOpenFaq(openFaq === 2 ? null : 2)}
+                  >
+                    <strong>Can I buy {formatSubcategoryName(subcategorySlug)} in bulk or wholesale?</strong>
+                    <span>{openFaq === 2 ? "−" : "+"}</span>
+                  </button>
+                  {openFaq === 2 && (
+                    <div className="p-3 border-top">
+                      Yes, multiple {formatSubcategoryName(subcategorySlug)} suppliers on Dial Export Mart offer bulk and wholesale supply options.
+                    </div>
+                  )}
+                </div>
+
+                <div className="border rounded mb-3">
+                  <button
+                    className="w-100 text-start p-3 bg-light border-0 d-flex justify-content-between align-items-center"
+                    onClick={() => setOpenFaq(openFaq === 3 ? null : 3)}
+                  >
+                    <strong>Does Dial Export Mart support exporters and international buyers?</strong>
+                    <span>{openFaq === 3 ? "−" : "+"}</span>
+                  </button>
+                  {openFaq === 3 && (
+                    <div className="p-3 border-top">
+                      Yes, international buyers can directly connect with Indian {formatSubcategoryName(subcategorySlug)} exporters on the platform.
+                    </div>
+                  )}
+                </div>
+
+                <div className="border rounded mb-3">
+                  <button
+                    className="w-100 text-start p-3 bg-light border-0 d-flex justify-content-between align-items-center"
+                    onClick={() => setOpenFaq(openFaq === 4 ? null : 4)}
+                  >
+                    <strong>Is Dial Export Mart suitable for long-term business sourcing?</strong>
+                    <span>{openFaq === 4 ? "−" : "+"}</span>
+                  </button>
+                  {openFaq === 4 && (
+                    <div className="p-3 border-top">
+                      Yes, the platform is designed for reliable, transparent, and long-term B2B trade.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </main>
 
  

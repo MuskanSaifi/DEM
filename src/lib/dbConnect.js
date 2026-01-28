@@ -77,8 +77,13 @@ const connectdb = async () => {
         heartbeatFrequencyMS: 10000, // Check connection health every 10 seconds
       };
 
+      const mongoUrl = process.env.MONGO_URL || process.env.MONGODB_URI || process.env.MONGO_URI;
+      if (!mongoUrl) {
+        throw new Error("MongoDB connection string not found in environment variables (MONGO_URL, MONGODB_URI, or MONGO_URI)");
+      }
+      
       cached.promise = mongoose
-        .connect(process.env.MONGO_URL, opts)
+        .connect(mongoUrl, opts)
         .then((mongoose) => {
           console.log("✅ MongoDB connection established");
           return mongoose;

@@ -1,0 +1,835 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import "@/components/styles/sales-dashboards.css";
+
+export default function SalesTeamDashboard() {
+  const [employee, setEmployee] = useState(null);
+  const [leads, setLeads] = useState([]);
+  const [filteredLeads, setFilteredLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddLead, setShowAddLead] = useState(false);
+  const [showRemarkModal, setShowRemarkModal] = useState(null);
+  const [showChat, setShowChat] = useState(false);
+  const [conversations, setConversations] = useState([]);
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [toast, setToast] = useState(null);
+  const [formData, setFormData] = useState({
+    clientName: "",
+    companyName: "",
+    mobile: "",
+    email: "",
+    state: "",
+    product: "",
+  });
+  const [filters, setFilters] = useState({
+    status: "",
+    search: "",
+    paymentStatus: "",
+  });
+  const [remarkData, setRemarkData] = useState({
+    remark: "",
+    remarkType: "general",
+  });
+  const chatEndRef = useRef(null);
+  const router = useRouter();
+
+  const remarkTypes = [
+    { value: "general", label: "General" },
+    { value: "call", label: "Call" },
+    { value: "email", label: "Email" },
+    { value: "meeting", label: "Meeting" },
+    { value: "followup", label: "Follow-up" },
+    { value: "other", label: "Other" },
+  ];
+
+  useEffect(() => {
+    const token = localStorage.getItem("salesEmployeeToken");
+    const emp = localStorage.getItem("salesEmployee");
+    if (!token || !emp) {
+      router.push("/sales-team-login");
+      return;
+    }
+    setEmployee(JSON.parse(emp));
+    fetchLeads(token);
+    fetchConversations(token);
+  }, []);
+
+  useEffect(() => {
+    // Apply filters
+    let filtered = [...leads];
+    if (filters.status) {
+      filtered = filtered.filter((lead) => lead.status === filters.status);
+    }
+    if (filters.paymentStatus) {
+      filtered = filtered.filter(
+        (lead) => (lead.paymentStatus || "pending") === filters.paymentStatus
+      );
+    }
+    if (filters.search) {
+      const search = filters.search.toLowerCase();
+      filtered = filtered.filter(
+        (lead) =>
+          lead.clientName?.toLowerCase().includes(search) ||
+          lead.companyName?.toLowerCase().includes(search) ||
+          lead.mobile?.includes(search) ||
+          lead.product?.toLowerCase().includes(search)
+      );
+    }
+    setFilteredLeads(filtered);
+  }, [leads, filters]);
+
+  useEffect(() => {
+    if (selectedConversation) {
+      const token = localStorage.getItem("salesEmployeeToken");
+      fetchChatMessages(token, selectedConversation.userId);
+      const interval = setInterval(() => {
+        fetchChatMessages(token, selectedConversation.userId);
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedConversation]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages]);
+
+  const fetchLeads = async (token) => {
+    try {
+      const res = await fetch("/api/sales/leads", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setLeads(data.leads);
+      }
+    } catch (err) {
+      console.error("Fetch leads error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchConversations = async (token) => {
+    try {
+      const res = await fetch("/api/sales/chat/conversations", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setConversations(data.conversations);
+      }
+    } catch (err) {
+      console.error("Fetch conversations error:", err);
+    }
+  };
+
+  const fetchChatMessages = async (token, withUserId) => {
+    try {
+      const res = await fetch(
+        `/api/sales/chat?with=${withUserId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = await res.json();
+      if (data.success) {
+        setChatMessages(data.messages);
+      }
+    } catch (err) {
+      console.error("Fetch chat error:", err);
+    }
+  };
+
+  const handleAddLead = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("salesEmployeeToken");
+    const { clientName, companyName, mobile, email, state, product } = formData;
+    if (!clientName || !mobile || !product) {
+      alert("Client name, mobile, and product are required");
+      return;
+    }
+    try {
+      const res = await fetch("/api/sales/leads", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ clientName, companyName, mobile, email, state, product }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setToast({ type: "success", message: "Lead added successfully!" });
+        setShowAddLead(false);
+        setFormData({
+          clientName: "",
+          companyName: "",
+          mobile: "",
+          email: "",
+          state: "",
+          product: "",
+        });
+        fetchLeads(token);
+        setTimeout(() => setToast(null), 3000);
+      } else {
+        setToast({ type: "error", message: data.message || "Failed to add lead" });
+        setTimeout(() => setToast(null), 3000);
+      }
+    } catch (err) {
+      console.error("Add lead error:", err);
+    }
+  };
+
+  const handleAddRemark = async (leadId) => {
+    if (!remarkData.remark.trim()) {
+      alert("Please enter a remark");
+      return;
+    }
+    const token = localStorage.getItem("salesEmployeeToken");
+    try {
+      const res = await fetch(`/api/sales/leads/${leadId}/remarks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(remarkData),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setShowRemarkModal(null);
+        setRemarkData({ remark: "", remarkType: "general" });
+        fetchLeads(token);
+      }
+    } catch (err) {
+      console.error("Add remark error:", err);
+    }
+  };
+
+  const handleSelfAssign = async (leadId) => {
+    const token = localStorage.getItem("salesEmployeeToken");
+    try {
+      const res = await fetch(`/api/sales/leads/${leadId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ selfAssign: true }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setToast({ type: "success", message: "Lead assigned to you!" });
+        fetchLeads(token);
+        setTimeout(() => setToast(null), 3000);
+      } else {
+        setToast({ type: "error", message: data.message || "Failed to assign" });
+        setTimeout(() => setToast(null), 3000);
+      }
+    } catch (err) {
+      console.error("Self assign error:", err);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedConversation) return;
+    const token = localStorage.getItem("salesEmployeeToken");
+    try {
+      const res = await fetch("/api/sales/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          to: selectedConversation.userId,
+          message: newMessage,
+          toType: "SalesAdmin",
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNewMessage("");
+        fetchChatMessages(token, selectedConversation.userId);
+        fetchConversations(token);
+      }
+    } catch (err) {
+      console.error("Send message error:", err);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("salesEmployeeToken");
+    localStorage.removeItem("salesEmployee");
+    router.push("/sales-team-login");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4">
+        <div className="sales-spinner" />
+        <p className="text-gray-500 font-medium">Loading dashboard…</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          className={`sales-toast-enter fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-xl flex items-center gap-3 ${
+            toast.type === "success"
+              ? "bg-emerald-500 text-white"
+              : "bg-red-500 text-white"
+          }`}
+        >
+          <span className="text-lg">{toast.type === "success" ? "✓" : "✕"}</span>
+          <span className="font-medium">{toast.message}</span>
+          <button
+            onClick={() => setToast(null)}
+            className="ml-2 p-1 rounded-lg hover:bg-white/20 transition"
+            aria-label="Dismiss"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+      <header className="bg-gradient-to-r from-indigo-600 to-indigo-800 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap justify-between items-center gap-4">
+          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            Sales Team Dashboard
+          </h1>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowChat(!showChat)}
+              className="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white rounded-xl font-medium transition relative border border-white/20"
+            >
+              💬 Chat
+              {conversations.some((c) => c.unreadCount > 0) && (
+                <span className="absolute -top-1 -right-1 bg-red-400 text-white rounded-full min-w-[1.25rem] h-5 px-1.5 text-xs flex items-center justify-center font-bold">
+                  {conversations.reduce((sum, c) => sum + c.unreadCount, 0)}
+                </span>
+              )}
+            </button>
+            <span className="hidden sm:inline px-3 py-1.5 bg-white/10 rounded-lg text-white text-sm font-medium">
+              {employee?.fullname}
+            </span>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition shadow"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Filters */}
+        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6">
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">Filters</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Status</label>
+              <select
+                value={filters.status}
+                onChange={(e) =>
+                  setFilters({ ...filters, status: e.target.value })
+                }
+                className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-gray-50/50 focus:bg-white transition"
+              >
+                <option value="">All Status</option>
+                <option value="new">New</option>
+                <option value="contacted">Contacted</option>
+                <option value="qualified">Qualified</option>
+                <option value="converted">Converted</option>
+                <option value="lost">Lost</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Payment</label>
+              <select
+                value={filters.paymentStatus}
+                onChange={(e) =>
+                  setFilters({ ...filters, paymentStatus: e.target.value })
+                }
+                className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-gray-50/50 focus:bg-white transition"
+              >
+                <option value="">All</option>
+                <option value="pending">Pending</option>
+                <option value="paid">Paid</option>
+                <option value="partial">Partial</option>
+                <option value="not_applicable">N/A</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Search</label>
+              <input
+                type="text"
+                placeholder="Name, company, mobile, product…"
+                value={filters.search}
+                onChange={(e) =>
+                  setFilters({ ...filters, search: e.target.value })
+                }
+                className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm placeholder:text-gray-400 bg-gray-50/50 focus:bg-white transition"
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={() => setFilters({ status: "", paymentStatus: "", search: "" })}
+                className="sales-btn-primary px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg border border-gray-200 transition"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* My Summary */}
+        {leads.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="sales-card-hover bg-white p-5 rounded-xl shadow-sm border-l-4 border-indigo-500">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Assigned to me</div>
+              <div className="mt-1 text-2xl font-bold text-gray-900">{leads.length}</div>
+            </div>
+            <div className="sales-card-hover bg-white p-5 rounded-xl shadow-sm border-l-4 border-amber-500">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Contacted</div>
+              <div className="mt-1 text-2xl font-bold text-gray-900">
+                {leads.filter((l) => (l.remarks?.length || 0) > 0).length}
+              </div>
+            </div>
+            <div className="sales-card-hover bg-white p-5 rounded-xl shadow-sm border-l-4 border-emerald-500">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Paid</div>
+              <div className="mt-1 text-2xl font-bold text-emerald-600">
+                {leads.filter((l) => l.paymentStatus === "paid").length}
+              </div>
+            </div>
+            <div className="sales-card-hover bg-white p-5 rounded-xl shadow-sm border-l-4 border-indigo-500">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Converted</div>
+              <div className="mt-1 text-2xl font-bold text-indigo-600">
+                {leads.filter((l) => l.status === "converted").length}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="mb-6">
+          <button
+            onClick={() => setShowAddLead(!showAddLead)}
+            className="sales-btn-primary px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition flex items-center gap-2"
+          >
+            {showAddLead ? "✕ Cancel" : "➕ Add New Lead"}
+          </button>
+        </div>
+
+        {showAddLead && (
+          <form
+            onSubmit={handleAddLead}
+            className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6"
+          >
+            <h2 className="text-lg font-bold text-gray-900 mb-4">Add New Lead</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <input
+                type="text"
+                placeholder="Client Name *"
+                required
+                value={formData.clientName}
+                onChange={(e) =>
+                  setFormData({ ...formData, clientName: e.target.value })
+                }
+                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+              />
+              <input
+                type="text"
+                placeholder="Company Name"
+                value={formData.companyName}
+                onChange={(e) =>
+                  setFormData({ ...formData, companyName: e.target.value })
+                }
+                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+              />
+              <input
+                type="tel"
+                placeholder="Mobile *"
+                required
+                value={formData.mobile}
+                onChange={(e) =>
+                  setFormData({ ...formData, mobile: e.target.value })
+                }
+                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+              />
+              <input
+                type="text"
+                placeholder="State"
+                value={formData.state}
+                onChange={(e) =>
+                  setFormData({ ...formData, state: e.target.value })
+                }
+                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+              />
+              <input
+                type="text"
+                placeholder="Product Description *"
+                required
+                value={formData.product}
+                onChange={(e) =>
+                  setFormData({ ...formData, product: e.target.value })
+                }
+                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm sm:col-span-2"
+              />
+            </div>
+            <button
+              type="submit"
+              className="mt-5 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition"
+            >
+              Add Lead
+            </button>
+          </form>
+        )}
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+            <h2 className="text-lg font-bold text-gray-900">My Leads ({filteredLeads.length})</h2>
+          </div>
+          <div className="overflow-x-auto">
+            {filteredLeads.length === 0 ? (
+              <div className="sales-empty-state">
+                <div className="sales-empty-state-icon">📋</div>
+                <p className="font-medium text-gray-600">
+                  {leads.length === 0 ? "No leads yet" : "No leads match your filters"}
+                </p>
+                <p className="text-sm mt-1 text-gray-500">
+                  {leads.length === 0 ? "Add your first lead to get started." : "Try clearing filters or search."}
+                </p>
+                {leads.length === 0 && (
+                  <button
+                    onClick={() => setShowAddLead(true)}
+                    className="mt-4 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition"
+                  >
+                    ➕ Add New Lead
+                  </button>
+                )}
+              </div>
+            ) : (
+            <table className="min-w-full">
+              <thead className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Client
+                  </th>
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Company</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Mobile</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Remarks</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredLeads.map((lead) => (
+                  <tr key={lead._id} className="sales-table-row-hover transition">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {lead.clientName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {lead.companyName || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {lead.mobile}
+                    </td>
+                    <td className="px-6 py-4">{lead.product}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <select
+                        value={lead.status}
+                        onChange={(e) => {
+                          const token = localStorage.getItem("salesEmployeeToken");
+                          fetch(`/api/sales/leads/${lead._id}`, {
+                            method: "PATCH",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({ status: e.target.value }),
+                          }).then(() => {
+                            fetchLeads(token);
+                            setToast({
+                              type: "success",
+                              message: "Status updated",
+                            });
+                            setTimeout(() => setToast(null), 2000);
+                          });
+                        }}
+                        className={`px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer ${
+                          lead.status === "converted"
+                            ? "bg-green-100 text-green-800"
+                            : lead.status === "qualified"
+                            ? "bg-blue-100 text-blue-800"
+                            : lead.status === "contacted"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : lead.status === "lost"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        <option value="new">New</option>
+                        <option value="contacted">Contacted</option>
+                        <option value="qualified">Qualified</option>
+                        <option value="converted">Converted</option>
+                        <option value="lost">Lost</option>
+                      </select>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <select
+                        value={lead.paymentStatus || "pending"}
+                        onChange={(e) => {
+                          const token = localStorage.getItem("salesEmployeeToken");
+                          fetch(`/api/sales/leads/${lead._id}`, {
+                            method: "PATCH",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({ paymentStatus: e.target.value }),
+                          }).then(() => {
+                            fetchLeads(token);
+                            setToast({ type: "success", message: "Payment status updated" });
+                            setTimeout(() => setToast(null), 2000);
+                          });
+                        }}
+                        className={`px-2 py-1 rounded text-xs font-medium border cursor-pointer ${
+                          lead.paymentStatus === "paid"
+                            ? "bg-green-100 text-green-800"
+                            : lead.paymentStatus === "partial"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
+                        <option value="partial">Partial</option>
+                        <option value="not_applicable">N/A</option>
+                      </select>
+                    </td>
+                    <td className="px-6 py-4">
+                      {lead.remarks?.length > 0 ? (
+                        <div className="text-sm">
+                          <span className="font-semibold">
+                            {lead.remarks.length} remark(s)
+                          </span>
+                          <div className="mt-1 space-y-1 max-h-20 overflow-y-auto">
+                            {lead.remarks.slice(-3).map((r, idx) => (
+                              <div key={idx} className="text-xs text-gray-600">
+                                <span className="font-semibold text-indigo-600">
+                                  {r.remarkType}:
+                                </span>{" "}
+                                {r.remark}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">No remarks</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                      <div className="flex gap-2">
+                        {!lead.assignedTo && (
+                          <button
+                            onClick={() => handleSelfAssign(lead._id)}
+                            className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
+                          >
+                            ✋ Self Assign
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setShowRemarkModal(lead._id)}
+                          className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
+                        >
+                          💬 Add Remark
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* Remark Modal */}
+      {showRemarkModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">Add Remark</h2>
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Remark Type</label>
+              <select
+                value={remarkData.remarkType}
+                onChange={(e) =>
+                  setRemarkData({ ...remarkData, remarkType: e.target.value })
+                }
+                className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+              >
+                {remarkTypes.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-5">
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Remark</label>
+              <textarea
+                value={remarkData.remark}
+                onChange={(e) =>
+                  setRemarkData({ ...remarkData, remark: e.target.value })
+                }
+                rows={4}
+                className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm placeholder:text-gray-400"
+                placeholder="Enter your remark…"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleAddRemark(showRemarkModal)}
+                className="flex-1 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition"
+              >
+                Add
+              </button>
+              <button
+                onClick={() => {
+                  setShowRemarkModal(null);
+                  setRemarkData({ remark: "", remarkType: "general" });
+                }}
+                className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chat Modal */}
+      {showChat && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-2xl h-[600px] flex flex-col">
+            <div className="p-4 border-b flex justify-between items-center">
+              <h2 className="text-xl font-bold">Chat with Admin</h2>
+              <button
+                onClick={() => {
+                  setShowChat(false);
+                  setSelectedConversation(null);
+                }}
+                className="text-gray-500"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex flex-1 overflow-hidden">
+              <div className="w-1/3 border-r overflow-y-auto">
+                {conversations.map((conv) => (
+                  <div
+                    key={conv.userId}
+                    onClick={() => setSelectedConversation(conv)}
+                    className={`p-3 cursor-pointer hover:bg-gray-100 ${
+                      selectedConversation?.userId === conv.userId
+                        ? "bg-blue-50"
+                        : ""
+                    }`}
+                  >
+                    <div className="font-semibold">
+                      {conv.user?.fullname || "Admin"}
+                    </div>
+                    <div className="text-sm text-gray-600 truncate">
+                      {conv.lastMessage?.message}
+                    </div>
+                    {conv.unreadCount > 0 && (
+                      <span className="text-xs bg-red-500 text-white rounded-full px-2 py-1">
+                        {conv.unreadCount}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="flex-1 flex flex-col">
+                {selectedConversation ? (
+                  <>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                      {chatMessages.map((msg) => (
+                        <div
+                          key={msg._id}
+                          className={`flex ${
+                            msg.from._id === employee?.id
+                              ? "justify-end"
+                              : "justify-start"
+                          }`}
+                        >
+                          <div
+                            className={`max-w-xs rounded-lg p-2 ${
+                              msg.from._id === employee?.id
+                                ? "bg-blue-500 text-white"
+                                : "bg-gray-200"
+                            }`}
+                          >
+                            <div className="text-xs opacity-75">
+                              {msg.from.fullname}
+                            </div>
+                            <div>{msg.message}</div>
+                            <div className="text-xs opacity-75 mt-1">
+                              {new Date(msg.createdAt).toLocaleTimeString()}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      <div ref={chatEndRef} />
+                    </div>
+                    <div className="p-4 border-t flex gap-2">
+                      <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter") handleSendMessage();
+                        }}
+                        placeholder="Type a message..."
+                        className="flex-1 border rounded px-3 py-2"
+                      />
+                      <button
+                        onClick={handleSendMessage}
+                        className="px-4 py-2 bg-blue-600 text-white rounded"
+                      >
+                        Send
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center text-gray-400">
+                    Select a conversation
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
