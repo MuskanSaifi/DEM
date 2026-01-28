@@ -63,19 +63,8 @@ export async function PATCH(req) {
       }
     }
 
-    if (products && products.length > 0) {
-      const invalidProducts = await Promise.all(
-        products.map(async (productId) =>
-          mongoose.Types.ObjectId.isValid(productId) && (await Product.findById(productId))
-            ? null
-            : productId
-        )
-      );
-      const invalidProductIds = invalidProducts.filter((id) => id !== null);
-      if (invalidProductIds.length > 0) {
-        return new Response(JSON.stringify({ error: `Invalid product IDs: ${invalidProductIds.join(", ")}` }), { status: 400 });
-      }
-    }
+    // ❌ Removed manual product assignment validation - products are automatically synced from Product collection
+    // Products are assigned to subcategories based on Product.subCategory field, not manually
 
     let uploadedIconUrl = subCategory.icon;
     let uploadedIconPublicId = subCategory.iconPublicId;
@@ -118,12 +107,14 @@ export async function PATCH(req) {
     subCategory.metadescription = metadescription?.trim() || subCategory.metadescription;
     subCategory.metakeyword = metakeyword?.trim() || subCategory.metakeyword; // Corrected field name
 
-    if (products && products.length > 0) {
-      const existingProductIds = subCategory.products.map((id) => id.toString());
-      const newProductIds = products.map((id) => id.toString());
-      const mergedProducts = Array.from(new Set([...existingProductIds, ...newProductIds]));
-      subCategory.products = mergedProducts;
-    }
+    // ✅ Automatically sync products array from Product collection
+    // Find all products that have this subcategory assigned
+    const productsWithThisSubCategory = await Product.find({ subCategory: subCategory._id })
+      .select("_id")
+      .lean();
+    
+    // Update the products array to match actual products in Product collection
+    subCategory.products = productsWithThisSubCategory.map(p => p._id);
 
     subCategory.icon = uploadedIconUrl;
     subCategory.iconPublicId = uploadedIconPublicId; // ✅ Update public_id for PATCH

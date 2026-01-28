@@ -6,6 +6,7 @@ import { Tab, Nav } from "react-bootstrap";
 import Image from "next/image";
 import { Country, State, City } from 'country-state-city';
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 
 // Slug generator function
@@ -19,6 +20,7 @@ const generateSlug = (text) => {
   };
 
 const AddProduct = () => {
+  const router = useRouter();
 
 const [selectedCountry, setSelectedCountry] = useState("");
 const [availableStates, setAvailableStates] = useState([]);
@@ -356,6 +358,101 @@ const handleSubmit = async (e) => {
 
         if (response.data.success) {
             toast.success("Product created successfully!");
+            // Reset form
+            setProduct({
+                name: "",
+                productslug: "",
+                category: "",
+                subCategory: "",
+                price: "",
+                currency: "",
+                minimumOrderQuantity: "",
+                moqUnit: "",
+                description: "",
+                country: "",
+                state: "",
+                city: "",
+                stockQuantity: "",
+                images: [],
+                tradeInformation: {
+                    supplyAbility: "",
+                    deliveryTime: "",
+                    fobPort: "",
+                    samplePolicy: "",
+                    sampleAvailable: "No",
+                    mainExportMarkets: "",
+                    certifications: "",
+                    packagingDetails: "",
+                    paymentTerms: "",
+                    mainDomesticMarket: "",
+                },
+                specifications: {
+                    productType: "",
+                    material: "",
+                    finish: "",
+                    thicknessTolerance: "",
+                    thicknessToleranceUnit: "",
+                    width: "",
+                    widthUnit: "",
+                    length: "",
+                    lengthUnit: "",
+                    weight: "",
+                    weightUnit: "",
+                    metalsType: "",
+                    widthTolerance: "",
+                    widthToleranceUnit: "",
+                    shape: "",
+                    size: "",
+                    productName: "",
+                    thickness: "",
+                    thicknessUnit: "",
+                    color: "",
+                    coating: "",
+                    woodType: "",
+                    usage: "",
+                    processorType: "",
+                    type: "",
+                    design: "",
+                    feature: "",
+                    metalType: "",
+                    application: "",
+                    finishing: "",
+                    origin: "",
+                    finishType: "",
+                    installationType: "",
+                    otherMaterial: "",
+                    coverMaterial: "",
+                    foldable: ""
+                },
+                tradeShopping: {
+                    brandName: "",
+                    gst: "",
+                    sellingPriceType: "",
+                    fixedSellingPrice: "",
+                    slabPricing: [{ minQuantity: "", maxQuantity: "", price: "" }],
+                    unit: "",
+                    packSize: "",
+                    minOrderedPacks: "",
+                    isReturnable: "",
+                    stockQuantity: "",
+                    weightPerUnit: "",
+                    weightUnit: "kg",
+                    shippingType: "Free",
+                    packageDimensions: {
+                        length: "",
+                        width: "",
+                        height: "",
+                        unit: "cm",
+                    },
+                },
+            });
+            setSelectedCountry("");
+            setAvailableStates([]);
+            setAvailableCities([]);
+            // Redirect to My Products page
+            setTimeout(() => {
+                router.push("/userdashboard?activeTab=My Product");
+            }, 1500);
         } else {
             toast.error(`${response.data.message || "Failed to create product."}`);
         }
@@ -557,7 +654,6 @@ const handleSubmit = async (e) => {
 <option value="Milliliter">Milliliter</option>
 <option value="Gallon/Gallons">Gallon</option>
 <option value="Barrel/Barrels">Barrel</option>
-
 <option value="Pack">Pack</option>
 <option value="Pouch">Pouch</option>
 <option value="Bottle">Bottle</option>

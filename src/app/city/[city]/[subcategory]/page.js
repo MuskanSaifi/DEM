@@ -126,11 +126,24 @@ export default async function SubcategoryPage({
       city: { $regex: new RegExp(`^${normalizedCity}$`, 'i') },
     })
       .select(
-        "name price currency images city state minimumOrderQuantity moqUnit specifications userId productslug description tradeShopping tradeInformation"
+        "name price currency images city state minimumOrderQuantity moqUnit specifications userId productslug description tradeShopping tradeInformation subCategory"
       )
       .populate("userId", "companyName")
       .limit(500) // ✅ CRITICAL: Limit to prevent CPU spike
       .lean();
+
+    // ✅ Diagnostic: Log product count and verify subCategory assignment
+    console.log(`🔍 [City Subcategory Page] Found ${allProducts.length} products for city: ${normalizedCity}, subcategory: ${normalizedSubcategory} (ID: ${subcatObjectId})`);
+    
+    // ✅ Verify all products have correct subCategory
+    const productsWithWrongSubCategory = allProducts.filter(p => {
+      const productSubCatId = p.subCategory?.toString() || p.subCategory;
+      return productSubCatId !== subcatObjectId.toString();
+    });
+    
+    if (productsWithWrongSubCategory.length > 0) {
+      console.warn(`⚠️ [City Subcategory Page] Found ${productsWithWrongSubCategory.length} products with mismatched subCategory`);
+    }
 
     const totalCount = allProducts.length;
 

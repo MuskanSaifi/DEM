@@ -8,7 +8,7 @@ export async function GET() {
 
     const categories = await Category.find()
       .select("name subcategories")
-      .populate("subcategories", "name")
+      .populate("subcategories", "name _id")
       .lean();
 
     return Response.json(categories);

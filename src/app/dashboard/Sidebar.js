@@ -37,8 +37,8 @@ const Sidebar = ({ isSidebarOpen, setActiveContent, activeContent }) => {
     },
         { icon: "/assets/dashboardicons/web-template.png", label: "Web Templates" },
     { icon: "/assets/dashboardicons/Report.png", label: "Report" },
-
     { icon: "/assets/dashboardicons/Block.png", label: "Block" },
+    { icon: "/assets/dashboardicons/Report.png", label: "Products Diagnostic" },
 //    {
 //   icon: "/assets/dashboardicons/Manage Blogs.png",
 //   label: "Manage Salary",

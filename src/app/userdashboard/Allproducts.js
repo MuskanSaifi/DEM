@@ -11,15 +11,21 @@ import Link from "next/link";
 
 const AllProducts = () => {
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedField, setSelectedField] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("");
+  const [selectedSubCategoryFilter, setSelectedSubCategoryFilter] = useState("");
 
   const [formData, setFormData] = useState({
     basicDetails: {
       name: "",
       productslug: "",
+      category: "",
+      subCategory: "",
       price: "",
       currency: "INR",
       minimumOrderQuantity: "",
@@ -129,8 +135,39 @@ const AllProducts = () => {
       }
     };
 
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get(`/api/adminprofile/addcat`);
+        setCategories(res.data || []);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
     fetchProducts();
+    fetchCategories();
   }, []);
+
+  // Filter products by category/subcategory
+  useEffect(() => {
+    let filtered = [...products];
+
+    if (selectedCategoryFilter) {
+      filtered = filtered.filter(
+        (p) => p.category?._id?.toString() === selectedCategoryFilter || 
+               p.category?.toString() === selectedCategoryFilter
+      );
+    }
+
+    if (selectedSubCategoryFilter) {
+      filtered = filtered.filter(
+        (p) => p.subCategory?._id?.toString() === selectedSubCategoryFilter ||
+               p.subCategory?.toString() === selectedSubCategoryFilter
+      );
+    }
+
+    setFilteredProducts(filtered);
+  }, [selectedCategoryFilter, selectedSubCategoryFilter, products]);
 
   // ✅ Handle Delete Function
   const handleDelete = async (id) => {
@@ -179,6 +216,8 @@ const AllProducts = () => {
       basicDetails: {
         name: product.name || "",
         productslug: product.productslug || "",
+        category: product.category?._id || product.category || "",
+        subCategory: product.subCategory?._id || product.subCategory || "",
         price: product.price || "",
         currency: product.currency || "INR",
         minimumOrderQuantity: product.minimumOrderQuantity || "",
@@ -262,6 +301,8 @@ const AllProducts = () => {
           ...updateData,
           name: formData.basicDetails.name,
           productslug: formData.basicDetails.productslug,
+          category: formData.basicDetails.category || selectedProduct.category?._id || selectedProduct.category,
+          subCategory: formData.basicDetails.subCategory || selectedProduct.subCategory?._id || selectedProduct.subCategory,
           price: Number(formData.basicDetails.price),
           currency: formData.basicDetails.currency,
           minimumOrderQuantity: Number(formData.basicDetails.minimumOrderQuantity),
@@ -480,17 +521,69 @@ const AllProducts = () => {
 
   return (
     <div className="container mt-4">
-      {/* <div className="d-flex justify-content-between align-items-center mb-4">
-        <h5>{products.length} Products</h5>
-        <button className="btn btn-primary">+ Add More Product</button>
-      </div> */}
+      {/* Filter Section */}
+      <div className="row mb-4">
+        <div className="col-md-6">
+          <label className="form-label">Filter by Category</label>
+          <select
+            className="form-select"
+            value={selectedCategoryFilter}
+            onChange={(e) => {
+              setSelectedCategoryFilter(e.target.value);
+              setSelectedSubCategoryFilter(""); // Reset subcategory when category changes
+            }}
+          >
+            <option value="">All Categories</option>
+            {categories.map((category) => (
+              <option key={category._id} value={category._id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="col-md-6">
+          <label className="form-label">Filter by SubCategory</label>
+          <select
+            className="form-select"
+            value={selectedSubCategoryFilter}
+            onChange={(e) => setSelectedSubCategoryFilter(e.target.value)}
+            disabled={!selectedCategoryFilter}
+          >
+            <option value="">All SubCategories</option>
+            {categories
+              .find((cat) => cat._id === selectedCategoryFilter)
+              ?.subcategories?.map((sub) => (
+                <option key={sub._id} value={sub._id}>
+                  {sub.name}
+                </option>
+              ))}
+          </select>
+        </div>
+        {(selectedCategoryFilter || selectedSubCategoryFilter) && (
+          <div className="col-12 mt-2">
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={() => {
+                setSelectedCategoryFilter("");
+                setSelectedSubCategoryFilter("");
+              }}
+            >
+              Clear Filters
+            </Button>
+            <span className="ms-2 text-muted">
+              Showing {filteredProducts.length} of {products.length} products
+            </span>
+          </div>
+        )}
+      </div>
 
       {loading ? (
         <p className="text-center">Loading products...</p>
-      ) : products.length === 0 ? (
+      ) : filteredProducts.length === 0 ? (
         <p className="text-center">No products found.</p>
       ) : (
-        products.map((product) => {
+        filteredProducts.map((product) => {
           // ✅ Fix: Ensure product.images exists and has data before converting
           let productImage = "/default-image.jpg"; // Default Image
 
@@ -536,10 +629,33 @@ const AllProducts = () => {
         {product.name} {product?.category?.name}
       </h6>
       <div className="d-flex flex-wrap justify-content-start justify-content-sm-end gap-1">
-        <span className="badge bg-light text-dark border common-shad px-2 py-1 rounded-2 text-xs">
+        <span 
+          className="badge bg-light text-dark border common-shad px-2 py-1 rounded-2 text-xs"
+          style={{ cursor: "pointer" }}
+          onClick={() => {
+            const categoryId = product?.category?._id || product?.category;
+            if (categoryId) {
+              setSelectedCategoryFilter(categoryId.toString());
+              setSelectedSubCategoryFilter("");
+            }
+          }}
+          title="Click to filter by this category"
+        >
           <b>Category:</b> {product?.category?.name}
         </span>
-        <span className="badge bg-light text-dark border common-shad px-2 py-1 rounded-2 text-xs">
+        <span 
+          className="badge bg-light text-dark border common-shad px-2 py-1 rounded-2 text-xs"
+          style={{ cursor: "pointer" }}
+          onClick={() => {
+            const subCategoryId = product?.subCategory?._id || product?.subCategory;
+            const categoryId = product?.category?._id || product?.category;
+            if (subCategoryId && categoryId) {
+              setSelectedCategoryFilter(categoryId.toString());
+              setSelectedSubCategoryFilter(subCategoryId.toString());
+            }
+          }}
+          title="Click to filter by this subcategory"
+        >
           <b>Sub Category:</b> {product?.subCategory?.name}
         </span>
       </div>
@@ -672,6 +788,44 @@ const AllProducts = () => {
                 />
               </div>
 
+              {/* Category Dropdown */}
+              <div className="mb-3">
+                <label className="form-label">Category</label>
+                <select
+                  className="form-control"
+                  name="basicDetails.category"
+                  value={formData.basicDetails.category}
+                  onChange={handleChange}
+                >
+                  <option value="">Select Category</option>
+                  {categories.map((category) => (
+                    <option key={category._id} value={category._id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Subcategory Dropdown */}
+              <div className="mb-3">
+                <label className="form-label">Subcategory</label>
+                <select
+                  className="form-control"
+                  name="basicDetails.subCategory"
+                  value={formData.basicDetails.subCategory}
+                  onChange={handleChange}
+                  disabled={!formData.basicDetails.category}
+                >
+                  <option value="">Select Subcategory</option>
+                  {categories
+                    .find((cat) => cat._id === formData.basicDetails.category)
+                    ?.subcategories?.map((sub) => (
+                      <option key={sub._id} value={sub._id}>
+                        {sub.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
 
               {/* Product Image  */}
               <div className="mb-3">

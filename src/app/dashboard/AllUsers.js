@@ -26,6 +26,8 @@ const [fetchError, setFetchError] = useState(null); // ✅ New state for robust 
 const [remarkUpdates, setRemarkUpdates] = useState({});
 const [selectedRemarks, setSelectedRemarks] = useState({});
 const [customRemarks, setCustomRemarks] = useState({});
+const [categories, setCategories] = useState([]);
+const [productCategoryUpdates, setProductCategoryUpdates] = useState({}); // { productId: { category: "", subCategory: "" } }
 
 const handleCustomRemarkChange = (userId, value) => {
   setCustomRemarks((prev) => ({
@@ -46,7 +48,18 @@ const handleCustomRemarkChange = (userId, value) => {
 // 🚨 Dependency change: Fetch only when currentPage changes
   useEffect(() => {
     fetchUsers();
+    fetchCategories();
 }, [currentPage, searchTerm, searchDate, remarkFilter]);
+
+  // ✅ Fetch categories for dropdown
+  const fetchCategories = async () => {
+    try {
+      const res = await axios.get(`/api/adminprofile/addcat`);
+      setCategories(res.data || []);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
 
   // You might want to remove the static tooltip initialization if using Bootstrap 5+
   useEffect(() => {
@@ -134,6 +147,57 @@ const handlePageChange = (newPage) => {
     } catch (error) {
       console.error("Error deleting user:", error);
       Swal.fire("Error!", "Failed to delete user", "error");
+    }
+  };
+
+  // ✅ Handle Product Category/SubCategory Update (Same as userdashboard)
+  const handleUpdateProductCategory = async (productId) => {
+    const updates = productCategoryUpdates[productId];
+    const product = users
+      .flatMap((user) => user.products || [])
+      .find((p) => p._id === productId);
+    
+    if (!updates) {
+      toast.error("Please select category and subcategory");
+      return;
+    }
+
+    // ✅ Same logic as userdashboard: Use updates if available, otherwise use existing product values
+    const categoryId = updates.category || product?.category?._id || product?.category || "";
+    const subCategoryId = updates.subCategory || product?.subCategory?._id || product?.subCategory || "";
+
+    if (!categoryId || !subCategoryId) {
+      toast.error("Please select both category and subcategory");
+      return;
+    }
+
+    try {
+      const updateData = {
+        productId: productId,
+        category: categoryId,
+        subCategory: subCategoryId,
+      };
+
+      const res = await axios.patch(`/api/userprofile/manageproducts/${productId}`, updateData);
+
+      if (res.data.success) {
+        toast.success("Product category/subcategory updated successfully!");
+        
+        // Refresh users to get updated data
+        fetchUsers();
+        
+        // Clear the update state for this product
+        setProductCategoryUpdates((prev) => {
+          const newUpdates = { ...prev };
+          delete newUpdates[productId];
+          return newUpdates;
+        });
+      } else {
+        toast.error(res.data.message || "Failed to update product category/subcategory.");
+      }
+    } catch (error) {
+      console.error("Error updating product category/subcategory:", error);
+      toast.error("Failed to update product category/subcategory.");
     }
   };
 
@@ -579,15 +643,66 @@ const handleDateFilter = (e) => {
 
                                               <div className="col-md-2">
                                                 <div className="res-color1 text-center p-2 rounded-3 common-shad h-100 d-flex flex-column justify-content-center">
-                                                  <span className="text-sm d-block">Category</span>  
-                                                  <span className="res1-text-color fw-bold">{product?.category?.name}</span>
+                                                  <span className="text-sm d-block mb-1">Category</span>  
+                                                  <select
+                                                    className="form-select form-select-sm"
+                                                    value={productCategoryUpdates[product._id]?.category || product?.category?._id || product?.category || ""}
+                                                    onChange={(e) => {
+                                                      const categoryId = e.target.value;
+                                                      setProductCategoryUpdates((prev) => ({
+                                                        ...prev,
+                                                        [product._id]: {
+                                                          ...prev[product._id],
+                                                          category: categoryId,
+                                                          subCategory: "", // ✅ Reset subcategory when category changes (same as userdashboard)
+                                                        },
+                                                      }));
+                                                    }}
+                                                  >
+                                                    <option value="">Select Category</option>
+                                                    {categories.map((category) => (
+                                                      <option key={category._id} value={category._id}>
+                                                        {category.name}
+                                                      </option>
+                                                    ))}
+                                                  </select>
                                                 </div>
                                               </div>
 
                                               <div className="col-md-2">
                                                 <div className="res-color1 text-center p-2 rounded-3 common-shad h-100 d-flex flex-column justify-content-center">
-                                                  <span className="text-sm d-block">Sub Category</span>  
-                                                  <span className="res1-text-color fw-bold">{product?.subCategory?.name}</span>
+                                                  <span className="text-sm d-block mb-1">Sub Category</span>  
+                                                  <select
+                                                    className="form-select form-select-sm"
+                                                    value={productCategoryUpdates[product._id]?.subCategory || product?.subCategory?._id || product?.subCategory || ""}
+                                                    onChange={(e) => {
+                                                      const subCategoryId = e.target.value;
+                                                      setProductCategoryUpdates((prev) => ({
+                                                        ...prev,
+                                                        [product._id]: {
+                                                          ...prev[product._id],
+                                                          subCategory: subCategoryId,
+                                                        },
+                                                      }));
+                                                    }}
+                                                    disabled={!(productCategoryUpdates[product._id]?.category || product?.category?._id || product?.category)}
+                                                  >
+                                                    <option value="">Select Subcategory</option>
+                                                    {categories
+                                                      .find((cat) => cat._id === (productCategoryUpdates[product._id]?.category || product?.category?._id || product?.category))
+                                                      ?.subcategories?.map((sub) => (
+                                                        <option key={sub._id} value={sub._id}>
+                                                          {sub.name}
+                                                        </option>
+                                                      ))}
+                                                  </select>
+                                                  <button
+                                                    className="btn btn-sm btn-success mt-1 w-100"
+                                                    onClick={() => handleUpdateProductCategory(product._id)}
+                                                    disabled={!(productCategoryUpdates[product._id]?.category || product?.category?._id) || !(productCategoryUpdates[product._id]?.subCategory || product?.subCategory?._id)}
+                                                  >
+                                                    Update
+                                                  </button>
                                                 </div>
                                               </div>
 

@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import connectDB from "@/lib/dbConnect";
 import SubCategory from "@/models/SubCategory";
 import Category from "@/models/Category"; // Import the Category model
+import Product from "@/models/Product"; // Import Product model for counting
 import cloudinary from "@/lib/cloudinary";
 
 // ✅ GET API - Fetch all subcategories
@@ -11,25 +12,34 @@ export async function GET() {
 
     // 🔥 Light Query — No heavy product populate
     const subcategories = await SubCategory.find({})
-      .select("name icon subcategoryslug metatitle metadescription metakeyword category products")
+      .select("name icon subcategoryslug metatitle metadescription metakeyword category")
       .populate({
         path: "category",
         select: "name", // Only category name
       })
       .lean();
 
-    // 🔥 Only return product count — NOT full product list
-    const cleanData = subcategories.map((s) => ({
-      _id: s._id,
-      name: s.name,
-      icon: s.icon,
-      subcategoryslug: s.subcategoryslug,
-      metatitle: s.metatitle,
-      metadescription: s.metadescription,
-      metakeyword: s.metakeyword,
-      category: s.category ? { name: s.category.name } : null,
-      productCount: s.products?.length || 0, // ONLY COUNT
-    }));
+    // 🔥 Count products from Product collection (actual count, not from products array)
+    const cleanData = await Promise.all(
+      subcategories.map(async (s) => {
+        // Count products that have this subcategory assigned
+        const actualProductCount = await Product.countDocuments({
+          subCategory: s._id,
+        });
+
+        return {
+          _id: s._id,
+          name: s.name,
+          icon: s.icon,
+          subcategoryslug: s.subcategoryslug,
+          metatitle: s.metatitle,
+          metadescription: s.metadescription,
+          metakeyword: s.metakeyword,
+          category: s.category ? { name: s.category.name } : null,
+          productCount: actualProductCount, // ✅ Real count from Product collection
+        };
+      })
+    );
 
     return new Response(JSON.stringify(cleanData), {
       status: 200,

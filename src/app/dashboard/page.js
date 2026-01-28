@@ -34,6 +34,7 @@ import Block from "./Block";
 import Banner from "./Banner";
 import Plans from "./Plans";
 import AddTemplate from "./ManageTemplates";
+import ProductsDiagnostic from "./ProductsDiagnostic";
 
 function ResponsiveDashboard() {
   const router = useRouter();
@@ -130,6 +131,7 @@ function ResponsiveDashboard() {
 
           {activeContent === "Report" && <Report />}
           {activeContent === "Block" && <Block />}
+          {activeContent === "Products Diagnostic" && <ProductsDiagnostic />}
         </div>
       </div>
     </div>

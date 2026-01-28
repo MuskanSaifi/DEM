@@ -159,18 +159,28 @@ export async function POST(req) {
     // --- END: Changes for sellingPriceType and fixedSellingPrice ---
 
 
-    // ✅ Validate Category & SubCategory
+    // ✅ Validate Category & SubCategory (REQUIRED)
     const categoryExists = await Category.findById(category);
     if (!categoryExists) {
       return NextResponse.json({ success: false, message: "Invalid category ID" }, { status: 400 });
     }
 
-    let subCategoryExists = null;
-    if (subCategory) {
-      subCategoryExists = await SubCategory.findById(subCategory);
-      if (!subCategoryExists) {
-        return NextResponse.json({ success: false, message: "Invalid subCategory ID" }, { status: 400 });
-      }
+    // ✅ SubCategory is REQUIRED - don't allow products without subcategory
+    if (!subCategory) {
+      return NextResponse.json({ success: false, message: "SubCategory is required" }, { status: 400 });
+    }
+
+    const subCategoryExists = await SubCategory.findById(subCategory);
+    if (!subCategoryExists) {
+      return NextResponse.json({ success: false, message: "Invalid subCategory ID" }, { status: 400 });
+    }
+    
+    // ✅ Verify subcategory belongs to the selected category
+    if (subCategoryExists.category.toString() !== categoryExists._id.toString()) {
+      return NextResponse.json({ 
+        success: false, 
+        message: "SubCategory does not belong to the selected Category" 
+      }, { status: 400 });
     }
 
     // Ensure images array contains valid strings
@@ -230,9 +240,34 @@ export async function POST(req) {
 
     console.log("Saving product with images:", imageUrls.map(({ url, public_id }) => ({ url, public_id })));
     console.log("🔍 Saving product with moqUnit:", moqUnit);
+    console.log("🔍 Saving product with subCategory:", subCategoryExists._id);
+    console.log("🔍 Saving product with city:", normalizedCity);
+    
     await newProduct.save();
     console.log("✅ Product saved. moqUnit in saved product:", newProduct.moqUnit);
+    console.log("✅ Product saved. subCategory in saved product:", newProduct.subCategory);
+    
+    // ✅ Add product to User's products array
     await User.findByIdAndUpdate(user.id, { $push: { products: newProduct._id } });
+    
+    // ✅ CRITICAL: Always add product to SubCategory's products array (subCategory is now required)
+    try {
+      const updateResult = await SubCategory.findByIdAndUpdate(
+        newProduct.subCategory, 
+        { $addToSet: { products: newProduct._id } }, // $addToSet prevents duplicates
+        { new: true }
+      );
+      
+      if (!updateResult) {
+        console.error("❌ Failed to add product to SubCategory's products array");
+        // Don't fail the request, but log the error
+      } else {
+        console.log("✅ Product added to SubCategory's products array. Total products in subcategory:", updateResult.products?.length || 0);
+      }
+    } catch (error) {
+      console.error("❌ Error adding product to SubCategory:", error);
+      // Don't fail the request, but log the error for debugging
+    }
 
     return NextResponse.json({ success: true, message: "Product created successfully", data: newProduct }, { status: 201 });
 

@@ -7,6 +7,21 @@ import cloudinary from "@/lib/cloudinary"; // This imports the configured cloudi
 import SubCategory from "@/models/SubCategory";
 import mongoose from "mongoose"; // Import mongoose for ObjectId validation
 import { validateContent } from "@/middleware/contentValidation";
+import jwt from "jsonwebtoken";
+import Admin from "@/models/Admin";
+
+// ✅ Helper function to check admin authentication
+const checkAdminAuth = async (req) => {
+  try {
+    const token = req.cookies.get("adminToken")?.value;
+    if (!token) return null;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const admin = await Admin.findById(decoded.id).select("-password");
+    return admin || null;
+  } catch (err) {
+    return null;
+  }
+};
 // ✅ Upload Image to Cloudinary Function
 const uploadToCloudinary = async (image) => {
     // This check is refined: Ensure it's a string and starts with data:image
@@ -42,7 +57,10 @@ export async function PATCH(req) {
     try {
         await connectdb();
         const user = await requireSignIn(req);
-        if (!user) {
+        const admin = await checkAdminAuth(req);
+        
+        // Allow either user (product owner) or admin
+        if (!user && !admin) {
             return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
         }
         const body = await req.json();
@@ -126,11 +144,77 @@ export async function PATCH(req) {
             updateFields.city = updateFields.city.trim(); // Keep original case for city names
         }
 
+        // ✅ Handle SubCategory change: Remove from old, add to new
+        const oldSubCategoryId = existingProduct.subCategory?.toString() || existingProduct.subCategory;
+        const newSubCategoryId = updateFields.subCategory?.toString() || updateFields.subCategory || null;
+        
+        // Case 1: Subcategory is being changed (old exists, new is different)
+        if (oldSubCategoryId && newSubCategoryId && oldSubCategoryId !== newSubCategoryId) {
+            // Validate new subcategory exists
+            const newSubCategory = await SubCategory.findById(newSubCategoryId);
+            if (!newSubCategory) {
+                return NextResponse.json({ 
+                    success: false, 
+                    message: "Invalid subcategory ID" 
+                }, { status: 400 });
+            }
+            
+            // Remove product ID from old subcategory's products array
+            await SubCategory.findByIdAndUpdate(
+                oldSubCategoryId, 
+                { $pull: { products: productId } }
+            );
+            
+            // Add product ID to new subcategory's products array
+            await SubCategory.findByIdAndUpdate(
+                newSubCategoryId, 
+                { $addToSet: { products: productId } } // $addToSet prevents duplicates
+            );
+        }
+        // Case 2: Subcategory is being removed (old exists, new is null/empty)
+        else if (oldSubCategoryId && !newSubCategoryId) {
+            // Remove product ID from old subcategory's products array
+            await SubCategory.findByIdAndUpdate(
+                oldSubCategoryId, 
+                { $pull: { products: productId } }
+            );
+        }
+        // Case 3: Subcategory is being added (old doesn't exist, new exists)
+        else if (!oldSubCategoryId && newSubCategoryId) {
+            // Validate new subcategory exists
+            const newSubCategory = await SubCategory.findById(newSubCategoryId);
+            if (!newSubCategory) {
+                return NextResponse.json({ 
+                    success: false, 
+                    message: "Invalid subcategory ID" 
+                }, { status: 400 });
+            }
+            
+            // Add product ID to new subcategory's products array
+            await SubCategory.findByIdAndUpdate(
+                newSubCategoryId, 
+                { $addToSet: { products: productId } } // $addToSet prevents duplicates
+            );
+        }
+        // Case 4: No change (old === new) - do nothing
+
+        // ✅ If admin, allow updating any product. If user, only their own products.
+        const query = admin 
+            ? { _id: productId } 
+            : { _id: productId, userId: user.id };
+        
         const updatedProduct = await Product.findOneAndUpdate(
-            { _id: productId, userId: user.id },
+            query,
             { $set: updateFields },
             { new: true }
         );
+        
+        if (!updatedProduct) {
+            return NextResponse.json({ 
+                success: false, 
+                message: "Product not found or you don't have permission to update it" 
+            }, { status: 404 });
+        }
 
         return NextResponse.json({
             success: true,
