@@ -6,6 +6,23 @@ import { notFound } from 'next/navigation';
 // ✅ ISR: Revalidate every hour (3600 seconds)
 export const revalidate = 3600;
 
+// ✅ Noindex: Company profile pages - do not index in search engines
+// Outputs: <meta name="robots" content="noindex, follow"> and <meta name="googlebot" content="noindex, follow">
+export const metadata = {
+  robots: {
+    index: false,
+    follow: true,
+    googleBot: {
+      index: false,
+      follow: true,
+    },
+  },
+  alternates: {
+    canonical: undefined, // 👈 THIS removes canonical
+  },
+};
+
+
 // 🔑 Helper function for masking sensitive data
 const maskData = (data) => {
   if (!data || typeof data !== 'string' || data.length < 5) {

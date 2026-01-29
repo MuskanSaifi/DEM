@@ -18,6 +18,7 @@ import ContactRating from "@/components/home/ContactRating";
 import CustomChatBot from "@/components/home/CustomChatBot";
 import Faq from "@/components/home/Faq";
 import CategoryGridPage from "@/components/home/CategoryGridPage";
+import AppDownload from "./AppDownload";
 
 // ✅ OPTIMIZED: Lazy load heavy components below the fold
 const LazyStatsWithImage = lazy(() => import("@/components/home/Stats"));
@@ -58,6 +59,7 @@ export default function HomeClient() {
       </div>
 
       <CategoryGridPage />
+    
 
       <div className="banner-container">
         <Link href="/user/register">
@@ -93,10 +95,12 @@ export default function HomeClient() {
       <Suspense fallback={<SectionLoader />}>
         <LazyFaq />
       </Suspense>
-      
+      <AppDownload />
       <Suspense fallback={<SectionLoader />}>
         <LazyContactRating />
       </Suspense>
+
+     
 
       {/* ✅ ChatBot - Load after page is ready */}
       <Suspense fallback={null}>
