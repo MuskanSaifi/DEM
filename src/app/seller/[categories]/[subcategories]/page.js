@@ -1,7 +1,15 @@
 import SubcategoryProductPage from "./SubcategoryProductPage";
+import { notFound } from "next/navigation";
 
 // ✅ ISR: Revalidate every hour (3600 seconds)
 export const revalidate = 3600;
+
+// Block SEO spam: slugs like "video-da0sqrh3-Qjpei14VE" (random alphanumeric)
+// Real subcategory slugs are letters + hyphens only, e.g. "ladies-kurtis", "handicrafts"
+const isValidSubcategorySlug = (slug) => {
+  if (!slug || slug.length > 50) return false;
+  return /^[a-z]+(-[a-z]+)*$/.test(slug.toLowerCase());
+};
 
 // Define fetchCategories function directly
 export async function fetchCategories() {
@@ -20,12 +28,18 @@ export async function fetchCategories() {
 
 export async function generateMetadata({ params }) {
   try {
-      const resolvedParams = await params; // ✅ IMPORTANT
-
+    const resolvedParams = await params;
     const { categories, subcategories } = resolvedParams;
 
     const decodedCategorySlug = decodeURIComponent(categories || "");
     const decodedSubcategorySlug = decodeURIComponent(subcategories || "");
+
+    if (!isValidSubcategorySlug(decodedSubcategorySlug)) {
+      return {
+        title: "Page Not Found | Dial Export Mart",
+        robots: { index: false, follow: false },
+      };
+    }
 
     const categoriesData = await fetchCategories();
 
@@ -49,8 +63,9 @@ export async function generateMetadata({ params }) {
 
     if (!subcategory) {
       return {
-        title: "Subcategory Not Found",
+        title: "Subcategory Not Found | Dial Export Mart",
         description: "The requested subcategory does not exist.",
+        robots: { index: false, follow: false },
         alternates: {
           canonical: `https://www.dialexportmart.com/seller/not-found`,
         },
@@ -77,6 +92,11 @@ export async function generateMetadata({ params }) {
 
 
 
-export default function Page({ params }) {
+export default async function Page({ params }) {
+  const resolvedParams = await params;
+  const subcategorySlug = decodeURIComponent(resolvedParams?.subcategories || "");
+  if (!isValidSubcategorySlug(subcategorySlug)) {
+    notFound();
+  }
   return <SubcategoryProductPage params={params} />;
 }

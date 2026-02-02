@@ -360,7 +360,7 @@ const fetchData = useCallback(async () => {
         </Link>{" "}
         /{" "}
         <span className="text-primary">
-          {loading ? <Skeleton width={100} /> : decode(subcategorySlug)}
+          {loading ? <Skeleton width={100} /> : error ? "Not Found" : decode(subcategorySlug)}
         </span>
       </nav>
 
@@ -698,10 +698,12 @@ const fetchData = useCallback(async () => {
 
         {/* Product Listing */}
         <main className="col-md-9 common-shad rounded-2 p-3">
-          {/* H1 Heading */}
+          {/* H1 Heading - Only use slug when we have valid data (no error) */}
           <h1 className="mb-3 text-primary text-sm fw-bold">
             {loading ? (
               <Skeleton width={400} />
+            ) : error ? (
+              "Subcategory Not Found"
             ) : (
               `${formatSubcategoryName(subcategorySlug)} Manufacturers & Suppliers in India`
             )}
@@ -721,7 +723,11 @@ const fetchData = useCallback(async () => {
             {loading ? (
               <Skeleton count={6} height={150} />
             ) : error ? (
-              <p className="text-danger">{error}</p>
+              <div className="col-12 text-center py-5">
+                <p className="text-danger fw-bold">{error}</p>
+                <p className="text-muted mt-2">This subcategory does not exist. Please check the URL or browse our categories.</p>
+                <Link href="/all-categories" className="btn btn-primary mt-3">Browse All Categories</Link>
+              </div>
             ) : filteredProducts.length > 0 ? (
               filteredProducts.map((product, index) => {
                 const isInWishlist = wishlistItems.some(
@@ -905,8 +911,8 @@ const fetchData = useCallback(async () => {
   </div>
 )}
 
-          {/* SEO Content Section - Moved after products, before FAQ */}
-          {!loading && subcategorySlug && (
+          {/* SEO Content Section - Only show when valid subcategory (no error) */}
+          {!loading && !error && subcategorySlug && (
             <div className="mt-5 mb-4">
               <p className="text-muted mb-3">
                 <strong>{formatSubcategoryName(subcategorySlug)}</strong> are widely used across various industries and applications. India has a strong network of manufacturers and suppliers offering <strong>{formatSubcategoryName(subcategorySlug)}</strong> in different designs, materials, and price ranges.
@@ -943,8 +949,8 @@ const fetchData = useCallback(async () => {
             </div>
           )}
 
-          {/* FAQ Section */}
-          {!loading && subcategorySlug && (
+          {/* FAQ Section - Only show when valid subcategory (no error) */}
+          {!loading && !error && subcategorySlug && (
             <div className="mt-5 mb-4">
               <h2 className="h3 fw-bold mb-4 text-primary">
                 Frequently Asked Questions - {formatSubcategoryName(subcategorySlug)}

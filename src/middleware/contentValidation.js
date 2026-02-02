@@ -23,7 +23,11 @@ const maliciousPatterns = [
   /top.*betting/i,
   /vip.*levels/i,
   /exciting.*bonuses/i,
-  /soo-foo\.com/i
+  /soo-foo\.com/i,
+  /legends\s*bet|epic\s*winnings/i,
+  /crypto\s*loko|mgm\s*online|sky\s*sweeps\s*casino/i,
+  /no\s*deposit\s*coupon|live\s*casino\s*slot\s*games/i,
+  /sports\s*betting|bovada|gacor/i,
 ];
 
 /**

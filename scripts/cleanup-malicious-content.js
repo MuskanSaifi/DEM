@@ -34,7 +34,11 @@ const maliciousPatterns = [
   /top.*betting/i,
   /vip.*levels/i,
   /exciting.*bonuses/i,
-  /soo-foo\.com/i
+  /soo-foo\.com/i,
+  /legends\s*bet|epic\s*winnings/i,
+  /crypto\s*loko|mgm\s*online|sky\s*sweeps\s*casino/i,
+  /no\s*deposit\s*coupon|live\s*casino\s*slot\s*games/i,
+  /sports\s*betting|bovada|gacor/i,
 ];
 
 // Check if content contains malicious patterns
@@ -53,15 +57,16 @@ async function cleanupDatabase() {
   
   // 1. Find malicious products
   console.log('📦 Checking products...');
+  const spamRegex = /casino|gambling|bet|poker|slot|free.*spin|withdrawal.*crypto|instant.*withdrawal|fast.*payout|no.*deposit.*crypto|cash.*out.*money|unleash.*fortune|soccer.*betting|betting.*sites|top.*betting|vip.*levels|exciting.*bonuses|soo-foo\.com|legends\s*bet|epic\s*winnings|crypto\s*loko|mgm\s*online|sky\s*sweeps|bovada|gacor|sports\s*betting|live\s*casino\s*slot/i;
   const maliciousProducts = await Product.find({
     $or: [
-      { name: { $regex: /casino|gambling|bet|poker|slot|free.*spin|withdrawal.*crypto|instant.*withdrawal|fast.*payout|no.*deposit.*crypto|cash.*out.*money|unleash.*fortune|soccer.*betting|betting.*sites|top.*betting|vip.*levels|exciting.*bonuses|soo-foo\.com/i } },
-      { description: { $regex: /casino|gambling|bet|poker|slot|free.*spin|withdrawal.*crypto|instant.*withdrawal|fast.*payout|no.*deposit.*crypto|cash.*out.*money|unleash.*fortune|soccer.*betting|betting.*sites|top.*betting|vip.*levels|exciting.*bonuses|soo-foo\.com/i } },
-      { metaTitle: { $regex: /casino|gambling|bet|poker|slot|free.*spin|withdrawal.*crypto|instant.*withdrawal|fast.*payout|no.*deposit.*crypto|cash.*out.*money|unleash.*fortune|soccer.*betting|betting.*sites|top.*betting|vip.*levels|exciting.*bonuses|soo-foo\.com/i } },
-      { metaDescription: { $regex: /casino|gambling|bet|poker|slot|free.*spin|withdrawal.*crypto|instant.*withdrawal|fast.*payout|no.*deposit.*crypto|cash.*out.*money|unleash.*fortune|soccer.*betting|betting.*sites|top.*betting|vip.*levels|exciting.*bonuses|soo-foo\.com/i } },
-      { metaKeywords: { $regex: /casino|gambling|bet|poker|slot|free.*spin|withdrawal.*crypto|instant.*withdrawal|fast.*payout|no.*deposit.*crypto|cash.*out.*money|unleash.*fortune|soccer.*betting|betting.*sites|top.*betting|vip.*levels|exciting.*bonuses|soo-foo\.com/i } },
-      { video: { $regex: /soo-foo\.com|betting|casino|gambling/i } },
-      { youtubeUrl: { $regex: /soo-foo\.com|betting|casino|gambling/i } }
+      { name: { $regex: spamRegex } },
+      { description: { $regex: spamRegex } },
+      { metaTitle: { $regex: spamRegex } },
+      { metaDescription: { $regex: spamRegex } },
+      { metaKeywords: { $regex: spamRegex } },
+      { video: { $regex: spamRegex } },
+      { youtubeUrl: { $regex: spamRegex } }
     ]
   }).lean();
   
@@ -121,10 +126,10 @@ async function cleanupDatabase() {
   console.log('\n📝 Checking blogs...');
   const maliciousBlogs = await Blog.find({
     $or: [
-      { title: { $regex: /casino|gambling|bet|poker|slot|free.*spin|withdrawal.*crypto|instant.*withdrawal|fast.*payout|no.*deposit.*crypto|cash.*out.*money|unleash.*fortune|soccer.*betting|betting.*sites|top.*betting|vip.*levels|exciting.*bonuses|soo-foo\.com/i } },
-      { content: { $regex: /casino|gambling|bet|poker|slot|free.*spin|withdrawal.*crypto|instant.*withdrawal|fast.*payout|no.*deposit.*crypto|cash.*out.*money|unleash.*fortune|soccer.*betting|betting.*sites|top.*betting|vip.*levels|exciting.*bonuses|soo-foo\.com/i } },
-      { metaTitle: { $regex: /casino|gambling|bet|poker|slot|free.*spin|withdrawal.*crypto|instant.*withdrawal|fast.*payout|no.*deposit.*crypto|cash.*out.*money|unleash.*fortune|soccer.*betting|betting.*sites|top.*betting|vip.*levels|exciting.*bonuses|soo-foo\.com/i } },
-      { metaDescription: { $regex: /casino|gambling|bet|poker|slot|free.*spin|withdrawal.*crypto|instant.*withdrawal|fast.*payout|no.*deposit.*crypto|cash.*out.*money|unleash.*fortune|soccer.*betting|betting.*sites|top.*betting|vip.*levels|exciting.*bonuses|soo-foo\.com/i } }
+      { title: { $regex: spamRegex } },
+      { content: { $regex: spamRegex } },
+      { metaTitle: { $regex: spamRegex } },
+      { metaDescription: { $regex: spamRegex } }
     ]
   }).lean();
   
