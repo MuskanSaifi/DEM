@@ -1,5 +1,6 @@
 // C:\Users\abc\Desktop\DEM\src\app\products\[id]\page.js
 import ProductDetailPage from "./ProductPage";
+import { getSafeMetaContent } from "@/middleware/contentValidation";
 
 // ✅ ISR: Revalidate every hour (3600 seconds)
 export const revalidate = 3600;
@@ -15,12 +16,14 @@ export async function generateMetadata({ params }) {
       next: { revalidate: 3600 }, // ✅ ISR: Revalidate every hour
     });
     const product = await res.json();
+    const safeName = getSafeMetaContent(product?.name) || "Product";
+    const safeDesc = getSafeMetaContent(product?.description) || "Explore high-quality products on Dial Export Mart.";
 
     return {
-      title: `${product?.name || "Product"} | Dial Export Mart`,
-      description: product?.description?.slice(0, 160) || "Explore high-quality products on Dial Export Mart.",
+      title: `${safeName} | Dial Export Mart`,
+      description: (typeof safeDesc === 'string' ? safeDesc.slice(0, 160) : safeDesc) || "Explore high-quality products on Dial Export Mart.",
       keywords: [
-        product?.name,
+        safeName,
         product?.userId?.companyName,
         "Export",
         "Import",
@@ -30,8 +33,8 @@ export async function generateMetadata({ params }) {
         canonical: `https://www.dialexportmart.com/products/${id}`,
       },
       openGraph: {
-        title: `${product?.name || "Product"} | Dial Export Mart`,
-        description: product?.description?.slice(0, 160) || "Explore products on Dial Export Mart.",
+        title: `${safeName} | Dial Export Mart`,
+        description: (typeof safeDesc === 'string' ? safeDesc.slice(0, 160) : safeDesc) || "Explore products on Dial Export Mart.",
         url: `https://www.dialexportmart.com/products/${id}`,
         siteName: "Dial Export Mart",
         images: [
@@ -39,7 +42,7 @@ export async function generateMetadata({ params }) {
             url: product?.images?.[0] || "https://www.dialexportmart.com/assets/product-default.png",
             width: 1200,
             height: 630,
-            alt: product?.name || "Product Image",
+            alt: safeName || "Product Image",
           },
         ],
       },

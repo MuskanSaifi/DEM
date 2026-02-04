@@ -1,6 +1,7 @@
 // app/seller/[categories]/page.js
 import React from "react";
 import CategoryPage from "./CategoryPage";
+import { getSafeMetaContent } from "@/middleware/contentValidation";
 
 // ✅ ISR: Revalidate every hour (3600 seconds)
 export const revalidate = 3600;
@@ -47,20 +48,20 @@ export async function generateMetadata({ params }) {
       };
     }
 
+    const safeTitle = getSafeMetaContent(category.metatitle) || category.name;
+    const safeDesc = getSafeMetaContent(category.metadescription) || `Explore premium ${category.name} products at best prices.`;
+    const safeKeywords = getSafeMetaContent(category.metakeywords) || "";
+
     return {
-      title: category.metatitle || category.name,
-      description:
-        category.metadescription ||
-        `Explore premium ${category.name} products at best prices.`,
-      keywords: category.metakeywords || "",
+      title: safeTitle,
+      description: safeDesc,
+      keywords: safeKeywords,
       alternates: {
         canonical: `https://www.dialexportmart.com/seller/${category.categoryslug}`,
       },
       openGraph: {
-        title: category.metatitle || category.name,
-        description:
-          category.metadescription ||
-          `Explore top-quality ${category.name} products on Dial Export Mart.`,
+        title: safeTitle,
+        description: safeDesc || `Explore top-quality ${category.name} products on Dial Export Mart.`,
         url: `https://www.dialexportmart.com/seller/${category.categoryslug}`,
         type: "website",
       },

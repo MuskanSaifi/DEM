@@ -1,5 +1,6 @@
 import SubcategoryProductPage from "./SubcategoryProductPage";
 import { notFound } from "next/navigation";
+import { getSafeMetaContent } from "@/middleware/contentValidation";
 
 // ✅ ISR: Revalidate every hour (3600 seconds)
 export const revalidate = 3600;
@@ -72,12 +73,14 @@ export async function generateMetadata({ params }) {
       };
     }
 
+    const safeTitle = getSafeMetaContent(subcategory.metatitle) || subcategory.name;
+    const safeDesc = getSafeMetaContent(subcategory.metadescription) || `Explore ${subcategory.name} products under ${category.name}.`;
+    const safeKeywords = getSafeMetaContent(subcategory.metakeyword) || "";
+
     return {
-      title: subcategory.metatitle || subcategory.name,
-      description:
-        subcategory.metadescription ||
-        `Explore ${subcategory.name} products under ${category.name}.`,
-      keywords: subcategory.metakeyword || "",
+      title: safeTitle,
+      description: safeDesc,
+      keywords: safeKeywords,
       alternates: {
         canonical: `https://www.dialexportmart.com/seller/${category.categoryslug}/${subcategory.subcategoryslug}`,
       },

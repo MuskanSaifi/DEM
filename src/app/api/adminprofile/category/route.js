@@ -8,6 +8,7 @@ import User from "@/models/User"; // Assuming you have User model
 import BusinessProfile from "@/models/BusinessProfile"; // Assuming you have BusinessProfile model
 import cloudinary from "@/lib/cloudinary"; // Cloudinary config
 import { URL } from "url";
+import { validateContent } from "@/middleware/contentValidation";
 
 
 export async function GET() {
@@ -150,6 +151,16 @@ export async function PATCH(req) {
       }
     }
 
+    try {
+      if (name) validateContent(name, "name");
+      if (metatitle) validateContent(metatitle, "metatitle");
+      if (metadescription) validateContent(metadescription, "metadescription");
+      if (metakeywords) validateContent(metakeywords, "metakeywords");
+      if (content) validateContent(content, "content");
+    } catch (err) {
+      return new Response(JSON.stringify({ error: err.message }), { status: 400 });
+    }
+
     const updateFields = {
       name: name?.trim(),
       categoryslug: categoryslug?.trim(),
@@ -237,6 +248,16 @@ export async function POST(req) {
           { status: 409 }
         );
       }
+    }
+
+    try {
+      if (name) validateContent(name, "name");
+      if (metatitle) validateContent(metatitle, "metatitle");
+      if (metadescription) validateContent(metadescription, "metadescription");
+      if (metakeywords) validateContent(metakeywords, "metakeywords");
+      if (content) validateContent(content, "content");
+    } catch (err) {
+      return new Response(JSON.stringify({ error: err.message }), { status: 400 });
     }
 
     const newCategory = new Category({

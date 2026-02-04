@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import BlogDetail from "./BlogDetail";
 import connectdb from "@/lib/dbConnect";
 import Blog from "@/models/Blogs";
+import { getSafeMetaContent } from "@/middleware/contentValidation";
 
 
 export async function generateMetadata({ params }) {
@@ -27,19 +28,22 @@ export async function generateMetadata({ params }) {
 
   const canonicalUrl = `https://www.dialexportmart.com/blogs/${slug}`;
   const imageUrl = blog.image ? `https://www.dialexportmart.com/${blog.image}` : null;
+  const safeTitle = getSafeMetaContent(blog.metaTitle) || blog.title;
+  const safeDesc = getSafeMetaContent(blog.metaDescription) || "Read detailed blog article on Dial Export Mart.";
+  const safeKeywords = getSafeMetaContent(blog.metaKeywords);
 
   return {
-    title: blog.metaTitle || blog.title,
-    description: blog.metaDescription || "Read detailed blog article on Dial Export Mart.",
-    keywords: blog.metaKeywords?.split(',') || ["export", "business", "blog"],
+    title: safeTitle,
+    description: safeDesc,
+    keywords: safeKeywords ? safeKeywords.split(',') : ["export", "business", "blog"],
 
     alternates: {
       canonical: canonicalUrl,
     },
 
     openGraph: {
-      title: blog.metaTitle || blog.title,
-      description: blog.metaDescription || "Read detailed blog article on Dial Export Mart.",
+      title: safeTitle,
+      description: safeDesc,
       url: canonicalUrl,
       siteName: "Dial Export Mart",
       type: "article",

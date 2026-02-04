@@ -66,6 +66,18 @@ export function validateFields(fields) {
 }
 
 /**
+ * Check if content is safe for meta tags (no malicious patterns)
+ * Use this when displaying meta from DB - returns empty string if malicious
+ * @param {string} content - Content to check
+ * @returns {string} Original content if safe, empty string if malicious
+ */
+export function getSafeMetaContent(content) {
+  if (!content || typeof content !== 'string') return '';
+  const hasMalicious = maliciousPatterns.some(pattern => pattern.test(content));
+  return hasMalicious ? '' : content;
+}
+
+/**
  * Sanitize content by removing malicious patterns
  * @param {string} content - Content to sanitize
  * @returns {string} Sanitized content

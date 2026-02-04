@@ -1,6 +1,7 @@
 // src/app/manufacturers/[productslug]/page.js
 
 import ProductDetailClient from "./ProductDetailClient";
+import { getSafeMetaContent } from "@/middleware/contentValidation";
 
 // ✅ ISR: Revalidate every hour (3600 seconds)
 export const revalidate = 3600;
@@ -86,6 +87,10 @@ export async function generateMetadata({ params }) {
       return `${baseTitle}${brandPart}${locationPart} - Best Price & Deals`;
     };
 
+    const safeMetaTitle = getSafeMetaContent(metaTitle);
+    const safeMetaDesc = getSafeMetaContent(metaDescription);
+    const safeMetaKeywords = getSafeMetaContent(metaKeywords);
+
     const generateMetaDescription = () => {
       const templates = [
         `${name} is one of the best options available${location ? ` in ${location}` : ""}. Discover its features, specifications, and best pricing here.`,
@@ -94,20 +99,18 @@ export async function generateMetadata({ params }) {
         `${name} is known for its ${feature}${material ? ` and durable ${material}` : ""}. Available at the best price online!`,
         `Buy ${name}${brand ? ` by ${brand}` : ""}${location ? ` in ${location}` : ""}. Featuring ${feature}, ${finish} finish, and ${color} color.`,
       ];
-      // You might want to use a more sophisticated way to pick a description,
-      // or simply use the first one if `metaDescription` is not provided.
-      return metaDescription || templates[0];
+      return safeMetaDesc || templates[0];
     };
 
     const imageUrl = images?.[0]?.url || "/placeholder.png"; // Fallback for Open Graph image
 
     return {
-      title: metaTitle || getOptimizedTitle(),
-      description: generateMetaDescription(), // Use the generated description
-      keywords: metaKeywords || name?.split(" ")?.join(", ") || "", // Ensure keywords is a string
+      title: safeMetaTitle || getOptimizedTitle(),
+      description: generateMetaDescription(),
+      keywords: safeMetaKeywords || name?.split(" ")?.join(", ") || "",
       openGraph: {
         images: [{ url: imageUrl }],
-        title: metaTitle || getOptimizedTitle(),
+        title: safeMetaTitle || getOptimizedTitle(),
         description: generateMetaDescription(),
         url: `https://www.dialexportmart.com/manufacturers/${productslug}`,
         type: 'website', // or 'product'

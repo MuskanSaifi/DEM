@@ -1,13 +1,25 @@
-// Database Cleanup Script - Remove Malicious Casino/Gambling Content
-// Run this script to clean your database
+// Database Cleanup Script - Clean Malicious Casino/Gambling Content from Meta Fields
+// NO DELETES - Only overwrites malicious meta fields with empty string
+// Run: node scripts/cleanup-malicious-content.js
 
-const mongoose = require('mongoose');
-require('dotenv').config();
+import mongoose from 'mongoose';
+import { config } from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+config({ path: join(__dirname, '..', '.env') });
 
 // Connect to MongoDB
 async function connectDB() {
+  const mongoUrl = process.env.MONGO_URL || process.env.MONGODB_URI || process.env.MONGO_URI;
+  if (!mongoUrl) {
+    console.error('❌ MongoDB URI not found. Add MONGO_URL, MONGODB_URI, or MONGO_URI to your .env file.');
+    process.exit(1);
+  }
   try {
-    await mongoose.connect(process.env.MONGODB_URI || process.env.MONGO_URI);
+    await mongoose.connect(mongoUrl);
     console.log('✅ Connected to MongoDB');
   } catch (error) {
     console.error('❌ MongoDB connection error:', error);
@@ -15,144 +27,94 @@ async function connectDB() {
   }
 }
 
-// Malicious patterns to detect
-const maliciousPatterns = [
-  /casino/i,
-  /gambling/i,
-  /bet/i,
-  /poker/i,
-  /slot/i,
-  /free.*spin/i,
-  /withdrawal.*crypto/i,
-  /instant.*withdrawal/i,
-  /fast.*payout/i,
-  /no.*deposit.*crypto/i,
-  /cash.*out.*money/i,
-  /unleash.*fortune/i,
-  /soccer.*betting/i,
-  /betting.*sites/i,
-  /top.*betting/i,
-  /vip.*levels/i,
-  /exciting.*bonuses/i,
-  /soo-foo\.com/i,
-  /legends\s*bet|epic\s*winnings/i,
-  /crypto\s*loko|mgm\s*online|sky\s*sweeps\s*casino/i,
-  /no\s*deposit\s*coupon|live\s*casino\s*slot\s*games/i,
-  /sports\s*betting|bovada|gacor/i,
-];
+const spamRegex = /casino|gambling|bet|poker|slot|free.*spin|withdrawal.*crypto|instant.*withdrawal|fast.*payout|no.*deposit.*crypto|cash.*out.*money|unleash.*fortune|soccer.*betting|betting.*sites|top.*betting|vip.*levels|exciting.*bonuses|soo-foo\.com|legends\s*bet|epic\s*winnings|crypto\s*loko|mgm\s*online|sky\s*sweeps|bovada|gacor|sports\s*betting|live\s*casino\s*slot/i;
 
-// Check if content contains malicious patterns
 function isMalicious(content) {
   if (!content || typeof content !== 'string') return false;
-  return maliciousPatterns.some(pattern => pattern.test(content));
+  return spamRegex.test(content);
 }
 
 async function cleanupDatabase() {
   await connectDB();
-  
+
   const Product = mongoose.model('Product', new mongoose.Schema({}, { strict: false }));
   const Blog = mongoose.model('Blog', new mongoose.Schema({}, { strict: false }));
-  
-  console.log('\n🔍 Starting database cleanup...\n');
-  
-  // 1. Find malicious products
-  console.log('📦 Checking products...');
-  const spamRegex = /casino|gambling|bet|poker|slot|free.*spin|withdrawal.*crypto|instant.*withdrawal|fast.*payout|no.*deposit.*crypto|cash.*out.*money|unleash.*fortune|soccer.*betting|betting.*sites|top.*betting|vip.*levels|exciting.*bonuses|soo-foo\.com|legends\s*bet|epic\s*winnings|crypto\s*loko|mgm\s*online|sky\s*sweeps|bovada|gacor|sports\s*betting|live\s*casino\s*slot/i;
-  const maliciousProducts = await Product.find({
-    $or: [
-      { name: { $regex: spamRegex } },
-      { description: { $regex: spamRegex } },
-      { metaTitle: { $regex: spamRegex } },
-      { metaDescription: { $regex: spamRegex } },
-      { metaKeywords: { $regex: spamRegex } },
-      { video: { $regex: spamRegex } },
-      { youtubeUrl: { $regex: spamRegex } }
-    ]
-  }).lean();
-  
-  console.log(`   Found ${maliciousProducts.length} malicious products`);
-  
-  if (maliciousProducts.length > 0) {
-    console.log('\n   Malicious products:');
-    maliciousProducts.forEach((product, index) => {
-      console.log(`   ${index + 1}. ${product.name || 'No name'} (ID: ${product._id})`);
-      if (product.metaTitle) console.log(`      Meta Title: ${product.metaTitle.substring(0, 60)}...`);
-      if (product.metaDescription) console.log(`      Meta Desc: ${product.metaDescription.substring(0, 60)}...`);
-    });
-    
-    // Delete malicious products
-    const deleteResult = await Product.deleteMany({
-      _id: { $in: maliciousProducts.map(p => p._id) }
-    });
-    console.log(`\n   ✅ Deleted ${deleteResult.deletedCount} malicious products`);
-  }
-  
-  // 2. Clean meta fields in remaining products
-  console.log('\n🧹 Cleaning meta fields in products...');
-  const productsToClean = await Product.find({
-    $or: [
-      { metaTitle: { $exists: true, $ne: null } },
-      { metaDescription: { $exists: true, $ne: null } },
-      { metaKeywords: { $exists: true, $ne: null } }
-    ]
-  }).lean();
-  
-  let cleanedCount = 0;
-  for (const product of productsToClean) {
+  const Category = mongoose.model('Category', new mongoose.Schema({}, { strict: false }));
+  const SubCategory = mongoose.model('SubCategory', new mongoose.Schema({}, { strict: false }));
+
+  console.log('\n🔍 Starting database cleanup (NO DELETES - only cleaning meta fields)...\n');
+
+  // 1. Clean Products - meta fields only
+  console.log('📦 Cleaning products meta fields...');
+  const productsToClean = await Product.find({}).lean();
+  let productCleaned = 0;
+  for (const p of productsToClean) {
     const updates = {};
-    let needsUpdate = false;
-    
-    if (product.metaTitle && isMalicious(product.metaTitle)) {
-      updates.metaTitle = '';
-      needsUpdate = true;
-    }
-    if (product.metaDescription && isMalicious(product.metaDescription)) {
-      updates.metaDescription = '';
-      needsUpdate = true;
-    }
-    if (product.metaKeywords && isMalicious(product.metaKeywords)) {
-      updates.metaKeywords = '';
-      needsUpdate = true;
-    }
-    
-    if (needsUpdate) {
-      await Product.updateOne({ _id: product._id }, { $unset: updates });
-      cleanedCount++;
+    if (p.metaTitle && isMalicious(p.metaTitle)) updates.metaTitle = '';
+    if (p.metaDescription && isMalicious(p.metaDescription)) updates.metaDescription = '';
+    if (p.metaKeywords && isMalicious(p.metaKeywords)) updates.metaKeywords = '';
+    if (p.video && isMalicious(p.video)) updates.video = '';
+    if (p.youtubeUrl && isMalicious(p.youtubeUrl)) updates.youtubeUrl = '';
+    if (Object.keys(updates).length > 0) {
+      await Product.updateOne({ _id: p._id }, { $set: updates });
+      productCleaned++;
     }
   }
-  console.log(`   ✅ Cleaned ${cleanedCount} products with malicious meta fields`);
-  
-  // 3. Check blogs
-  console.log('\n📝 Checking blogs...');
-  const maliciousBlogs = await Blog.find({
-    $or: [
-      { title: { $regex: spamRegex } },
-      { content: { $regex: spamRegex } },
-      { metaTitle: { $regex: spamRegex } },
-      { metaDescription: { $regex: spamRegex } }
-    ]
-  }).lean();
-  
-  console.log(`   Found ${maliciousBlogs.length} malicious blogs`);
-  
-  if (maliciousBlogs.length > 0) {
-    console.log('\n   Malicious blogs:');
-    maliciousBlogs.forEach((blog, index) => {
-      console.log(`   ${index + 1}. ${blog.title || 'No title'} (ID: ${blog._id})`);
-    });
-    
-    const deleteResult = await Blog.deleteMany({
-      _id: { $in: maliciousBlogs.map(b => b._id) }
-    });
-    console.log(`\n   ✅ Deleted ${deleteResult.deletedCount} malicious blogs`);
+  console.log(`   ✅ Cleaned ${productCleaned} products`);
+
+  // 2. Clean Blogs - meta fields only
+  console.log('\n📝 Cleaning blogs meta fields...');
+  const blogsToClean = await Blog.find({}).lean();
+  let blogCleaned = 0;
+  for (const b of blogsToClean) {
+    const updates = {};
+    if (b.metaTitle && isMalicious(b.metaTitle)) updates.metaTitle = '';
+    if (b.metaDescription && isMalicious(b.metaDescription)) updates.metaDescription = '';
+    if (b.metaKeywords && isMalicious(b.metaKeywords)) updates.metaKeywords = '';
+    if (Object.keys(updates).length > 0) {
+      await Blog.updateOne({ _id: b._id }, { $set: updates });
+      blogCleaned++;
+    }
   }
-  
-  console.log('\n✅ Database cleanup completed!\n');
+  console.log(`   ✅ Cleaned ${blogCleaned} blogs`);
+
+  // 3. Clean Categories - meta fields only
+  console.log('\n📂 Cleaning categories meta fields...');
+  const categoriesToClean = await Category.find({}).lean();
+  let categoryCleaned = 0;
+  for (const c of categoriesToClean) {
+    const updates = {};
+    if (c.metatitle && isMalicious(c.metatitle)) updates.metatitle = '';
+    if (c.metadescription && isMalicious(c.metadescription)) updates.metadescription = '';
+    if (c.metakeywords && isMalicious(c.metakeywords)) updates.metakeywords = '';
+    if (Object.keys(updates).length > 0) {
+      await Category.updateOne({ _id: c._id }, { $set: updates });
+      categoryCleaned++;
+    }
+  }
+  console.log(`   ✅ Cleaned ${categoryCleaned} categories`);
+
+  // 4. Clean SubCategories - meta fields only
+  console.log('\n📁 Cleaning subcategories meta fields...');
+  const subcatsToClean = await SubCategory.find({}).lean();
+  let subcatCleaned = 0;
+  for (const s of subcatsToClean) {
+    const updates = {};
+    if (s.metatitle && isMalicious(s.metatitle)) updates.metatitle = '';
+    if (s.metadescription && isMalicious(s.metadescription)) updates.metadescription = '';
+    if (s.metakeyword && isMalicious(s.metakeyword)) updates.metakeyword = '';
+    if (Object.keys(updates).length > 0) {
+      await SubCategory.updateOne({ _id: s._id }, { $set: updates });
+      subcatCleaned++;
+    }
+  }
+  console.log(`   ✅ Cleaned ${subcatCleaned} subcategories`);
+
+  console.log('\n✅ Cleanup completed! No records deleted.\n');
   await mongoose.connection.close();
   process.exit(0);
 }
 
-// Run cleanup
 cleanupDatabase().catch(error => {
   console.error('❌ Error during cleanup:', error);
   process.exit(1);

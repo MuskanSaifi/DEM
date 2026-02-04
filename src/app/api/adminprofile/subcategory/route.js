@@ -6,6 +6,7 @@ import Category from "@/models/Category";
 import User from "@/models/User";
 import cloudinary from "@/lib/cloudinary"; // Cloudinary config
 import { URL } from "url"; // For DELETE method
+import { validateContent } from "@/middleware/contentValidation";
 
 // ✅ Function to Upload Image to Cloudinary - MODIFIED to return public_id
 const uploadToCloudinary = async (image) => {
@@ -61,6 +62,15 @@ export async function PATCH(req) {
       if (!categoryExists) {
         return new Response(JSON.stringify({ error: "Category not found." }), { status: 404 });
       }
+    }
+
+    try {
+      if (name) validateContent(name, "name");
+      if (metatitle) validateContent(metatitle, "metatitle");
+      if (metadescription) validateContent(metadescription, "metadescription");
+      if (metakeyword) validateContent(metakeyword, "metakeyword");
+    } catch (err) {
+      return new Response(JSON.stringify({ error: err.message }), { status: 400 });
     }
 
     // ❌ Removed manual product assignment validation - products are automatically synced from Product collection
@@ -221,6 +231,15 @@ export async function POST(req) {
         JSON.stringify({ error: `Subcategory with slug "${subcategoryslug}" already exists. Please choose a different slug.` }),
         { status: 400 }
       );
+    }
+
+    try {
+      validateContent(name, "name");
+      validateContent(metatitle, "metatitle");
+      validateContent(metadescription, "metadescription");
+      validateContent(metakeyword, "metakeyword");
+    } catch (err) {
+      return new Response(JSON.stringify({ error: err.message }), { status: 400 });
     }
 
     const newSubCategory = new SubCategory({

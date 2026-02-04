@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import connectdb from "@/lib/dbConnect";
 import Blog from "@/models/Blogs";
 import cloudinary from "@/lib/cloudinary";
+import { validateContent } from "@/middleware/contentValidation";
 import { Readable } from "stream"; // ✅ Import for Buffer conversion
 
 // ✅ Convert File to Buffer
@@ -70,6 +71,16 @@ export async function POST(req) {
     if (!title || !metaKeywords || !slug || !author || !content) {
       console.log("❌ Missing required fields!");
       return NextResponse.json({ error: "Required fields missing!" }, { status: 400 });
+    }
+
+    try {
+      validateContent(title, "title");
+      validateContent(content, "content");
+      if (metaTitle) validateContent(metaTitle, "metaTitle");
+      if (metaDescription) validateContent(metaDescription, "metaDescription");
+      if (metaKeywords) validateContent(metaKeywords, "metaKeywords");
+    } catch (err) {
+      return NextResponse.json({ error: err.message }, { status: 400 });
     }
 
     const existingBlog = await Blog.findOne({ slug });
@@ -147,6 +158,16 @@ export async function PATCH(req) {
       if (existingBlog) {
         return NextResponse.json({ error: "Slug already in use by another blog" }, { status: 400 });
       }
+    }
+
+    try {
+      validateContent(title, "title");
+      validateContent(content, "content");
+      if (metaTitle) validateContent(metaTitle, "metaTitle");
+      if (metaDescription) validateContent(metaDescription, "metaDescription");
+      if (metaKeywords) validateContent(metaKeywords, "metaKeywords");
+    } catch (err) {
+      return NextResponse.json({ error: err.message }, { status: 400 });
     }
 
     // ✅ Update fields (use provided values, not fallback to old values)
