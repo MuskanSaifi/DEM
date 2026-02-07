@@ -12,43 +12,57 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const categorySlug = searchParams.get("categorySlug");
     const subcategorySlug = searchParams.get("subcategorySlug");
+    const city = searchParams.get("city")?.toLowerCase();
     const page = parseInt(searchParams.get("page")) || 1;
     const limit = parseInt(searchParams.get("limit")) || 20;
 
-    if (!categorySlug || !subcategorySlug) {
-      return Response.json({ error: "Missing slug params" }, { status: 400 });
+    if (!subcategorySlug) {
+      return Response.json({ error: "subcategorySlug required" }, { status: 400 });
     }
 
-    // 1) Find Category
-    const category = await Category.findOne({ categoryslug: categorySlug })
-      .populate("subcategories")
-      .lean();
+    let subcat;
+    let category;
 
-    if (!category) {
-      return Response.json({ error: "Category not found" }, { status: 404 });
+    if (categorySlug) {
+      // Existing flow: categorySlug + subcategorySlug
+      category = await Category.findOne({ categoryslug: categorySlug })
+        .populate("subcategories")
+        .lean();
+      if (!category) {
+        return Response.json({ error: "Category not found" }, { status: 404 });
+      }
+      subcat = category.subcategories.find(
+        (s) => s.subcategoryslug === subcategorySlug
+      );
+    } else {
+      // City flow: subcategorySlug + city - find SubCategory directly
+      const subcatDoc = await SubCategory.findOne({
+        subcategoryslug: { $regex: new RegExp(`^${subcategorySlug}$`, "i") },
+      })
+        .populate("category", "name categoryslug icon")
+        .lean();
+      subcat = subcatDoc;
+      category = subcat?.category || null;
     }
-
-    // 2) Find Subcategory
-    const subcat = category.subcategories.find(
-      (s) => s.subcategoryslug === subcategorySlug
-    );
 
     if (!subcat) {
       return Response.json({ error: "Subcategory not found" }, { status: 404 });
     }
 
-    // 3) Paginated Products Query
+    // 3) Paginated Products Query - add city filter when provided
     const skip = (page - 1) * limit;
+    const productQuery = { subCategory: subcat._id };
+    if (city) {
+      productQuery.city = { $regex: new RegExp(`^${city}$`, "i") };
+    }
 
-    const totalProducts = await Product.countDocuments({
-      subCategory: subcat._id,
-    });
+    const totalProducts = await Product.countDocuments(productQuery);
 
-    const products = await Product.find({ subCategory: subcat._id })
+    const products = await Product.find(productQuery)
       .select(
-        "name description price images tradeShopping userId minimumOrderQuantity currency tags"
+        "name description price images tradeShopping userId minimumOrderQuantity currency tags city state"
       )
-      .populate("userId", "fullname mobileNumber")
+      .populate("userId", "fullname mobileNumber companyName")
       .skip(skip)
       .limit(limit)
       .lean();

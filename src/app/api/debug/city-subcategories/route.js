@@ -26,9 +26,9 @@ export async function GET(req) {
       subCategory: { $ne: null }
     })
       .select("name city subCategory category")
-      .populate("category", "name categoryslug")
-      .populate("subCategory", "name subcategoryslug")
-      .limit(100)
+      .populate("category", "name categoryslug icon")
+      .populate("subCategory", "name subcategoryslug icon")
+      .limit(1000)
       .lean();
 
     // Group by subcategory
@@ -42,12 +42,18 @@ export async function GET(req) {
       const catName = p.category?.name;
 
       if (subcatId && subcatName) {
+        const catSlug = p.category?.categoryslug;
+        const catIcon = p.category?.icon;
+        const subcatIcon = p.subCategory?.icon;
         if (!subcategoriesMap[subcatId]) {
           subcategoriesMap[subcatId] = {
             id: subcatId,
             name: subcatName,
             slug: subcatSlug || "NO SLUG",
+            icon: subcatIcon,
             category: catName,
+            categorySlug: catSlug,
+            categoryIcon: catIcon,
             count: 0,
             products: []
           };
