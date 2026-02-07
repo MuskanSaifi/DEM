@@ -1,4 +1,5 @@
 import connectDB from "@/lib/dbConnect";
+import mongoose from "mongoose";
 import Category from "@/models/Category";
 import SubCategory from "@/models/SubCategory";
 import Product from "@/models/Product";
@@ -12,18 +13,29 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const categorySlug = searchParams.get("categorySlug");
     const subcategorySlug = searchParams.get("subcategorySlug");
+    const subcategoryId = searchParams.get("subcategoryId");
     const city = searchParams.get("city")?.toLowerCase();
     const page = parseInt(searchParams.get("page")) || 1;
     const limit = parseInt(searchParams.get("limit")) || 20;
 
-    if (!subcategorySlug) {
-      return Response.json({ error: "subcategorySlug required" }, { status: 400 });
+    if (!subcategorySlug && !subcategoryId) {
+      return Response.json({ error: "subcategorySlug or subcategoryId required" }, { status: 400 });
     }
 
     let subcat;
     let category;
 
-    if (categorySlug) {
+    if (subcategoryId && mongoose.Types.ObjectId.isValid(subcategoryId)) {
+      const subcatDoc = await SubCategory.findById(subcategoryId)
+        .populate("category", "name categoryslug icon")
+        .lean();
+      if (subcatDoc) {
+        subcat = subcatDoc;
+        category = subcat?.category || null;
+      }
+    }
+
+    if (!subcat && categorySlug && subcategorySlug) {
       // Existing flow: categorySlug + subcategorySlug
       category = await Category.findOne({ categoryslug: categorySlug })
         .populate("subcategories")
@@ -32,12 +44,15 @@ export async function GET(req) {
         return Response.json({ error: "Category not found" }, { status: 404 });
       }
       subcat = category.subcategories.find(
-        (s) => s.subcategoryslug === subcategorySlug
+        (s) => (s.subcategoryslug || "").toLowerCase() === (subcategorySlug || "").toLowerCase()
       );
-    } else {
-      // City flow: subcategorySlug + city - find SubCategory directly
+    }
+
+    if (!subcat && subcategorySlug && subcategorySlug !== "NO SLUG") {
+      // City flow: subcategorySlug + city - find SubCategory directly (case-insensitive)
+      const safeSlug = (subcategorySlug || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const subcatDoc = await SubCategory.findOne({
-        subcategoryslug: { $regex: new RegExp(`^${subcategorySlug}$`, "i") },
+        subcategoryslug: { $regex: new RegExp(`^${safeSlug}$`, "i") },
       })
         .populate("category", "name categoryslug icon")
         .lean();
