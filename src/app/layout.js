@@ -2,8 +2,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import Providers from "./store/providers";
 import LayoutWrapper from "../components/LayoutWrapper";
-import "bootstrap/dist/css/bootstrap.min.css";   // ✅ move here
 import "./globals.css";
+import "bootstrap/dist/css/bootstrap.min.css";   // ✅ move here
 import "../components/styles/header.css";
 import "../components/styles/footer.css";
 import AppInitializer from "./store/AppInitializer";

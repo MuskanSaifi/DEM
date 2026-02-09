@@ -26,9 +26,8 @@ const getUserIdFromRequest = async (req) => {
 export async function DELETE(req, { params }) {
     await connectdb();
     try {
-        // Line 15: This call now works because the function is defined above.
-        const userId = await getUserIdFromRequest(req); 
-        const { productId } = params; 
+        const userId = await getUserIdFromRequest(req);
+        const { productId } = await params;
 
         if (!userId) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
