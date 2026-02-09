@@ -5,12 +5,6 @@ import { writeFile } from 'fs/promises';
 import connectdb from '@/lib/dbConnect';
 import SupportPerson from '@/models/SupportPerson';
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 export async function POST(req) {
   const formData = await req.formData();
   const file = formData.get('audio');

@@ -5,15 +5,6 @@ import jwt from "jsonwebtoken";
 import slugify from "slugify";
 import cloudinary from "@/lib/cloudinary"; // This correctly imports the v2 object aliased as cloudinary
 
-// Set the body parser size limit for this API route to handle larger image payloads
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '4mb', // Configured to accept request bodies up to 4MB
-    },
-  },
-};
-
 const uploadUserImage = async (image) => {
   // Added a check for empty image string or non-base64, which was missing in the previous context
   // If the image isn't a base64 string, assume it's an existing URL (or empty) and return it.

@@ -4,14 +4,6 @@ import jwt from "jsonwebtoken";
 import slugify from "slugify";
 import cloudinary from "@/lib/cloudinary";
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: "4mb",
-    },
-  },
-};
-
 // Helper: upload image to Cloudinary
 const uploadBuyerImage = async (image) => {
   if (!image || typeof image !== "string" || !image.startsWith("data:image")) {

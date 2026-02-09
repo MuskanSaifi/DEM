@@ -2,11 +2,11 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import Providers from "./store/providers";
 import LayoutWrapper from "../components/LayoutWrapper";
+import "bootstrap/dist/css/bootstrap.min.css";   // ✅ move here
 import "./globals.css";
 import "../components/styles/header.css";
 import "../components/styles/footer.css";
-import "bootstrap/dist/css/bootstrap.min.css";
-import AppInitializer from "./store/AppInitializer"; // ✅ import added
+import AppInitializer from "./store/AppInitializer";
 
 // Organization & WebSite schemas moved to homepage + about-us only (see lib/schemas.js)
 

@@ -22,39 +22,33 @@ Top Cities in India to Find Verified B2B Suppliers
       manufacturing hubs across India.</p>
 <div className="bg-gray-100 p-6 rounded-lg">
       <div className="city-scroll flex md:grid md:grid-cols-4 lg:grid-cols-6 gap-6 overflow-x-auto md:overflow-hidden justify-start">
-        {cities.map((city, index) => (
-          // 2. Replace <a> with <Link> and wrap the content inside
-          <Link
-            key={index}
-            href={city.link}
-            legacyBehavior // Add this for compatibility with wrapping <a> tag
-            passHref
-          >
-            {/* 3. Keep the <a> tag inside <Link> */}
-            <a
-                className="flex flex-col items-center space-y-3 bg-white p-5 my-2 rounded-lg shadow-md hover:shadow-lg transition duration-200 min-w-[100px] flex-shrink-0"
-            >
-                {city.icon ? (
-                  <Image
-                    src={city.icon}
-                    alt={city.name}
-                    width={100}
-                    height={100}
-                    className="rounded-full border border-gray-300"
-                  />
-                ) : (
-                  <span className="text-4xl">⋯</span>
-                )}
-                <h3
-  className="text-sm text-gray-800"
-  role="heading"
-  aria-level="3"
->
-  {city.name}
-</h3>
-            </a>
-          </Link>
-        ))}
+  {cities.map((city, index) => (
+  <Link
+    key={index}
+    href={city.link}
+    className="flex flex-col items-center space-y-3 bg-white p-5 my-2 rounded-lg shadow-md hover:shadow-lg transition duration-200 min-w-[100px] flex-shrink-0"
+  >
+    {city.icon ? (
+      <Image
+        src={city.icon}
+        alt={city.name}
+        width={100}
+        height={100}
+        className="rounded-full border border-gray-300"
+      />
+    ) : (
+      <span className="text-4xl">⋯</span>
+    )}
+    <h3
+      className="text-sm text-gray-800"
+      role="heading"
+      aria-level="3"
+    >
+      {city.name}
+    </h3>
+  </Link>
+))}
+
       </div>
 </div>
 

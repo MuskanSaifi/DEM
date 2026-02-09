@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import './CustomChatBot.css';
 import Image from 'next/image';
-import supportIcon from '/public/assets/sp.png';
 
 const CustomChatBot = () => {
   const [step, setStep] = useState(1);
@@ -76,7 +75,7 @@ const CustomChatBot = () => {
 
       {!isOpen && (
         <button className="support-btn" onClick={() => setIsOpen(true)}>
-          <Image src={supportIcon} alt="support" width={20} height={20} />
+          <Image src="/assets/sp.png" alt="support" width={20} height={20} />
           Support
         </button>
       )}

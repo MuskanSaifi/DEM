@@ -1,15 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Select from "react-select";
 import toast from "react-hot-toast";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 
 import { useDispatch } from "react-redux";
 import { setUser } from "@/app/store/userSlice";
 import { setBuyer } from "@/app/store/buyerSlice";
 
 import countryCodes from "./CountryCode";
+const Select = dynamic(() => import("react-select"), { ssr: false });
 
 const BuySellForm = () => {
   const [showModal, setShowModal] = useState(false);
@@ -198,7 +199,14 @@ const BuySellForm = () => {
                         placeholder="Email (optional)"
                       />
                       <div className="mb-2 d-flex">
-                        <Select options={countryCodes} value={countryCode} onChange={setCountryCode} className="me-2" />
+                     <Select
+  instanceId="country-code-select"
+  options={countryCodes}
+  value={countryCode}
+  onChange={setCountryCode}
+  className="me-2"
+/>
+
                         <input
                           type="text"
                           value={mobileNumber}
