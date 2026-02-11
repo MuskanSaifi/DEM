@@ -42,14 +42,6 @@ const filterReducer = (state, action) => {
         ...state,
         tags: { ...state.tags, [action.tag]: action.value },
       };
-    case "SET_BRAND":
-      const { brand, checked } = action.payload;
-      return {
-        ...state,
-        selectedBrands: checked
-          ? [...state.selectedBrands, brand]
-          : state.selectedBrands.filter((b) => b !== brand),
-      };
     case "SET_CONTAINER_TYPE":
       const { type, containerChecked } = action.payload;
       return {
@@ -67,8 +59,6 @@ const filterReducer = (state, action) => {
         maxPrice: 100000, // Default max price, adjust as per your data
         minMOQ: "",
         maxMOQ: "",
-        selectedBrands: [],
-        brandSearchTerm: "",
         tags: {
           newArrivals: false,
           trending: false,
@@ -108,8 +98,6 @@ const [totalPages, setTotalPages] = useState(1);
     maxPrice: 100000, // Default max price, adjust based on your product data
     minMOQ: "",
     maxMOQ: "",
-    selectedBrands: [],
-    brandSearchTerm: "",
     tags: {
       newArrivals: false,
       trending: false,
@@ -120,7 +108,6 @@ const [totalPages, setTotalPages] = useState(1);
     selectedContainerTypes: [],
   });
 
-  const [allBrands, setAllBrands] = useState([]);
   const [allContainerTypes, setAllContainerTypes] = useState([]); // To store all unique container types
 
   // Mobile filter sidebar state
@@ -194,10 +181,6 @@ const fetchData = useCallback(async () => {
     setSubcategories(data.category.subcategories);
     setTotalPages(data.totalPages);
 
-    // Extract brands
-    const brands = [...new Set(data.products.map(p => p.tradeShopping?.brandName).filter(Boolean))];
-    setAllBrands(brands);
-
     // Extract container types
     const containerTypes = [...new Set(data.products.map(p => p.containerType).filter(Boolean))];
     setAllContainerTypes(containerTypes);
@@ -243,13 +226,6 @@ const fetchData = useCallback(async () => {
       );
     }
 
-    // Brand filter
-    if (filters.selectedBrands.length > 0) {
-      tempProducts = tempProducts.filter((p) =>
-        filters.selectedBrands.includes(p.tradeShopping?.brandName)
-      );
-    }
-
     // Tags filter
     const activeTags = Object.keys(filters.tags).filter(tag => filters.tags[tag]);
     if (activeTags.length > 0) {
@@ -287,12 +263,6 @@ const fetchData = useCallback(async () => {
     dispatchFilters({ type: "SET_PRICE_RANGE", payload: value });
   };
 
-
-  const handleBrandChange = (e) => {
-    const { value, checked } = e.target;
-    dispatchFilters({ type: "SET_BRAND", payload: { brand: value, checked } });
-  };
-
   const handleTagFilterChange = (e) => {
     const { name, checked } = e.target;
     dispatchFilters({ type: "SET_TAG", tag: name, value: checked });
@@ -306,11 +276,16 @@ const fetchData = useCallback(async () => {
   const handleClearFilters = () => {
     dispatchFilters({ type: "CLEAR_FILTERS" });
   };
-
-  // Filtered brands for display based on search term
-  const filteredBrands = allBrands.filter(brand =>
-    brand.toLowerCase().includes(filters.brandSearchTerm.toLowerCase())
-  );
+  
+  // Product name list (from current loaded products)
+  const productNameList = React.useMemo(() => {
+    const names = products
+      .map((p) => p?.name)
+      .filter(Boolean)
+      .map((n) => String(n).trim())
+      .filter(Boolean);
+    return Array.from(new Set(names)).sort((a, b) => a.localeCompare(b));
+  }, [products]);
 
   const shouldDisplay = (value) => {
     if (value === null || typeof value === "undefined") {
@@ -405,35 +380,6 @@ const fetchData = useCallback(async () => {
               <div className="mb-3 text-light global-heading rounded-2 common-shad px-4 text-center py-1 text-sm">
                 Filters
               </div>
-                 {/* Subcategories (visible on desktop, also in mobile filter sidebar) */}
-            <div className="mb-4">
-                              <label className="form-label fw-bold">Sub Categories</label>
-              {loading ? (
-                <Skeleton count={5} height={20} />
-              ) : (
-                <ul className="list-group">
-                  {subcategories.map((sub) => (
-                    <Link
-                      key={sub._id}
-                      href={`/seller/${categorySlug}/${sub.subcategoryslug}`}
-                      className="text-decoration-none"
-                      onClick={() => setShowFilterSidebar(false)} // Close sidebar on subcategory click
-                    >
-                      <li
-                        className={`list-group-item ${
-                          decode(sub.subcategoryslug) ===
-                          decode(subcategorySlug)
-                            ? "custom-active"
-                            : "text-dark"
-                        }`}
-                      >
-                        {sub.name}
-                      </li>
-                    </Link>
-                  ))}
-                </ul>
-              )}
-            </div>
               <div>
                 {/* Product Name Search */}
                 <div className="mb-3">
@@ -452,6 +398,49 @@ const fetchData = useCallback(async () => {
                       <FaSearch />
                     </span>
                   </div>
+                </div>
+
+                {/* Products List (scroll) */}
+                <div className="mb-4">
+                  <label className="form-label fw-bold">Products</label>
+                  {loading ? (
+                    <Skeleton count={6} height={18} />
+                  ) : productNameList.length > 0 ? (
+                    <div
+                      style={{
+                        maxHeight: "180px",
+                        overflowY: "auto",
+                        border: "1px solid #eee",
+                        borderRadius: "8px",
+                        padding: "8px",
+                        background: "#fff",
+                      }}
+                    >
+                      {productNameList.map((name) => (
+                        <button
+                          key={name}
+                          type="button"
+                          className={`btn btn-sm w-100 text-start mb-1 ${
+                            filters.productName?.toLowerCase() ===
+                            name.toLowerCase()
+                              ? "btn-primary"
+                              : "btn-light"
+                          }`}
+                          onClick={() => {
+                            dispatchFilters({
+                              type: "SET_FILTER",
+                              field: "productName",
+                              value: name,
+                            });
+                          }}
+                        >
+                          {name}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted text-sm mb-0">No products found.</p>
+                  )}
                 </div>
 
                 {/* Price Range Filter for Desktop (Slider + Dropdowns) */}
@@ -641,49 +630,6 @@ const fetchData = useCallback(async () => {
                   ) : (
                     <p className="text-muted text-sm">No container types available.</p>
                   )}
-                </div>
-
-                {/* Brand Filter */}
-                <p className="text-dark mb-3 font-bold">Brand</p>
-                <div className="mb-3">
-                  <div className="input-group mb-2">
-                    <input
-                      type="text"
-                      placeholder="Search Brand"
-                      className="form-control"
-                      value={filters.brandSearchTerm}
-                      onChange={(e) => dispatchFilters({ type: "SET_FILTER", field: "brandSearchTerm", value: e.target.value })}
-                    />
-                    <span className="input-group-text">
-                      <FaSearch />
-                    </span>
-                  </div>
-                  <div className="brand-list" style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid #eee', padding: '5px', borderRadius: '5px' }}>
-                    {loading ? (
-                      <Skeleton count={3} height={20} />
-                    ) : filteredBrands.length > 0 ? (
-                      filteredBrands.map((brand) => (
-                        <div className="form-check" key={brand}>
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            value={brand}
-                            id={`brand-${brand}`}
-                            checked={filters.selectedBrands.includes(brand)}
-                            onChange={handleBrandChange}
-                          />
-                          <label
-                            className="form-check-label"
-                            htmlFor={`brand-${brand}`}
-                          >
-                            {brand}
-                          </label>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-muted text-sm">No brands matching search.</p>
-                    )}
-                  </div>
                 </div>
 
                 <button
@@ -911,6 +857,43 @@ const fetchData = useCallback(async () => {
     </button>
   </div>
 )}
+
+          {/* Subcategories (moved from left filters to right side, below products) */}
+          <div className="mt-4">
+            <div className="d-flex align-items-center justify-content-between mb-2">
+              <h2 className="h6 fw-bold text-dark mb-0">Other Categories</h2>
+              <Link
+                href={`/seller/${categorySlug}`}
+                className="small text-decoration-none"
+              >
+                View category
+              </Link>
+            </div>
+
+            {loading ? (
+              <Skeleton count={2} height={28} />
+            ) : error ? null : subcategories?.length ? (
+              <div className="d-flex flex-wrap gap-2">
+                {subcategories.map((sub) => {
+                  const isActive =
+                    decode(sub.subcategoryslug) === decode(subcategorySlug);
+                  return (
+                    <Link
+                      key={sub._id}
+                      href={`/seller/${categorySlug}/${sub.subcategoryslug}`}
+                      className={`btn btn-sm ${
+                        isActive ? "btn-primary" : "btn-outline-primary"
+                      }`}
+                    >
+                      {sub.name}
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-muted small mb-0">No subcategories found.</p>
+            )}
+          </div>
 
           {/* SEO Content Section - Only show when valid subcategory (no error) */}
           {!loading && !error && subcategorySlug && (
