@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import BulkImportLeads from "@/components/sales/BulkImportLeads";
 import "@/components/styles/sales-dashboards.css";
@@ -37,6 +37,8 @@ export default function SalesAdminDashboard() {
   const [reportLoading, setReportLoading] = useState(false);
   const [leaderboard, setLeaderboard] = useState(null);
   const [expandedReportEmployeeId, setExpandedReportEmployeeId] = useState(null);
+  const [showEmployeeSidebar, setShowEmployeeSidebar] = useState(false);
+  const [employeeSearch, setEmployeeSearch] = useState("");
   const [employeeForm, setEmployeeForm] = useState({
     fullname: "",
     email: "",
@@ -49,6 +51,20 @@ export default function SalesAdminDashboard() {
   });
   const chatEndRef = useRef(null);
   const router = useRouter();
+  const [showAssignDropdown, setShowAssignDropdown] = useState(false);
+
+  const filteredAssignEmployees = useMemo(() => {
+    const query = employeeSearch.trim().toLowerCase();
+    if (!query) return employees;
+    return employees.filter((emp) =>
+      (emp.fullname || "").toLowerCase().includes(query)
+    );
+  }, [employees, employeeSearch]);
+
+  const selectedAssignEmployee = useMemo(
+    () => employees.find((emp) => emp._id === assignTo),
+    [employees, assignTo]
+  );
 
   const remarkTypes = [
     { value: "general", label: "General" },
@@ -806,10 +822,20 @@ export default function SalesAdminDashboard() {
           </div>
         </div>
 
-        {/* Employees List */}
+        {/* Employees List – summary card + sidebar trigger */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-            <h2 className="text-lg font-bold text-gray-900">Sales Team ({employees.length})</h2>
+          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center gap-3">
+            <h2 className="text-lg font-bold text-gray-900">
+              Sales Team ({employees.length})
+            </h2>
+            {employees.length > 0 && (
+              <button
+                onClick={() => setShowEmployeeSidebar(true)}
+                className="ml-auto px-4 py-2.5 text-sm font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-100 transition"
+              >
+                View All Sales Team
+              </button>
+            )}
           </div>
           <div className="p-6">
             {employees.length === 0 ? (
@@ -828,58 +854,22 @@ export default function SalesAdminDashboard() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {employees.map((emp) => (
-                  <div
-                    key={emp._id}
-                    className={`sales-card-hover border rounded-xl p-5 transition ${
-                      emp.isActive ? "bg-white border-gray-200" : "bg-gray-50 border-gray-100 opacity-80"
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{emp.fullname}</h3>
-                        <p className="text-sm text-gray-500">{emp.email}</p>
-                        {emp.mobileNumber && (
-                          <p className="text-sm text-gray-500">{emp.mobileNumber}</p>
-                        )}
-                      </div>
-                      <span
-                        className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
-                          emp.isActive
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {emp.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </div>
-                    <div className="flex gap-2 mt-4">
-                      <button
-                        onClick={() =>
-                          handleToggleEmployeeStatus(
-                            emp._id,
-                            emp.isActive,
-                            emp.fullname
-                          )
-                        }
-                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                          emp.isActive
-                            ? "bg-amber-100 text-amber-800 hover:bg-amber-200"
-                            : "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
-                        }`}
-                      >
-                        {emp.isActive ? "Deactivate" : "Activate"}
-                      </button>
-                      <button
-                        onClick={() => handleDeleteEmployee(emp._id, emp.fullname)}
-                        className="px-3 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
+              <div className="space-y-2 text-sm text-gray-600">
+                <p className="font-medium">
+                  You have <span className="font-semibold">{employees.length}</span> sales
+                  team member{employees.length > 1 ? "s" : ""}. Use{" "}
+                  <span className="font-semibold">“View All Sales Team”</span> to see and
+                  manage the full list.
+                </p>
+                <button
+                  onClick={() => {
+                    setShowAddEmployee(true);
+                    setShowBulkImport(false);
+                  }}
+                  className="mt-2 inline-flex items-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition text-sm"
+                >
+                  ➕ Add Employee
+                </button>
               </div>
             )}
           </div>
@@ -917,66 +907,86 @@ export default function SalesAdminDashboard() {
           </div>
         )}
 
+        {/* Add Employee – modal popup */}
         {showAddEmployee && (
-          <form
-            onSubmit={handleAddEmployee}
-            className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6"
-          >
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Add Sales Employee</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <input
-                type="text"
-                placeholder="Full Name *"
-                required
-                value={employeeForm.fullname}
-                onChange={(e) =>
-                  setEmployeeForm({ ...employeeForm, fullname: e.target.value })
-                }
-                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
-              />
-              <input
-                type="email"
-                placeholder="Email *"
-                required
-                value={employeeForm.email}
-                onChange={(e) =>
-                  setEmployeeForm({ ...employeeForm, email: e.target.value })
-                }
-                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
-              />
-              <input
-                type="password"
-                placeholder="Password *"
-                required
-                value={employeeForm.password}
-                onChange={(e) =>
-                  setEmployeeForm({
-                    ...employeeForm,
-                    password: e.target.value,
-                  })
-                }
-                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
-              />
-              <input
-                type="tel"
-                placeholder="Mobile"
-                value={employeeForm.mobileNumber}
-                onChange={(e) =>
-                  setEmployeeForm({
-                    ...employeeForm,
-                    mobileNumber: e.target.value,
-                  })
-                }
-                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
-              />
+          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+              <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b">
+                <h2 className="text-lg font-bold text-gray-900">Add Sales Employee</h2>
+                <button
+                  onClick={() => setShowAddEmployee(false)}
+                  className="text-gray-400 hover:text-gray-600 rounded-full p-1"
+                  aria-label="Close add employee"
+                >
+                  ✕
+                </button>
+              </div>
+              <form onSubmit={handleAddEmployee} className="px-6 pb-6 pt-4 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    placeholder="Full Name *"
+                    required
+                    value={employeeForm.fullname}
+                    onChange={(e) =>
+                      setEmployeeForm({ ...employeeForm, fullname: e.target.value })
+                    }
+                    className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email *"
+                    required
+                    value={employeeForm.email}
+                    onChange={(e) =>
+                      setEmployeeForm({ ...employeeForm, email: e.target.value })
+                    }
+                    className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+                  />
+                  <input
+                    type="password"
+                    placeholder="Password *"
+                    required
+                    value={employeeForm.password}
+                    onChange={(e) =>
+                      setEmployeeForm({
+                        ...employeeForm,
+                        password: e.target.value,
+                      })
+                    }
+                    className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Mobile"
+                    value={employeeForm.mobileNumber}
+                    onChange={(e) =>
+                      setEmployeeForm({
+                        ...employeeForm,
+                        mobileNumber: e.target.value,
+                      })
+                    }
+                    className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+                  />
+                </div>
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddEmployee(false)}
+                    className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition text-sm"
+                  >
+                    Add Employee
+                  </button>
+                </div>
+              </form>
             </div>
-            <button
-              type="submit"
-              className="mt-5 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition"
-            >
-              Add Employee
-            </button>
-          </form>
+          </div>
         )}
 
         {/* Bulk Assign - Sticky Bar */}
@@ -989,18 +999,69 @@ export default function SalesAdminDashboard() {
                     {selectedLeads.length} lead(s) selected
                   </span>
                 </div>
-                <select
-                  value={assignTo}
-                  onChange={(e) => setAssignTo(e.target.value)}
-                  className="sales-input-focus border-2 border-amber-600/30 rounded-xl px-4 py-2.5 bg-white min-w-[200px] font-medium text-gray-900"
-                >
-                  <option value="">👤 Select Employee</option>
-                  {employees.map((emp) => (
-                    <option key={emp._id} value={emp._id}>
-                      {emp.fullname}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowAssignDropdown((prev) => !prev)}
+                    className="sales-input-focus border-2 border-amber-600/30 rounded-xl px-4 py-2.5 bg-white min-w-[220px] font-medium text-gray-900 flex items-center justify-between gap-2"
+                  >
+                    <span className="flex items-center gap-2 text-sm">
+                      <span role="img" aria-hidden="true">
+                        👤
+                      </span>
+                      {selectedAssignEmployee?.fullname || "Select Employee"}
+                    </span>
+                    <span className="text-xs text-gray-500">▾</span>
+                  </button>
+                  {showAssignDropdown && (
+                    <div className="absolute bottom-11 left-0 w-64 max-h-80 bg-white rounded-xl shadow-2xl border border-amber-500/40 p-2 space-y-2 z-50">
+                      <input
+                        type="text"
+                        value={employeeSearch}
+                        onChange={(e) => setEmployeeSearch(e.target.value)}
+                        placeholder="Search employee…"
+                        className="sales-input-focus w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm"
+                      />
+                      <div className="max-h-52 overflow-y-auto">
+                        {filteredAssignEmployees.length === 0 && (
+                          <p className="text-xs text-gray-400 px-2 py-2">
+                            No employees match your search.
+                          </p>
+                        )}
+                        {filteredAssignEmployees.map((emp) => (
+                          <button
+                            key={emp._id}
+                            type="button"
+                            onClick={() => {
+                              setAssignTo(emp._id);
+                              setEmployeeSearch(emp.fullname || "");
+                              setShowAssignDropdown(false);
+                            }}
+                            className={`w-full text-left px-3 py-1.5 rounded-lg text-sm hover:bg-amber-50 ${
+                              assignTo === emp._id
+                                ? "bg-amber-100 text-amber-900 font-semibold"
+                                : "text-gray-800"
+                            }`}
+                          >
+                            {emp.fullname}
+                          </button>
+                        ))}
+                      </div>
+                      {assignTo && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAssignTo("");
+                            setEmployeeSearch("");
+                          }}
+                          className="w-full text-left text-xs text-red-600 px-2 py-1 rounded-lg hover:bg-red-50"
+                        >
+                          Clear selection
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex gap-2">
                 <button
@@ -1067,228 +1128,441 @@ export default function SalesAdminDashboard() {
                 )}
               </div>
             ) : (
-            <table className="min-w-full">
-              <thead className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3.5 text-left">
-                    <input
-                      type="checkbox"
-                      checked={
-                        filteredLeads.length > 0 &&
-                        selectedLeads.length === filteredLeads.length
-                      }
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedLeads(filteredLeads.map((l) => l._id));
-                        } else {
-                          setSelectedLeads([]);
-                        }
-                      }}
-                      className="cursor-pointer"
-                    />
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Client
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Company
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Mobile
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Product
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Assigned To
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Payment
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Remarks
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredLeads.map((lead) => (
-                  <tr key={lead._id} className="sales-table-row-hover transition">
-                    <td className="px-6 py-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedLeads.includes(lead._id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedLeads([...selectedLeads, lead._id]);
-                          } else {
-                            setSelectedLeads(
-                              selectedLeads.filter((id) => id !== lead._id)
-                            );
+              <>
+                {/* Desktop / Tablet table */}
+                <table className="hidden md:table min-w-full">
+                  <thead className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-3.5 text-left">
+                        <input
+                          type="checkbox"
+                          checked={
+                            filteredLeads.length > 0 &&
+                            selectedLeads.length === filteredLeads.length
                           }
-                        }}
-                        className="cursor-pointer w-4 h-4"
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {lead.clientName}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {lead.companyName || "-"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {lead.mobile}
-                    </td>
-                    <td className="px-6 py-4">{lead.product}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {lead.assignedTo?.fullname || "Unassigned"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={lead.status}
-                        onChange={(e) => {
-                          const token = localStorage.getItem("salesAdminToken");
-                          fetch(`/api/sales/leads/${lead._id}`, {
-                            method: "PATCH",
-                            headers: {
-                              "Content-Type": "application/json",
-                              Authorization: `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({ status: e.target.value }),
-                          }).then(() => {
-                            fetchData(token);
-                            setToast({
-                              type: "success",
-                              message: "Status updated",
-                            });
-                            setTimeout(() => setToast(null), 2000);
-                          });
-                        }}
-                        className={`px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer ${
-                          lead.status === "converted"
-                            ? "bg-green-100 text-green-800"
-                            : lead.status === "qualified"
-                            ? "bg-blue-100 text-blue-800"
-                            : lead.status === "contacted"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : lead.status === "lost"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-800"
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedLeads(filteredLeads.map((l) => l._id));
+                            } else {
+                              setSelectedLeads([]);
+                            }
+                          }}
+                          className="cursor-pointer"
+                        />
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Client
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Company
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Mobile
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Product
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Assigned To
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Payment
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Remarks
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {filteredLeads.map((lead, index) => (
+                      <tr
+                        key={lead._id}
+                        className={`sales-table-row-hover transition ${
+                          index % 2 === 0 ? "bg-white" : "bg-gray-50/60"
                         }`}
                       >
-                        <option value="new">New</option>
-                        <option value="contacted">Contacted</option>
-                        <option value="qualified">Qualified</option>
-                        <option value="converted">Converted</option>
-                        <option value="lost">Lost</option>
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={lead.paymentStatus || "pending"}
-                        onChange={(e) => {
-                          const token = localStorage.getItem("salesAdminToken");
-                          fetch(`/api/sales/leads/${lead._id}`, {
-                            method: "PATCH",
-                            headers: {
-                              "Content-Type": "application/json",
-                              Authorization: `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({ paymentStatus: e.target.value }),
-                          }).then(() => {
-                            fetchData(token);
-                            fetchLeaderboard(token);
-                            fetchDailyReport(token, reportDate);
-                            setToast({ type: "success", message: "Payment status updated" });
-                            setTimeout(() => setToast(null), 2000);
-                          });
-                        }}
-                        className={`px-2 py-1 rounded text-xs font-medium border cursor-pointer ${
-                          lead.paymentStatus === "paid"
-                            ? "bg-green-100 text-green-800"
-                            : lead.paymentStatus === "partial"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="paid">Paid</option>
-                        <option value="partial">Partial</option>
-                        <option value="not_applicable">N/A</option>
-                      </select>
-                    </td>
-                    <td className="px-6 py-4">
-                      {lead.remarks?.length > 0 ? (
-                        <div className="text-sm">
-                          <span className="font-semibold">
-                            {lead.remarks.length} remark(s)
-                          </span>
-                          <div className="mt-1 space-y-1 max-h-20 overflow-y-auto">
-                            {lead.remarks.slice(-3).map((r, idx) => (
-                              <div key={idx} className="text-xs text-gray-600">
-                                <span className="font-semibold text-indigo-600">
-                                  {r.remarkType}:
-                                </span>{" "}
-                                {r.remark}
+                        <td className="px-6 py-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedLeads.includes(lead._id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedLeads([...selectedLeads, lead._id]);
+                              } else {
+                                setSelectedLeads(
+                                  selectedLeads.filter((id) => id !== lead._id)
+                                );
+                              }
+                            }}
+                            className="cursor-pointer w-4 h-4"
+                          />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {lead.clientName}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {lead.companyName || "-"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {lead.mobile}
+                        </td>
+                        <td className="px-6 py-4">{lead.product}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {lead.assignedTo ? (
+                            <div className="flex items-center gap-2">
+                              <span>{lead.assignedTo.fullname}</span>
+                              {lead.createdBy &&
+                                String(lead.assignedTo._id || lead.assignedTo) ===
+                                  String(lead.createdBy._id || lead.createdBy) &&
+                                !lead.assignedBy && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">
+                                    Self-assigned
+                                  </span>
+                                )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-sm">
+                              Unassigned
+                              {lead.createdBy?.fullname && (
+                                <span className="ml-1 text-xs text-gray-500">
+                                  (created by {lead.createdBy.fullname})
+                                </span>
+                              )}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <select
+                            value={lead.status}
+                            onChange={(e) => {
+                              const token = localStorage.getItem("salesAdminToken");
+                              fetch(`/api/sales/leads/${lead._id}`, {
+                                method: "PATCH",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                  Authorization: `Bearer ${token}`,
+                                },
+                                body: JSON.stringify({ status: e.target.value }),
+                              }).then(() => {
+                                fetchData(token);
+                                setToast({
+                                  type: "success",
+                                  message: "Status updated",
+                                });
+                                setTimeout(() => setToast(null), 2000);
+                              });
+                            }}
+                            className={`px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer ${
+                              lead.status === "converted"
+                                ? "bg-green-100 text-green-800"
+                                : lead.status === "qualified"
+                                ? "bg-blue-100 text-blue-800"
+                                : lead.status === "contacted"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : lead.status === "lost"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            <option value="new">New</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="qualified">Qualified</option>
+                            <option value="converted">Converted</option>
+                            <option value="lost">Lost</option>
+                          </select>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <select
+                            value={lead.paymentStatus || "pending"}
+                            onChange={(e) => {
+                              const token = localStorage.getItem("salesAdminToken");
+                              fetch(`/api/sales/leads/${lead._id}`, {
+                                method: "PATCH",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                  Authorization: `Bearer ${token}`,
+                                },
+                                body: JSON.stringify({ paymentStatus: e.target.value }),
+                              }).then(() => {
+                                fetchData(token);
+                                fetchLeaderboard(token);
+                                fetchDailyReport(token, reportDate);
+                                setToast({ type: "success", message: "Payment status updated" });
+                                setTimeout(() => setToast(null), 2000);
+                              });
+                            }}
+                            className={`px-2 py-1 rounded text-xs font-medium border cursor-pointer ${
+                              lead.paymentStatus === "paid"
+                                ? "bg-green-100 text-green-800"
+                                : lead.paymentStatus === "partial"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="paid">Paid</option>
+                            <option value="partial">Partial</option>
+                            <option value="not_applicable">N/A</option>
+                          </select>
+                        </td>
+                        <td className="px-6 py-4">
+                          {lead.remarks?.length > 0 ? (
+                            <div className="text-sm">
+                              <span className="font-semibold">
+                                {lead.remarks.length} remark(s)
+                              </span>
+                              <div className="mt-1 space-y-1 max-h-20 overflow-y-auto">
+                                {lead.remarks.slice(-3).map((r, idx) => (
+                                  <div key={idx} className="text-xs text-gray-600">
+                                    <span className="font-semibold text-indigo-600">
+                                      {r.remarkType}:
+                                    </span>{" "}
+                                    {r.remark}
+                                  </div>
+                                ))}
                               </div>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">No remarks</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                          <button
+                            onClick={() => setShowRemarkModal(lead._id)}
+                            className="text-blue-600 hover:underline text-sm"
+                          >
+                            Remark
+                          </button>
+                          <select
+                            value={lead.assignedTo?._id || ""}
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                fetch(`/api/sales/leads/${lead._id}`, {
+                                  method: "PATCH",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${localStorage.getItem(
+                                      "salesAdminToken"
+                                    )}`,
+                                  },
+                                  body: JSON.stringify({
+                                    assignedTo: e.target.value,
+                                  }),
+                                }).then(() => {
+                                  const token =
+                                    localStorage.getItem("salesAdminToken");
+                                  fetchData(token);
+                                });
+                              }
+                            }}
+                            className="text-sm border rounded px-2 py-1"
+                          >
+                            <option value="">Assign</option>
+                            {employees.map((emp) => (
+                              <option key={emp._id} value={emp._id}>
+                                {emp.fullname}
+                              </option>
                             ))}
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {/* Mobile cards */}
+                <div className="md:hidden divide-y divide-gray-100">
+                  {filteredLeads.map((lead) => (
+                    <div key={lead._id} className="p-4 space-y-2">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={selectedLeads.includes(lead._id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedLeads([...selectedLeads, lead._id]);
+                                } else {
+                                  setSelectedLeads(
+                                    selectedLeads.filter((id) => id !== lead._id)
+                                  );
+                                }
+                              }}
+                              className="cursor-pointer w-4 h-4 mt-0.5"
+                            />
+                            <p className="font-semibold text-gray-900">
+                              {lead.clientName}
+                            </p>
                           </div>
+                          <p className="text-xs text-gray-500">
+                            {lead.companyName || "-"}
+                          </p>
                         </div>
-                      ) : (
-                        <span className="text-gray-400">No remarks</span>
+                        <div className="text-right space-y-1">
+                          <p className="text-xs text-gray-500">{lead.mobile}</p>
+                          {lead.assignedTo ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700 gap-1">
+                              <span>{lead.assignedTo.fullname}</span>
+                              {lead.createdBy &&
+                                String(lead.assignedTo._id || lead.assignedTo) ===
+                                  String(lead.createdBy._id || lead.createdBy) &&
+                                !lead.assignedBy && (
+                                  <span className="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[9px] font-semibold">
+                                    Self
+                                  </span>
+                                )}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-500">
+                              Unassigned
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {lead.product && (
+                        <p className="text-xs text-gray-600">
+                          <span className="font-semibold">Product: </span>
+                          {lead.product}
+                        </p>
                       )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap space-x-2">
-                      <button
-                        onClick={() => setShowRemarkModal(lead._id)}
-                        className="text-blue-600 hover:underline text-sm"
-                      >
-                        Remark
-                      </button>
-                      <select
-                        value={lead.assignedTo?._id || ""}
-                        onChange={(e) => {
-                          if (e.target.value) {
+                      <div className="flex flex-wrap items-center gap-2">
+                        <select
+                          value={lead.status}
+                          onChange={(e) => {
+                            const token = localStorage.getItem("salesAdminToken");
                             fetch(`/api/sales/leads/${lead._id}`, {
                               method: "PATCH",
                               headers: {
                                 "Content-Type": "application/json",
-                                Authorization: `Bearer ${localStorage.getItem(
-                                  "salesAdminToken"
-                                )}`,
+                                Authorization: `Bearer ${token}`,
                               },
-                              body: JSON.stringify({
-                                assignedTo: e.target.value,
-                              }),
+                              body: JSON.stringify({ status: e.target.value }),
                             }).then(() => {
-                              const token =
-                                localStorage.getItem("salesAdminToken");
                               fetchData(token);
+                              setToast({
+                                type: "success",
+                                message: "Status updated",
+                              });
+                              setTimeout(() => setToast(null), 2000);
                             });
-                          }
-                        }}
-                        className="text-sm border rounded px-2 py-1"
-                      >
-                        <option value="">Assign</option>
-                        {employees.map((emp) => (
-                          <option
-                            key={emp._id}
-                            value={emp._id}
-                          >
-                            {emp.fullname}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                          }}
+                          className={`px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer ${
+                            lead.status === "converted"
+                              ? "bg-green-100 text-green-800"
+                              : lead.status === "qualified"
+                              ? "bg-blue-100 text-blue-800"
+                              : lead.status === "contacted"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : lead.status === "lost"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          <option value="new">New</option>
+                          <option value="contacted">Contacted</option>
+                          <option value="qualified">Qualified</option>
+                          <option value="converted">Converted</option>
+                          <option value="lost">Lost</option>
+                        </select>
+                        <select
+                          value={lead.paymentStatus || "pending"}
+                          onChange={(e) => {
+                            const token = localStorage.getItem("salesAdminToken");
+                            fetch(`/api/sales/leads/${lead._id}`, {
+                              method: "PATCH",
+                              headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${token}`,
+                              },
+                              body: JSON.stringify({ paymentStatus: e.target.value }),
+                            }).then(() => {
+                              fetchData(token);
+                              fetchLeaderboard(token);
+                              fetchDailyReport(token, reportDate);
+                              setToast({
+                                type: "success",
+                                message: "Payment status updated",
+                              });
+                              setTimeout(() => setToast(null), 2000);
+                            });
+                          }}
+                          className={`px-2 py-1 rounded text-xs font-medium border cursor-pointer ${
+                            lead.paymentStatus === "paid"
+                              ? "bg-green-100 text-green-800"
+                              : lead.paymentStatus === "partial"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="paid">Paid</option>
+                          <option value="partial">Partial</option>
+                          <option value="not_applicable">N/A</option>
+                        </select>
+                        <button
+                          onClick={() => setShowRemarkModal(lead._id)}
+                          className="ml-auto text-xs text-indigo-600 underline"
+                        >
+                          {lead.remarks?.length ? `${lead.remarks.length} remark(s)` : "Remark"}
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between mt-1 gap-2">
+                        <div className="text-xs text-gray-500 truncate max-w-[60%]">
+                          {lead.remarks?.length > 0 ? (
+                            <>
+                              <span className="font-semibold">
+                                Last: {lead.remarks[lead.remarks.length - 1].remarkType}
+                                :
+                              </span>{" "}
+                              {lead.remarks[lead.remarks.length - 1].remark}
+                            </>
+                          ) : (
+                            "No remarks"
+                          )}
+                        </div>
+                        <select
+                          value={lead.assignedTo?._id || ""}
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              fetch(`/api/sales/leads/${lead._id}`, {
+                                method: "PATCH",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                  Authorization: `Bearer ${localStorage.getItem(
+                                    "salesAdminToken"
+                                  )}`,
+                                },
+                                body: JSON.stringify({
+                                  assignedTo: e.target.value,
+                                }),
+                              }).then(() => {
+                                const token =
+                                  localStorage.getItem("salesAdminToken");
+                                fetchData(token);
+                              });
+                            }
+                          }}
+                          className="text-xs border rounded px-2 py-1 bg-white"
+                        >
+                          <option value="">Assign</option>
+                          {employees.map((emp) => (
+                            <option key={emp._id} value={emp._id}>
+                              {emp.fullname}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -1449,6 +1723,108 @@ export default function SalesAdminDashboard() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Employees Sidebar – full sales team list */}
+      {showEmployeeSidebar && (
+        <div className="fixed inset-0 z-40">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowEmployeeSidebar(false)}
+          />
+          <aside className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col">
+            <div className="px-5 py-4 border-b flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Sales Team</h2>
+                <p className="text-xs text-gray-500">
+                  Total members: {employees.length}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowEmployeeSidebar(false)}
+                className="text-gray-400 hover:text-gray-600 rounded-full p-1"
+                aria-label="Close sales team"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {employees.length === 0 ? (
+                <div className="sales-empty-state">
+                  <div className="sales-empty-state-icon">👥</div>
+                  <p className="font-medium text-gray-600">No employees yet</p>
+                  <p className="text-sm mt-1 text-gray-500">
+                    Add your first sales team member to get started.
+                  </p>
+                </div>
+              ) : (
+                employees.map((emp) => (
+                  <div
+                    key={emp._id}
+                    className={`border rounded-xl px-4 py-3 flex items-start justify-between gap-3 ${
+                      emp.isActive ? "bg-white" : "bg-gray-50 opacity-90"
+                    }`}
+                  >
+                    <div className="space-y-1">
+                      <p className="font-semibold text-gray-900">{emp.fullname}</p>
+                      <p className="text-xs text-gray-500">{emp.email}</p>
+                      {emp.mobileNumber && (
+                        <p className="text-xs text-gray-500">{emp.mobileNumber}</p>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                          emp.isActive
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {emp.isActive ? "Active" : "Inactive"}
+                      </span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() =>
+                            handleToggleEmployeeStatus(
+                              emp._id,
+                              emp.isActive,
+                              emp.fullname
+                            )
+                          }
+                          className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition ${
+                            emp.isActive
+                              ? "bg-amber-100 text-amber-800 hover:bg-amber-200"
+                              : "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                          }`}
+                        >
+                          {emp.isActive ? "Deactivate" : "Activate"}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteEmployee(emp._id, emp.fullname)}
+                          className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-[11px] font-medium hover:bg-red-200 transition"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="px-5 py-3 border-t bg-gray-50 flex justify-end">
+              <button
+                onClick={() => {
+                  setShowEmployeeSidebar(false);
+                  setShowAddEmployee(true);
+                  setShowBulkImport(false);
+                }}
+                className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl shadow-sm transition"
+              >
+                ➕ Add Employee
+              </button>
+            </div>
+          </aside>
         </div>
       )}
     </div>

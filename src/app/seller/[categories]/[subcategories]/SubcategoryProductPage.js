@@ -144,7 +144,6 @@ useEffect(() => {
   }
 }, [user, buyer, dispatch]);
 
-
 const handleToggleWishlist = (productId) => {
   if (!user && !buyer) {
     alert("Please log in to manage your wishlist!");
@@ -318,7 +317,6 @@ const fetchData = useCallback(async () => {
     { value: 200000, label: "₹2,00,000" },
     { value: 500000, label: "₹5,00,000" },
   ];
-
 
   return (
     <div className="container mt-4 mb-5">
@@ -680,7 +678,6 @@ const fetchData = useCallback(async () => {
                 const isInWishlist = wishlistItems.some(
                   (item) => item._id === product._id
                 );
-
                 return (
                   <div key={`${product._id}-${index}`} className="col-md-3 col-6">
 <div className="card border-0 shadow-sm p-3 rounded-3 h-100 d-flex flex-column">
