@@ -31,6 +31,13 @@ const maskData = (data) => {
   return `${maskedPart}${visiblePart}`; // Example: XXXXXXXXXXXXXXXX1234
 };
 
+// Show spec/trade row only when value is present and not empty/N/A
+const hasSpecValue = (val) => {
+  if (val === null || val === undefined) return false;
+  const s = String(val).trim();
+  return s !== "" && s.toUpperCase() !== "N/A";
+};
+
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -463,85 +470,118 @@ const ProductDetailPage = () => {
                   </div>
 
                   <div className="mt-6 border-t pt-4 grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Specifications Table */}
+                    {/* Specifications Table — only show rows with a value (hide empty/N/A) */}
                     <div>
                       <h2 className="font-semibold text-lg mb-4">Specifications</h2>
                       <table className="w-full text-sm text-left text-gray-700 border rounded overflow-hidden">
                         <tbody>
-                          <tr className="even:bg-gray-50">
-                            <td className="py-2 px-3 font-medium text-gray-600">Color</td>
-                            <td className="py-2 px-3">{product.specifications?.color || "N/A"}</td>
-                          </tr>
-                          <tr className="even:bg-gray-50">
-                            <td className="py-2 px-3 font-medium text-gray-600">Material</td>
-                            <td className="py-2 px-3">{product.specifications?.material || "N/A"}</td>
-                          </tr>
-                          <tr className="even:bg-gray-50">
-                            <td className="py-2 px-3 font-medium text-gray-600">Weight</td>
-                            <td className="py-2 px-3">{product.specifications?.weight || "N/A"} kg</td>
-                          </tr>
-                          <tr className="even:bg-gray-50">
-                            <td className="py-2 px-3 font-medium text-gray-600">Stock</td>
-                            <td className="py-2 px-3">{product.stockQuantity ?? "In Stock"}</td>
-                          </tr>
-                          {/* Add more specifications based on your schema if needed */}
-                          <tr className="even:bg-gray-50">
-                            <td className="py-2 px-3 font-medium text-gray-600">Product Type</td>
-                            <td className="py-2 px-3">{product.specifications?.productType || "N/A"}</td>
-                          </tr>
-                          <tr className="even:bg-gray-50">
-                            <td className="py-2 px-3 font-medium text-gray-600">Finish</td>
-                            <td className="py-2 px-3">{product.specifications?.finish || "N/A"}</td>
-                          </tr>
-                          <tr className="even:bg-gray-50">
-                            <td className="py-2 px-3 font-medium text-gray-600">Design</td>
-                            <td className="py-2 px-3">{product.specifications?.design || "N/A"}</td>
-                          </tr>
-                          <tr className="even:bg-gray-50">
-                            <td className="py-2 px-3 font-medium text-gray-600">Usage</td>
-                            <td className="py-2 px-3">{product.specifications?.usage || "N/A"}</td>
-                          </tr>
-                          <tr className="even:bg-gray-50">
-                            <td className="py-2 px-3 font-medium text-gray-600">Application</td>
-                            <td className="py-2 px-3">{product.specifications?.application || "N/A"}</td>
-                          </tr>
+                          {hasSpecValue(product.specifications?.color) && (
+                            <tr className="even:bg-gray-50">
+                              <td className="py-2 px-3 font-medium text-gray-600">Color</td>
+                              <td className="py-2 px-3">{product.specifications.color}</td>
+                            </tr>
+                          )}
+                          {hasSpecValue(product.specifications?.material) && (
+                            <tr className="even:bg-gray-50">
+                              <td className="py-2 px-3 font-medium text-gray-600">Material</td>
+                              <td className="py-2 px-3">{product.specifications.material}</td>
+                            </tr>
+                          )}
+                          {hasSpecValue(product.specifications?.weight) && (
+                            <tr className="even:bg-gray-50">
+                              <td className="py-2 px-3 font-medium text-gray-600">Weight</td>
+                              <td className="py-2 px-3">{product.specifications.weight} kg</td>
+                            </tr>
+                          )}
+                          {(hasSpecValue(product.tradeShopping?.stockQuantity) || hasSpecValue(product.stockQuantity) || product.stockQuantity === 0) && (
+                            <tr className="even:bg-gray-50">
+                              <td className="py-2 px-3 font-medium text-gray-600">Stock</td>
+                              <td className="py-2 px-3">
+                                {product.tradeShopping?.stockQuantity ?? product.stockQuantity ?? "In Stock"}
+                              </td>
+                            </tr>
+                          )}
+                          {hasSpecValue(product.specifications?.productType) && (
+                            <tr className="even:bg-gray-50">
+                              <td className="py-2 px-3 font-medium text-gray-600">Product Type</td>
+                              <td className="py-2 px-3">{product.specifications.productType}</td>
+                            </tr>
+                          )}
+                          {hasSpecValue(product.specifications?.finish) && (
+                            <tr className="even:bg-gray-50">
+                              <td className="py-2 px-3 font-medium text-gray-600">Finish</td>
+                              <td className="py-2 px-3">{product.specifications.finish}</td>
+                            </tr>
+                          )}
+                          {hasSpecValue(product.specifications?.design) && (
+                            <tr className="even:bg-gray-50">
+                              <td className="py-2 px-3 font-medium text-gray-600">Design</td>
+                              <td className="py-2 px-3">{product.specifications.design}</td>
+                            </tr>
+                          )}
+                          {hasSpecValue(product.specifications?.usage) && (
+                            <tr className="even:bg-gray-50">
+                              <td className="py-2 px-3 font-medium text-gray-600">Usage</td>
+                              <td className="py-2 px-3">{product.specifications.usage}</td>
+                            </tr>
+                          )}
+                          {hasSpecValue(product.specifications?.application) && (
+                            <tr className="even:bg-gray-50">
+                              <td className="py-2 px-3 font-medium text-gray-600">Application</td>
+                              <td className="py-2 px-3">{product.specifications.application}</td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                     </div>
 
-                    {/* Trade Info Table */}
+                    {/* Trade Info Table — only show rows with a value (hide empty/N/A) */}
                     <div>
                       <h2 className="font-semibold text-lg mb-4">Trade Info</h2>
                       <table className="w-full text-sm text-left text-gray-700 border rounded overflow-hidden">
                         <tbody>
-                          <tr className="even:bg-gray-50">
-                            <td className="py-2 px-3 font-medium text-gray-600">Supply Ability</td>
-                            <td className="py-2 px-3">{product.tradeInformation?.supplyAbility || "N/A"}</td>
-                          </tr>
-                          <tr className="even:bg-gray-50">
-                            <td className="py-2 px-3 font-medium text-gray-600">Delivery Time</td>
-                            <td className="py-2 px-3">{product.tradeInformation?.deliveryTime || "N/A"}</td>
-                          </tr>
-                          <tr className="even:bg-gray-50">
-                            <td className="py-2 px-3 font-medium text-gray-600">FOB Port</td>
-                            <td className="py-2 px-3">{product.tradeInformation?.fobPort || "N/A"}</td>
-                          </tr>
-                          <tr className="even:bg-gray-50">
-                            <td className="py-2 px-3 font-medium text-gray-600">Sample Policy</td>
-                            <td className="py-2 px-3">{product.tradeInformation?.samplePolicy || "N/A"}</td>
-                          </tr>
-                          <tr className="even:bg-gray-50">
-                            <td className="py-2 px-3 font-medium text-gray-600">Sample Available</td>
-                            <td className="py-2 px-3">{product.tradeInformation?.sampleAvailable || "N/A"}</td>
-                          </tr>
-                          <tr className="even:bg-gray-50">
-                            <td className="py-2 px-3 font-medium text-gray-600">Payment Terms</td>
-                            <td className="py-2 px-3">{product.tradeInformation?.paymentTerms || "N/A"}</td>
-                          </tr>
-                          <tr className="even:bg-gray-50">
-                            <td className="py-2 px-3 font-medium text-gray-600">Packaging Details</td>
-                            <td className="py-2 px-3">{product.tradeInformation?.packagingDetails || "N/A"}</td>
-                          </tr>
+                          {hasSpecValue(product.tradeInformation?.supplyAbility) && (
+                            <tr className="even:bg-gray-50">
+                              <td className="py-2 px-3 font-medium text-gray-600">Supply Ability</td>
+                              <td className="py-2 px-3">{product.tradeInformation.supplyAbility}</td>
+                            </tr>
+                          )}
+                          {hasSpecValue(product.tradeInformation?.deliveryTime) && (
+                            <tr className="even:bg-gray-50">
+                              <td className="py-2 px-3 font-medium text-gray-600">Delivery Time</td>
+                              <td className="py-2 px-3">{product.tradeInformation.deliveryTime}</td>
+                            </tr>
+                          )}
+                          {hasSpecValue(product.tradeInformation?.fobPort) && (
+                            <tr className="even:bg-gray-50">
+                              <td className="py-2 px-3 font-medium text-gray-600">FOB Port</td>
+                              <td className="py-2 px-3">{product.tradeInformation.fobPort}</td>
+                            </tr>
+                          )}
+                          {hasSpecValue(product.tradeInformation?.samplePolicy) && (
+                            <tr className="even:bg-gray-50">
+                              <td className="py-2 px-3 font-medium text-gray-600">Sample Policy</td>
+                              <td className="py-2 px-3">{product.tradeInformation.samplePolicy}</td>
+                            </tr>
+                          )}
+                          {hasSpecValue(product.tradeInformation?.sampleAvailable) && (
+                            <tr className="even:bg-gray-50">
+                              <td className="py-2 px-3 font-medium text-gray-600">Sample Available</td>
+                              <td className="py-2 px-3">{product.tradeInformation.sampleAvailable}</td>
+                            </tr>
+                          )}
+                          {hasSpecValue(product.tradeInformation?.paymentTerms) && (
+                            <tr className="even:bg-gray-50">
+                              <td className="py-2 px-3 font-medium text-gray-600">Payment Terms</td>
+                              <td className="py-2 px-3">{product.tradeInformation.paymentTerms}</td>
+                            </tr>
+                          )}
+                          {hasSpecValue(product.tradeInformation?.packagingDetails) && (
+                            <tr className="even:bg-gray-50">
+                              <td className="py-2 px-3 font-medium text-gray-600">Packaging Details</td>
+                              <td className="py-2 px-3">{product.tradeInformation.packagingDetails}</td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                     </div>
