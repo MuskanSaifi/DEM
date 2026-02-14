@@ -1,3 +1,4 @@
+// src/components/home/CategoryGridSection.js
 "use client";
 import React, { memo } from "react";
 import Link from "next/link";
@@ -121,17 +122,23 @@ const CategoryGridSection = ({ categories }) => {
 </div>
 
                     <ul className="space-y-0.5 text-sm" style={{ color: "#6D4AAE" }}>
-                      {sub.products?.slice(0, 3).map((product) => (
-                        <li key={product._id}>
-                          <Link
-                            href={`/manufacturers/${product.productslug}`}
-                            className="hover:underline hover:font-semibold transition"
-                            style={{ color: "#6D4AAE" }}
-                          >
-                            {product.name}
-                          </Link>
+                      {sub.products?.length > 0 ? (
+                        sub.products.slice(0, 3).map((product) => (
+                          <li key={product._id}>
+                            <Link
+                              href={`/manufacturers/${product.productslug}`}
+                              className="hover:underline hover:font-semibold transition"
+                              style={{ color: "#6D4AAE" }}
+                            >
+                              {product.name}
+                            </Link>
+                          </li>
+                        ))
+                      ) : (
+                        <li>
+                          <span className="text-gray-400 text-xs">View products →</span>
                         </li>
-                      ))}
+                      )}
                     </ul>
                   </div>
                 </Link>

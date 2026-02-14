@@ -17,9 +17,9 @@ export default function CategoryGridPage() {
     const loadCategories = async () => {
       try {
         // ✅ OPTIMIZED: Use cache and add timeout
-        const res = await fetch("/api/home/categories", {
-          cache: "force-cache", // ✅ Use browser cache
-          signal: abortControllerRef.current.signal, // ✅ Allow cancellation
+        const res = await fetch("/api/home/categories?v=2", {
+          cache: "default", // allow fresh data so product names show for all subcategories
+          signal: abortControllerRef.current.signal,
         });
         
         if (!res.ok) throw new Error("Failed to fetch");

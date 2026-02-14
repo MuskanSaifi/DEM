@@ -1,3 +1,4 @@
+// src/components/SidebarMenu.js
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -7,8 +8,8 @@ import Image from "next/image";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
-const CACHE_KEY = "sidebarData";
-const CACHE_TIME = 1000 * 60 * 60 * 24 * 5; // ✅ 5 days
+const CACHE_KEY = "sidebarData_v3"; // v3: products + fallback so sidebar shows same as grid
+const CACHE_TIME = 1000 * 60 * 60 * 24 * 5; // 5 days
 
 const SidebarMenu = () => {
   const [activeCategory, setActiveCategory] = useState(null);
@@ -36,11 +37,10 @@ const SidebarMenu = () => {
 
     const fetchSidebar = async () => {
       try {
-const res = await fetch("/api/adminprofile/sidebarmenu", {
-  cache: "force-cache",
+const res = await fetch("/api/adminprofile/sidebarmenu?v=2", {
+  cache: "default",
 });
         const data = await res.json();
-
         setCategories(data);
         localStorage.setItem(
           CACHE_KEY,
@@ -63,7 +63,6 @@ const res = await fetch("/api/adminprofile/sidebarmenu", {
         setActiveCategory(null);
       }
     };
-
     document.addEventListener("mousedown", handleOutsideClick);
     return () =>
       document.removeEventListener("mousedown", handleOutsideClick);
@@ -180,21 +179,22 @@ const res = await fetch("/api/adminprofile/sidebarmenu", {
                     </p>
 
                     <ul className="text-gray-700">
-            {subcategory.products?.length > 0 && (
-  <ul className="text-gray-700">
-    {subcategory.products.slice(0, 4).map((product) => (
-      <li key={product._id}>
-        <Link
-          href={`/manufacturers/${product.productslug}`}
-          className="text-sm text-blue-700 hover:underline"
-        >
-          {product.name}
-        </Link>
-      </li>
-    ))}
-  </ul>
-)}
+                      {subcategory.products?.length > 0 ? (
+                        subcategory.products.slice(0, 4).map((product) => (
+                          <li key={product._id}>
+                            <Link
+                              href={`/manufacturers/${product.productslug}`}
+                              className="text-sm text-blue-700 hover:underline"
+                            >
+                              {product.name}
+                            </Link>
+                          </li>
+                        ))
+                      ) : (
+                        <li className="text-xs text-gray-500">No products listed</li>
+                      )}
                     </ul>
+
                   </div>
                 ))}
               </div>
