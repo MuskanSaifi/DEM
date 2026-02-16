@@ -43,6 +43,7 @@ const Buyfrom = ({ product, sellerId }) => {
         currency: "INR",
       },
       buyer: buyer?._id || user?._id,
+      buyerModel: buyer?._id ? "Buyer" : "User",
       requirementFrequency: "one-time",
       seller: sellerId,
     };

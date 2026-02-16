@@ -34,6 +34,7 @@ const Buyfrom = ({ product, sellerId }) => {
       return;
     }
 
+    const buyerId = buyer?._id || user?._id;
     const orderData = {
       product: product._id,
       quantity,
@@ -42,7 +43,8 @@ const Buyfrom = ({ product, sellerId }) => {
         amount: product.tradeShopping?.slabPricing?.[0]?.price || product.price,
         currency: "INR",
       },
-      buyer: buyer?._id || user?._id,
+      buyer: buyerId,
+      buyerModel: buyer?._id ? "Buyer" : "User",
       requirementFrequency: "one-time",
       seller: sellerId,
     };

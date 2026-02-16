@@ -3,8 +3,13 @@ import mongoose from "mongoose";
 const purchaseRequestSchema = new mongoose.Schema({
   buyer: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Buyer',
+    refPath: 'buyerModel',
     required: true
+  },
+  buyerModel: {
+    type: String,
+    enum: ['Buyer', 'User'],
+    default: 'Buyer'
   },  
   seller: {
     type: mongoose.Schema.Types.ObjectId,

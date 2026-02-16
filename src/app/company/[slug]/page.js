@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { notFound } from 'next/navigation';
+import CompanyProductsSection from './CompanyProductsSection';
+import CompanySidebar from './CompanySidebar';
 
 // ✅ ISR: Revalidate every hour (3600 seconds)
 export const revalidate = 3600;
@@ -124,40 +126,10 @@ export default async function CompanyProfile({ params }) {
     </div>
     </section>
 
-    {/* Products Section (No change needed here) */}
+    {/* Products Section - client component for Enquiry Now (same as Purchase Product) */}
     <section className="py-16 bg-white">
       <h2 className="text-4xl font-bold text-center text-gray-800 mb-12">Our Products</h2>
-      {user.products && user.products.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
-          {user.products.map((product) => (
-            <div
-              key={product._id}
-              className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-2 text-center border border-gray-200"
-            >
-              {product.images?.[0]?.url && (
-                <img
-                  src={product.images[0].url}
-                  alt={product.name}
-                  className="w-full h-52 object-cover rounded-lg mb-4"
-                />
-              )}
-              <h3 className="text-xl font-semibold text-gray-800">{product.name}</h3>
-              <p className="text-gray-500 line-clamp-2 mb-0 text-sm">{product.description}</p>
-              <div>
-                <p className="text-indigo-600 font-bold m-1">₹{product.price}</p>
-                <p className="text-sm text-gray-400 mb-1">
-                  MOQ: {product.minimumOrderQuantity} {product.moqUnit}
-                </p>
-<button className=" inline-flex items-center gap-1 m-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold px-6 py-2 rounded-full shadow-lg hover:from-indigo-600 hover:to-purple-700 transition duration-300">
-  📩 Enquiry Now
-</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-center text-gray-500 text-lg">No products available.</p>
-      )}
+      <CompanyProductsSection user={user} />
     </section>
 
     {/* Business Details */}
@@ -247,54 +219,8 @@ export default async function CompanyProfile({ params }) {
     </section>
   </div>
 
-  {/* Right Side - Fixed Seller Details (No change needed here) */}
-<div className="w-full lg:w-1/4 mt-10 lg:mt-0">
-  <div className="lg:sticky lg:top-6">
-    <div className="bg-white rounded-lg shadow-md border p-6">
-      <h3 className="text-xl font-bold text-gray-800 mb-4">Seller Details</h3>
-
-      {/* Partner/Owner Name */}
-      <p className="font-medium text-gray-700 m-1">👤 Name</p>
-      <p className="mb-3">{user?.fullname || '—'}</p>
-
-      {/* Member Since */}
-      <p className="font-medium text-gray-700 mb-1">📅 Member Since</p>
-      <p className="mb-3">
-        {businessProfile?.yearOfEstablishment
-          ? `${new Date().getFullYear() - businessProfile.yearOfEstablishment} Years`
-          : '—'}
-      </p>
-
-      {/* Address */}
-      <p className="font-medium text-gray-700 mb-1">📍 Address</p>
-      <p className="mb-3">
-        {businessProfile?.address
-          ? `${businessProfile.address}, ${businessProfile.city}, ${businessProfile.state}, ${businessProfile.pincode}, ${businessProfile.country}`
-          : '—'}
-      </p>
-
-      {/* Link */}
-      <a
-        href={`https://www.google.com/search?q=Exporters in ${businessProfile?.city || 'India'}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-indigo-600 underline text-sm block mb-4"
-      >
-        Exporters in {businessProfile?.city || 'your area'}
-      </a>
-
-      {/* View Catalog */}
-      <button className="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition mb-3">
-        🌐 View Catalog
-      </button>
-
-      {/* Send Enquiry Button */}
-      <button className="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition">
-        ✉️ Send Enquiry
-      </button>
-    </div>
-  </div>
-</div>
+  {/* Right Side - Seller Details + Send Enquiry (same flow as Purchase Product) */}
+  <CompanySidebar user={user} businessProfile={businessProfile} />
 </div>
 </section>
   );

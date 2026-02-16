@@ -7,17 +7,22 @@ export async function POST(req) {
   await connectdb();
 
   try {
+    const body = await req.json();
     const {
       productname,
       quantity,
       unit,
-      orderValue,
-      currency,
-      buyer, // now this is ObjectId
+      orderValue: orderValueRaw,
+      currency: currencyRaw,
+      buyer,
+      buyerModel,
       requirementFrequency,
-      seller, // <--- CORRECTED: This now correctly captures the 'seller' key from the frontend payload
-      product
-    } = await req.json(); // Use .json() to parse the request body
+      seller,
+      product,
+      approxOrderValue
+    } = body;
+    const orderValue = orderValueRaw ?? approxOrderValue?.amount;
+    const currency = currencyRaw ?? approxOrderValue?.currency ?? 'INR';
 
     
     // Validate if required fields are present individually
@@ -44,16 +49,17 @@ export async function POST(req) {
     }
 
     const newRequest = new purchaseRequestSchema({
-      buyer, 
-      seller: seller, // <--- CORRECTED: Use the 'seller' variable here too
-      product: product,
+      buyer,
+      buyerModel: buyerModel === 'User' ? 'User' : 'Buyer', // seller enquiry → User, else Buyer
+      seller,
+      product,
       quantity,
       unit,
       approxOrderValue: {
         amount: orderValue,
-        currency: currency || 'INR',
+        currency,
       },
-      requirementFrequency: requirementFrequency.toLowerCase(),
+      requirementFrequency: requirementFrequency?.toLowerCase?.() || 'one-time',
     });
 
     await newRequest.save();

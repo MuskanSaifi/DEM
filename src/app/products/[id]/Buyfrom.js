@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
 
-const Buyfrom = ({ product, sellerId }) => {
+const Buyfrom = ({ product, sellerId, buttonLabel = "Purchase Product", buttonClassName }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
@@ -34,6 +34,7 @@ const Buyfrom = ({ product, sellerId }) => {
       return;
     }
 
+    const buyerId = buyer?._id || user?._id;
     const orderData = {
       product: product._id,
       quantity,
@@ -42,7 +43,8 @@ const Buyfrom = ({ product, sellerId }) => {
         amount: product.tradeShopping?.slabPricing?.[0]?.price || product.price,
         currency: "INR",
       },
-      buyer: buyer?._id || user?._id,
+      buyer: buyerId,
+      buyerModel: buyer?._id ? "Buyer" : "User", // seller logged in → User, else Buyer
       requirementFrequency: "one-time",
       seller: sellerId,
     };
@@ -89,9 +91,9 @@ const Buyfrom = ({ product, sellerId }) => {
     <>
       <button
         onClick={toggleModal}
-        className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl shadow-md transition-all duration-300 flex items-center justify-center gap-2"
+        className={buttonClassName ?? "w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl shadow-md transition-all duration-300 flex items-center justify-center gap-2"}
       >
-        <span>🛒</span> Purchase Product
+        <span>🛒</span> {buttonLabel}
       </button>
 
       {isOpen && (
