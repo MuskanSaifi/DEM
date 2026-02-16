@@ -1,5 +1,6 @@
 import connectDB from "@/lib/dbConnect";
 import Category from "@/models/Category";
+import SubCategory from "@/models/SubCategory";
 import Product from "@/models/Product";
 
 export async function GET() {

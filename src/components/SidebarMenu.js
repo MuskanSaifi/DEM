@@ -24,30 +24,34 @@ const SidebarMenu = () => {
     const cached = localStorage.getItem(CACHE_KEY);
 
     if (cached) {
-      const { data, time } = JSON.parse(cached);
-
-      if (Date.now() - time < CACHE_TIME) {
-        setCategories(data);
-        setLoading(false);
-        return;
-      } else {
-        localStorage.removeItem(CACHE_KEY);
-      }
+      try {
+        const { data, time } = JSON.parse(cached);
+        if (Date.now() - time < CACHE_TIME && Array.isArray(data)) {
+          setCategories(data);
+          setLoading(false);
+          return;
+        }
+      } catch (_) {}
+      localStorage.removeItem(CACHE_KEY);
     }
 
     const fetchSidebar = async () => {
       try {
-const res = await fetch("/api/adminprofile/sidebarmenu?v=2", {
-  cache: "default",
-});
+        const res = await fetch("/api/adminprofile/sidebarmenu?v=2", {
+          cache: "default",
+        });
         const data = await res.json();
-        setCategories(data);
-        localStorage.setItem(
-          CACHE_KEY,
-          JSON.stringify({ data, time: Date.now() })
-        );
+        const list = Array.isArray(data) ? data : [];
+        setCategories(list);
+        if (list.length > 0) {
+          localStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({ data: list, time: Date.now() })
+          );
+        }
       } catch (err) {
         console.error("Sidebar API Error:", err);
+        setCategories([]);
       } finally {
         setLoading(false);
       }
@@ -100,7 +104,7 @@ const res = await fetch("/api/adminprofile/sidebarmenu?v=2", {
 
       {/* ----------- CATEGORY LIST (SAME UI) ------------- */}
       <ul className="border top-cat-list border-b border-gray-300 p-2">
-        {categories.slice(0, 11).map((category) => (
+        {(Array.isArray(categories) ? categories : []).slice(0, 11).map((category) => (
           <li
             key={category._id}
             className={`cursor-pointer hover:bg-gray-100 py-2 rounded-md ${
@@ -140,7 +144,7 @@ const res = await fetch("/api/adminprofile/sidebarmenu?v=2", {
       </ul>
 
       {/* ----------- MEGA MENU (SAME UI) ------------- */}
-      {categories.map(
+      {(Array.isArray(categories) ? categories : []).map(
         (category) =>
           activeCategory === category._id && (
             <div
@@ -148,7 +152,7 @@ const res = await fetch("/api/adminprofile/sidebarmenu?v=2", {
               className="mega-menu mt-2 p-3 border border-gray-300 rounded-md bg-gray-50"
             >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                {category.subcategories.map((subcategory) => (
+                {(Array.isArray(category.subcategories) ? category.subcategories : []).map((subcategory) => (
                   <div key={subcategory._id} className="subcategory">
                     <p
                       className="font-semibold mb-0 text-dark-600 hover:underline cursor-pointer"
