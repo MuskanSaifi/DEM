@@ -635,6 +635,7 @@ const handleSubmit = async (e) => {
 <option value="Piece">Piece</option>
 <option value="Pieces">Pieces</option>
 <option value="Unit/Units">Unit</option>
+<option value="Watt">Watt</option>
 <option value="Dozen">Dozen</option>
 <option value="Pairs">Pair</option>
 <option value="Set/Sets">Set</option>
@@ -1388,6 +1389,7 @@ const handleSubmit = async (e) => {
 <option value="Piece">Piece</option>
 <option value="Pieces">Pieces</option>
 <option value="Unit/Units">Unit/Units</option>
+<option value="Watt">Watt</option>
 <option value="Dozen">Dozen</option>
 <option value="Pair/Pairs">Pair/Pairs</option>
 <option value="Set/Sets">Set/Sets</option>

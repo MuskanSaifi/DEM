@@ -911,6 +911,7 @@ const AllProducts = () => {
   <option value="Ton/Tons">Ton</option>
   <option value="Piece/Pieces">Piece</option>
   <option value="Unit/Units">Unit</option>
+  <option value="Watt">Watt</option>
   <option value="Dozen">Dozen</option>
   <option value="Pairs">Pair</option>
   <option value="Set/Sets">Set</option>

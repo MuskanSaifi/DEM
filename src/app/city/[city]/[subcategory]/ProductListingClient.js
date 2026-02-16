@@ -335,7 +335,7 @@ export default function ProductListingClient({
               {/* Related Products Section */}
               {relatedProducts.length > 0 && (
                 <div className="mt-12 mb-8">
-                  <h2 className="text-2xl font-bold mb-4">Related Products in {displayCity}</h2>
+                  <h2 className="text-2xl font-bold mb-4">Other categories in {displayCity}</h2>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {relatedProducts.map((product) => (
                       <Link
