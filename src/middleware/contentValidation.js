@@ -1,5 +1,3 @@
-// Content Validation Middleware - Prevent Malicious Content Injection
-
 // Malicious patterns to detect and block
 const maliciousPatterns = [
   /casino/i,
@@ -36,6 +34,7 @@ const maliciousPatterns = [
  * @param {string} fieldName - Name of the field being validated (for error messages)
  * @throws {Error} If malicious content is detected
  */
+
 export function validateContent(content, fieldName = 'content') {
   if (!content || typeof content !== 'string') {
     return true; // Empty or non-string content is valid
@@ -47,7 +46,6 @@ export function validateContent(content, fieldName = 'content') {
       throw new Error(`Malicious content detected in ${fieldName}. Please remove inappropriate content.`);
     }
   }
-
   return true;
 }
 
@@ -56,6 +54,7 @@ export function validateContent(content, fieldName = 'content') {
  * @param {Object} fields - Object with field names as keys and content as values
  * @throws {Error} If any field contains malicious content
  */
+
 export function validateFields(fields) {
   for (const [fieldName, content] of Object.entries(fields)) {
     if (content) {
@@ -71,6 +70,7 @@ export function validateFields(fields) {
  * @param {string} content - Content to check
  * @returns {string} Original content if safe, empty string if malicious
  */
+
 export function getSafeMetaContent(content) {
   if (!content || typeof content !== 'string') return '';
   const hasMalicious = maliciousPatterns.some(pattern => pattern.test(content));
@@ -102,7 +102,6 @@ export function sanitizeContent(content) {
 export function contentValidationMiddleware(req, res, next) {
   try {
     const body = req.body || {};
-    
     // Fields to validate
     const fieldsToValidate = [
       'name',
@@ -121,7 +120,6 @@ export function contentValidationMiddleware(req, res, next) {
         fields[field] = body[field];
       }
     }
-
     // Validate all fields
     validateFields(fields);
     

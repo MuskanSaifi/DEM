@@ -8,14 +8,13 @@ import CompanySidebar from './CompanySidebar';
 // ✅ ISR: Revalidate every hour (3600 seconds)
 export const revalidate = 3600;
 
-// ✅ Noindex: Company profile pages - do not index in search engines
 // Outputs: <meta name="robots" content="noindex, follow"> and <meta name="googlebot" content="noindex, follow">
 export const metadata = {
   robots: {
     index: true,
     follow: true,
     googleBot: {
-      index: false,
+      index: true,
       follow: true,
     },
   },
@@ -83,8 +82,7 @@ export default async function CompanyProfile({ params }) {
       </div>
     </div>
 
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm font-medium">
-
+<div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm font-medium">
 <div className="bg-indigo-50 p-4 rounded-xl shadow-sm">
   <div className="text-gray-600">👤 Partner</div>
   <p className="text-gray-800">{user.fullname || '—'}</p>
@@ -197,7 +195,6 @@ export default async function CompanyProfile({ params }) {
         <p className="text-center text-gray-500">No business profile available.</p>
       )}
     </section>
-
 
     {/* CTA Section (No change needed here) */}
     <section className="py-16 bg-indigo-600 text-white text-center">
