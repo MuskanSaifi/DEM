@@ -12,7 +12,7 @@ export const revalidate = 3600;
 // Outputs: <meta name="robots" content="noindex, follow"> and <meta name="googlebot" content="noindex, follow">
 export const metadata = {
   robots: {
-    index: false,
+    index: true,
     follow: true,
     googleBot: {
       index: false,
@@ -23,7 +23,6 @@ export const metadata = {
     canonical: undefined, // 👈 THIS removes canonical
   },
 };
-
 
 // 🔑 Helper function for masking sensitive data
 const maskData = (data) => {
