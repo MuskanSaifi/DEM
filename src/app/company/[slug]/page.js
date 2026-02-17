@@ -66,7 +66,7 @@ export default async function CompanyProfile({ params }) {
   const maskedAadharNumber = maskData(businessProfile.aadharNumber);
   const maskedPanNumber = maskData(businessProfile.panNumber);
 
-  return (
+return (
 <section className='mt-5'>
 <div className="flex flex-col lg:flex-row max-w-7xl mx-auto px-6 gap-6">
   {/* Left Side - Main Content */}
@@ -190,6 +190,7 @@ export default async function CompanyProfile({ params }) {
               <p className="text-gray-500 text-sm mt-1">Turnover</p>
             </div>
           </div>
+
         </>
       ) : (
         <p className="text-center text-gray-500">No business profile available.</p>
@@ -213,6 +214,8 @@ export default async function CompanyProfile({ params }) {
         )}
       </div>
     </section>
+
+    
   </div>
 
   {/* Right Side - Seller Details + Send Enquiry (same flow as Purchase Product) */}
