@@ -5,12 +5,12 @@ import Link from "next/link";
 const countries = [
   { name: "India", flag: "/countries/In.png", link: "/country/in" },
     { name: "United Arab Emirates", flag: "/countries/United Arab Emirates.png", link: "/country/ae" },
-      { name: "USA", flag: "/countries/Us.png", link: "/country/us" },
+      { name: "United States", flag: "/countries/Us.png", link: "/country/us" },
   { name: "China", flag: "/countries/Ch.png", link: "/country/cn" },
   { name: "Australia", flag: "/countries/Au.png", link: "/country/au" },
   { name: "Hong Kong", flag: "/countries/Hong Kong.png", link: "/country/hk" },
 
-  { name: "More Regions", flag: "", link: "/all-countries" }, // ✅
+  { name: "More Countries", flag: "", link: "/all-countries" }, // ✅
 ];
 
 const Countries = () => {

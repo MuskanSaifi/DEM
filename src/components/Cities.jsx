@@ -6,7 +6,7 @@ const cities = [
   { name: "Delhi", icon: "/countries/cities/delhi.png", link: "/city/delhi" },
   { name: "Gurugram", icon: "/countries/cities/gurugram.png", link: "/city/gurgaon" },
   { name: "Kolkata", icon: "/countries/cities/kolkata.png", link: "/city/kolkata" },
-  { name: "Bijnor", icon: "/countries/cities/gurugram.png", link: "/city/bijnor" },
+  { name: "Mumbai", icon: "/countries/cities/gurugram.png", link: "/city/mumbai" },
   { name: "Chennai", icon: "/countries/cities/chennai.png", link: "/city/chennai" },
   { name: "More Cities", icon: "", link: "#" },
 ];

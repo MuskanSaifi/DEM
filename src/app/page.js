@@ -84,7 +84,7 @@ const faqSchema = {
 };
 
 export const metadata = {
-  title: "Best B2B Marketplace in India for Manufacturers & Suppliers",
+  title: "B2B Marketplace in India for Suppliers & Manufacturers | Dial Export Mart",
   description:
     "Dial Export Mart empowers exporters, suppliers, manufacturers, and buyers to discover genuine global trade opportunities. Unlock a premium platform to expand your business, connect with verified international buyers, and grow your presence in the worldwide B2B market.",
   keywords:
@@ -93,7 +93,7 @@ export const metadata = {
     canonical: "https://www.dialexportmart.com/",
   },
   openGraph: {
-    title: "Best B2B Marketplace in India for Manufacturers & Suppliers ",
+  title: "B2B Marketplace in India for Suppliers & Manufacturers | Dial Export Mart",
     description:
       "Dial Export Mart connects exporters, suppliers, and manufacturers with real global buyers. Expand your reach in the worldwide B2B market.",
     url: "https://www.dialexportmart.com",

@@ -27,11 +27,11 @@ const AppDownload = () => {
   </span>
 
   <h2 className="text-4xl font-bold text-gray-900 leading-tight mb-3">
-    Download Our New App
+    Download Our B2B Marketplace App
   </h2>
 
   <p className="text-gray-600 max-w-md mb-8">
-    Scan the QR code or use the buttons below to install Dial Export Mart app on your smartphone.
+   Download the Dial Export Mart app to connect with verified manufacturers, suppliers, exporters, and buyers in India. Get genuine B2B leads, bulk orders, and grow your business faster.
   </p>
 
   <div className="flex items-center gap-6 bg-gray-50 rounded-xl p-5 shadow-sm w-fit">
@@ -40,7 +40,7 @@ const AppDownload = () => {
     <div className="bg-white p-3 rounded-lg shadow">
       <Image
         src="/assets/app-scanner.png"
-        alt="Scan App"
+        alt="Download Dial Export Mart B2B Marketplace App QR Code"
         width={110}
         height={110}
       />
@@ -52,7 +52,7 @@ const AppDownload = () => {
         target="_blank"
         className="hover:scale-105 transition"
       >
-        <Image src="/assets/play-store.png" alt="Google Play" width={160} height={50} />
+        <Image src="/assets/play-store.png" alt="Download Dial Export Mart App on Google Play Store" width={160} height={50} />
       </a>
 
       <a
@@ -60,7 +60,7 @@ const AppDownload = () => {
         target="_blank"
         className="hover:scale-105 transition"
       >
-        <Image src="/assets/app-store.png" alt="App Store" width={160} height={50} />
+        <Image src="/assets/app-store.png" alt="Download Dial Export Mart App on Apple App Store" width={160} height={50} />
       </a>
     </div>
 

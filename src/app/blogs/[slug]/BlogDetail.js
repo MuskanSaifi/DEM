@@ -192,7 +192,8 @@ const handleSubscribe = async (e) => {
             </div>
 
             {/* Social Media Follow Section */}
-            <div className="sidebar-section mt-4 p-3 bg-light rounded shadow-sm">
+            
+            {/* <div className="sidebar-section mt-4 p-3 bg-light rounded shadow-sm">
               <p className="mb-3 border-bottom pb-2 sidebar-heading text-xl font-semibold">Follow Us</p>
               <div className="d-flex justify-content-around social-icons-wrapper">
                 <Link href="https://www.instagram.com/dialexportmart" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Instagram" className="social-icon-link">
@@ -207,11 +208,12 @@ const handleSubscribe = async (e) => {
                 <Link href="https://x.com/DialExportMart" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Twitter" className="social-icon-link">
                   <FaTwitter size={30} color="#1DA1F2" />
                 </Link>
-                <Link href="https://www.youtube.com/@DialExportMart" target="_blank" rel="noopener noreferrer" aria-label="Follow us on YouTube" className="social-icon-link"> {/* Corrected YouTube URL */}
+                <Link href="https://www.youtube.com/@DialExportMart" target="_blank" rel="noopener noreferrer" aria-label="Follow us on YouTube" className="social-icon-link"> 
                   <FaYoutube size={30} color="#FF0000" />
                 </Link>
               </div>
-            </div>
+            </div> */}
+            
           </div>
         </Col>
       </Row>

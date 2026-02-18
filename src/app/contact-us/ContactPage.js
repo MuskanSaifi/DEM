@@ -46,7 +46,6 @@ const ContactPage = () => {
       });
     }
   };
-  
 
   return (
     <>

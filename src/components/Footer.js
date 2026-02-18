@@ -184,7 +184,7 @@ const socialLinks = [
   key={index}
   href={social.link}
   target="_blank"
-  rel="noopener noreferrer"
+   rel="nofollow noopener noreferrer"
   aria-label={social.label}
   className={`rounded-full text-white hover:opacity-80 transition-all flex items-center justify-center w-10 h-10 ${social.colorClass}`}
 >
@@ -233,7 +233,7 @@ const socialLinks = [
 <div className="w-full md:w-[100px]">
 <Image
       src={Gpimage}
-      alt="Google Partner Logo"
+      alt="Dial Export Mart Google Partner Certified Agency"
       layout="responsive"
       width={100}
       height={100}
