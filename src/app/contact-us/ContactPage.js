@@ -87,11 +87,10 @@ const ContactPage = () => {
                 <strong className="text-gray-800">Dial Export Mart</strong>
               </p>
               <p className="flex items-center gap-2 text-gray-600">
-                <FaMapMarkerAlt className="text-[#6D4AAF]" /> 30 N Gould St
-                #3414, Sheridan, Wyoming - 82801, USA
+                <FaMapMarkerAlt className="text-[#6D4AAF]" /> Rawat Plaza, Sector 7, Ramphal Chowk
               </p>
               <p className="flex items-center gap-2 text-gray-600">
-                <FaPhone className="text-[#6D4AAF]" /> +1(570)-676-1540
+                <FaPhone className="text-[#6D4AAF]" /> +91 8448668076
               </p>
             </div>
 
