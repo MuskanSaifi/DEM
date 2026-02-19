@@ -118,18 +118,30 @@ export default async function SubcategoryPage({
         ? new mongoose.Types.ObjectId(subcat._id)
         : subcat._id;
 
-    /* ---------- Get Products with Limit (CPU Optimization) ---------- */
-    // ✅ CRITICAL: Limit products to prevent CPU spike (500 max per subcategory)
-    // Client-side filtering will work on this limited set
+    /* ---------- Sellers in this city (BusinessProfile.city) ---------- */
+    const cityRegex = new RegExp(`^${normalizedCity.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
+    const sellersInCity = await BusinessProfile.find({
+      city: cityRegex,
+    })
+      .select("userId")
+      .lean();
+    const sellerIdsInCity = (sellersInCity || [])
+      .map((bp) => bp.userId?.toString())
+      .filter(Boolean);
+
+    /* ---------- Get Products: Product.city OR seller's BusinessProfile.city = city ---------- */
     const allProducts = await Product.find({
       subCategory: subcatObjectId,
-      city: { $regex: new RegExp(`^${normalizedCity}$`, 'i') },
+      $or: [
+        { city: cityRegex },
+        ...(sellerIdsInCity.length ? [{ userId: { $in: sellerIdsInCity.map((id) => new mongoose.Types.ObjectId(id)) } }] : []),
+      ],
     })
       .select(
         "name price currency images city state minimumOrderQuantity moqUnit specifications userId productslug description tradeShopping tradeInformation subCategory"
       )
       .populate("userId", "companyName")
-      .limit(500) // ✅ CRITICAL: Limit to prevent CPU spike
+      .limit(500)
       .lean();
 
     // ✅ Diagnostic: Log product count and verify subCategory assignment

@@ -871,25 +871,37 @@ className="rounded-md object-contain mx-auto h-100 w-100"
 
           {/* Pagination */}
 {!loading && totalPages > 1 && (
-  <div className="d-flex justify-content-center mt-4 gap-3">
+  <div className="d-flex justify-content-center align-items-center mt-4 gap-2 flex-wrap">
     <button
-      className="btn btn-outline-primary"
+      className="btn btn-outline-primary rounded px-3 py-2 d-flex align-items-center gap-1"
       disabled={page === 1}
       onClick={() => setPage(page - 1)}
     >
-      ◀ Previous
+      <span aria-hidden>‹</span> Prev
     </button>
-
-    <span className="fw-bold">
-      Page {page} of {totalPages}
-    </span>
-
+    {(() => {
+      const show = 5;
+      let start = Math.max(1, page - Math.floor(show / 2));
+      let end = Math.min(totalPages, start + show - 1);
+      if (end - start + 1 < show) start = Math.max(1, end - show + 1);
+      const pages = [];
+      for (let i = start; i <= end; i++) pages.push(i);
+      return pages.map((p) => (
+        <button
+          key={p}
+          onClick={() => setPage(p)}
+          className={`btn rounded px-3 py-2 ${p === page ? "btn-primary text-white" : "btn-outline-primary"}`}
+        >
+          {p}
+        </button>
+      ));
+    })()}
     <button
-      className="btn btn-outline-primary"
+      className="btn btn-outline-primary rounded px-3 py-2 d-flex align-items-center gap-1"
       disabled={page === totalPages}
       onClick={() => setPage(page + 1)}
     >
-      Next ▶
+      Next <span aria-hidden>›</span>
     </button>
   </div>
 )}
