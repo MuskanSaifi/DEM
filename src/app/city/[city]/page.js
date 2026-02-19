@@ -2,10 +2,12 @@
 import { redirect } from "next/navigation";
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";
-import Category from "@/models/Category"; // ✅ Required for populate("category")
-import SubCategory from "@/models/SubCategory"; // ✅ Required for populate("subCategory")
+import Category from "@/models/Category";
+import SubCategory from "@/models/SubCategory";
+import BusinessProfile from "@/models/BusinessProfile";
 import Link from "next/link";
 import Image from "next/image";
+import mongoose from "mongoose";
 
 // ✅ ISR: Revalidate every 10 minutes (600 seconds) - optimized for performance
 export const revalidate = 600;
@@ -49,17 +51,29 @@ export default async function CityPage({ params }) {
 
     await connectdb();
 
-    // ✅ OPTIMIZED: Use aggregation pipeline for better performance
-    // This is much faster than find + populate + loop
+    const cityRegex = new RegExp(`^${city.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
+
+    // ✅ Sellers in this city (BusinessProfile.city) — so subcategories like Furniture show when seller is in city
+    const sellersInCity = await BusinessProfile.find({ city: cityRegex })
+      .select("userId")
+      .lean();
+    const sellerIdsInCity = (sellersInCity || [])
+      .map((bp) => bp.userId)
+      .filter(Boolean);
+
+    const cityMatch = { $regex: cityRegex };
+    const matchStage = {
+      subCategory: { $ne: null },
+      category: { $ne: null },
+      $or: [
+        { city: cityMatch },
+        ...(sellerIdsInCity.length ? [{ userId: { $in: sellerIdsInCity.map((id) => new mongoose.Types.ObjectId(id.toString())) } }] : []),
+      ],
+    };
+
+    // ✅ OPTIMIZED: Use aggregation pipeline (Product.city OR seller's BusinessProfile.city)
     const categorySubcategoryData = await Product.aggregate([
-      {
-        // ✅ Match products by city (case-insensitive) with subcategory
-        $match: {
-          city: { $regex: new RegExp(`^${city}$`, 'i') },
-          subCategory: { $ne: null },
-          category: { $ne: null }
-        }
-      },
+      { $match: matchStage },
       // ✅ Limit to prevent CPU spike (1000 products max per city)
       { $limit: 1000 },
       // ✅ Lookup category

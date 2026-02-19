@@ -735,7 +735,7 @@ const fetchData = useCallback(async () => {
                                 shouldDisplay(
                                   product.businessProfile.state
                                 )) && (
-                                <h3 className="h6 d-flex align-items-center text-muted me-3 mb-0">
+                                <h3 className="h6 d-flex align-items-center text-muted me-3 mb-0"   style={{ fontSize: "12px" }}>
                                   <FaMapMarkerAlt className="me-1 text-secondary" />
                                   <span>
                                     {product.businessProfile.city}
