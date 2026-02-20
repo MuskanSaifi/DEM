@@ -116,132 +116,137 @@ const LeadsEnquiry = () => {
         </div>
       </div>
 
-      {/* 🌀 Loading State */}
+      {/* Loading State */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {Array(4)
-            .fill()
-            .map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl p-5 shadow">
-                <Skeleton height={180} />
-              </div>
-            ))}
+        <div className="bg-white rounded-xl shadow overflow-hidden">
+          <table className="min-w-full">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="px-4 py-3 text-left"><Skeleton width={80} /></th>
+                <th className="px-4 py-3 text-left"><Skeleton width={80} /></th>
+                <th className="px-4 py-3 text-left"><Skeleton width={120} /></th>
+                <th className="px-4 py-3 text-left"><Skeleton width={60} /></th>
+                <th className="px-4 py-3 text-left"><Skeleton width={70} /></th>
+                <th className="px-4 py-3 text-left"><Skeleton width={80} /></th>
+                <th className="px-4 py-3 text-left"><Skeleton width={100} /></th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array(5).fill().map((_, i) => (
+                <tr key={i} className="border-t">
+                  <td className="px-4 py-3"><Skeleton height={24} /></td>
+                  <td className="px-4 py-3"><Skeleton height={24} /></td>
+                  <td className="px-4 py-3"><Skeleton height={24} /></td>
+                  <td className="px-4 py-3"><Skeleton height={24} /></td>
+                  <td className="px-4 py-3"><Skeleton height={24} /></td>
+                  <td className="px-4 py-3"><Skeleton height={24} /></td>
+                  <td className="px-4 py-3"><Skeleton height={32} width={100} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : filteredLeads.length === 0 ? (
-        <p className="text-center text-gray-500">No leads found.</p>
+        <p className="text-center text-gray-500 py-8">No leads found.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredLeads.map((lead, i) => (
-            <div
-              key={i}
-              className="bg-white border border-gray-100 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              {/* Header: Buyer → Product → Seller */}
-              <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-t-2xl flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <FaUser className="text-indigo-600" />
-                  <div>
-                    <p className="font-semibold text-indigo-700 text-sm mb-0">
-                      {lead.buyer?.fullname || "N/A"}
-                    </p>
-                    <p className="text-xs text-gray-600 mb-0">
-                      {lead.buyer?.mobileNumber || "N/A"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FaStore className="text-pink-600" />
-                  <div className="text-right">
-                    <p className="font-semibold text-pink-700 text-sm mb-0">
-                      {lead.seller?.fullname || "N/A"}
-                    </p>
-                    <p className="text-xs text-gray-600">
-                      {lead.seller?.mobileNumber || "N/A"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Product Section */}
-              <div className="p-5">
-                <div className="flex gap-5 items-start">
-                  {/* Product Image */}
-                  {lead.product?.images?.[0]?.url ? (
-                    <Link href={`/products/${lead.product._id}`} target="_blank">
-                      <div className="w-[120px] h-[120px] flex-shrink-0">
-                        <Image
-                          src={lead.product.images[0].url}
-                          alt={lead.product.name}
-                          width={120}
-                          height={120}
-                          className="w-full h-full rounded-xl border object-cover cursor-pointer hover:scale-105 transition-transform duration-300 shadow-md"
-                        />
+        <div className="bg-white rounded-xl shadow overflow-hidden border border-gray-200">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-indigo-600 text-white">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Buyer</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Seller</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Product</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Qty</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Frequency</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Created</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {filteredLeads.map((lead, i) => (
+                  <tr key={lead._id || i} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <FaUser className="text-indigo-500 flex-shrink-0" />
+                        <div>
+                          <p className="font-medium text-gray-900 text-sm">{lead.buyer?.fullname || "N/A"}</p>
+                          <p className="text-xs text-gray-500">{lead.buyer?.mobileNumber || "—"}</p>
+                        </div>
                       </div>
-                    </Link>
-                  ) : (
-                    <div className="w-[120px] h-[120px] bg-gray-200 rounded-xl flex-shrink-0" />
-                  )}
-
-                  {/* Product Info */}
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      {lead.product?.name || "Unnamed Product"}
-                    </h3>
-                    {lead.product?.price && (
-                      <p className="text-indigo-600 font-bold text-sm">
-                        ₹{lead.product.price}
-                      </p>
-                    )}
-                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                      {lead.product?.description || "No description available"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Lead Info */}
-                <div className="mt-4 text-sm text-gray-700 space-y-1">
-                  <p>
-                    <strong>Quantity:</strong> {lead.quantity} {lead.unit}
-                  </p>
-                  <p>
-                    <strong>Frequency:</strong> {lead.requirementFrequency}
-                  </p>
-                  <p>
-                    <strong>Status:</strong>{" "}
-                    <span
-                      className={`px-2 py-0.5 text-xs rounded-full font-semibold ${getStatusColor(
-                        lead.status
-                      )}`}
-                    >
-                      {lead.status}
-                    </span>
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    <strong>Created:</strong>{" "}
-                    {new Date(lead.createdAt).toLocaleString("en-GB", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                      hour12: false,
-                      timeZone: "Asia/Kolkata",
-                    })}
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    setSelectedLead(lead);
-                    setModalOpen(true);
-                  }}
-                  className="mt-4 w-full text-center py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium"
-                >
-                  View Details
-                </button>
-              </div>
-            </div>
-          ))}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <FaStore className="text-pink-500 flex-shrink-0" />
+                        <div>
+                          <p className="font-medium text-gray-900 text-sm">{lead.seller?.fullname || "N/A"}</p>
+                          <p className="text-xs text-gray-500">{lead.seller?.mobileNumber || "—"}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {lead.product?.images?.[0]?.url ? (
+                          <Link href={`/products/${lead.product._id}`} target="_blank" className="flex-shrink-0">
+                            <Image
+                              src={lead.product.images[0].url}
+                              alt={lead.product?.name || ""}
+                              width={48}
+                              height={48}
+                              className="rounded-lg border object-cover"
+                            />
+                          </Link>
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-gray-200 flex-shrink-0" />
+                        )}
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-900 text-sm truncate max-w-[180px]">{lead.product?.name || "—"}</p>
+                          {lead.product?.price != null && (
+                            <p className="text-xs text-indigo-600">₹{lead.product.price}</p>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                      {lead.quantity} {lead.unit || ""}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                      {lead.requirementFrequency || "—"}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs rounded-full font-medium ${getStatusColor(lead.status)}`}>
+                        {lead.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-500">
+                      {new Date(lead.createdAt).toLocaleString("en-GB", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                        hour12: false,
+                        timeZone: "Asia/Kolkata",
+                      })}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => {
+                          setSelectedLead(lead);
+                          setModalOpen(true);
+                        }}
+                        className="inline-flex items-center px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium"
+                      >
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

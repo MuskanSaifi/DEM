@@ -28,9 +28,16 @@ const ContactSchema = new mongoose.Schema(
       required: [true, "Description is required"],
       minlength: [10, "Description must be at least 10 characters long"],
     },
+    remarks: [
+      {
+        text: { type: String, required: true },
+        addedBy: { type: String, default: "Admin" },
+        addedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
-    timestamps: true, // Automatically includes createdAt and updatedAt
+    timestamps: true,
   }
 );
 

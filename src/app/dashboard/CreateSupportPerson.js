@@ -1,88 +1,156 @@
-import React, { useEffect } from 'react'
-import { useState } from "react";
-import toast from 'react-hot-toast';
-import Select from 'react-select';
-import Swal from 'sweetalert2';
-
-import { differenceInCalendarDays } from 'date-fns';
-import SupportMemberModal from "./components/SupportMemberModal"; // adjust path
-import axios from 'axios';
-
+import React, { useEffect, useState, useCallback } from "react";
+import toast from "react-hot-toast";
+import Select from "react-select";
+import Swal from "sweetalert2";
+import { differenceInCalendarDays } from "date-fns";
+import SupportMemberModal from "./components/SupportMemberModal";
+import axios from "axios";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
+// Isolated form component: only this re-renders on keystroke, not the heavy table with Select
+const CreateSupportPersonForm = React.memo(({ onCreated }) => {
+  const [formData, setFormData] = useState({ name: "", email: "", password: "", number: "" });
+  const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  }, []);
+
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      setMessage("");
+      try {
+        const res = await fetch("/api/adminprofile/supportmembers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setMessage("✅ Support person created successfully!");
+          setFormData({ name: "", email: "", password: "", number: "" });
+          onCreated?.();
+        } else {
+          setMessage(`❌ Error: ${data.error || "Something went wrong"}`);
+        }
+      } catch (err) {
+        console.error("❌ Submit error:", err);
+        setMessage("❌ Internal error, try again.");
+      }
+    },
+    [formData, onCreated]
+  );
+
+  return (
+    <div className="w-full lg:w-1/3">
+      <h4 className="text-2xl font-bold mb-4 text-blue-700">Create Support Person</h4>
+      <form onSubmit={handleSubmit} className="p-6 bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg">
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-700 font-medium">Name</label>
+          <input
+            type="text"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-700 font-medium">Phone Number</label>
+          <input
+            type="number"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            name="number"
+            value={formData.number}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-700 font-medium">Email</label>
+          <input
+            type="email"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="mb-4 relative">
+          <label className="block mb-1 text-gray-700 font-medium">Password</label>
+          <input
+            type={showPassword ? "text" : "password"}
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 pr-10"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((p) => !p)}
+            className="absolute right-3 top-[70%] -translate-y-1/2 text-gray-500 hover:text-blue-600"
+          >
+            {showPassword ? (
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-.38 1.221-1.049 2.343-1.958 3.271M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18M10.477 10.477A3 3 0 0112 9c1.657 0 3 1.343 3 3 0 .524-.135 1.018-.373 1.446M9.88 9.88l-2.829 2.829M4.12 4.12A10.969 10.969 0 0012 5c4.478 0 8.268 2.943 9.542 7-.38 1.221-1.049 2.343-1.958 3.271M15 12a3 3 0 01-3 3" />
+              </svg>
+            )}
+          </button>
+        </div>
+        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-semibold">
+          ➕ Create
+        </button>
+        {message && <div className="mt-4 p-3 bg-yellow-100 text-yellow-800 rounded-lg">{message}</div>}
+      </form>
+    </div>
+  );
+});
+CreateSupportPersonForm.displayName = "CreateSupportPersonForm";
 
 const CreateSupportPerson = () => {
-  const [formData, setFormData] = useState({ name: "", email: "", password: "", number:"" });
-  const [message, setMessage] = useState("");
   const [stateupdate, setStateupdate] = useState(false);
   const [supportMembers, setSupportMembers] = useState([]);
-  const [allClients, setAllClients] = useState([]); // instead of undefined
-  const [selectedClients, setSelectedClients] = useState({}); // key: member._id, value: [user ids]
+  const [allClients, setAllClients] = useState([]);
+  const [selectedClients, setSelectedClients] = useState({});
   const [loading, setLoading] = useState(true);
-const [showPassword, setShowPassword] = useState(false);
-
   const [selectedMember, setSelectedMember] = useState(null);
-const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-const openModal = (member) => {
-  setSelectedMember(member);
-  setIsModalOpen(true);
-};
+  const refreshList = useCallback(() => setStateupdate((prev) => !prev), []);
 
-const closeModal = () => {
-  setIsModalOpen(false);
-  setSelectedMember(null);
-};
-
-const handleModalSave = async (id, updatedData) => {
-  try {
-    console.log("Sending PATCH to", `/api/adminprofile/supportmembers/${id}`, updatedData);
-    const res = await axios.patch(`/api/adminprofile/supportmembers/${id}`, updatedData);
-
-    if (res.data?.success) {
-      toast.success("Support member updated!");
-      closeModal();
-      setStateupdate(prev => !prev);
-    } else {
-      console.error("API responded with error", res.data);
-      toast.error("Update failed: " + (res.data.message || "Unknown error"));
-    }
-  } catch (err) {
-    console.error("Request failed:", err.response?.data || err.message);
-    toast.error("Update failed: " + (err.response?.data?.message || err.message));
-  }
-};
-
-
-  const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+  const openModal = (member) => {
+    setSelectedMember(member);
+    setIsModalOpen(true);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage("");
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedMember(null);
+  };
 
+  const handleModalSave = async (id, updatedData) => {
     try {
-      const res = await fetch("/api/adminprofile/supportmembers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setMessage("✅ Support person created successfully!");
-        setStateupdate(prev => !prev); // toggles value on each change
-        setFormData({ name: "", email: "", password: "", number:"" }); // reset form
+      const res = await axios.patch(`/api/adminprofile/supportmembers/${id}`, updatedData);
+      if (res.data?.success) {
+        toast.success("Support member updated!");
+        closeModal();
+        setStateupdate((prev) => !prev);
       } else {
-        setMessage(`❌ Error: ${data.error || "Something went wrong"}`);
+        toast.error("Update failed: " + (res.data.message || "Unknown error"));
       }
     } catch (err) {
-      console.error("❌ Submit error:", err);
-      setMessage("❌ Internal error, try again.");
+      toast.error("Update failed: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -220,97 +288,12 @@ const handleDelete = async (id) => {
 
   
     
-return (
-<>
-<div className="flex flex-col lg:flex-row gap-6 p-6">
+  return (
+    <>
+      <div className="flex flex-col lg:flex-row gap-6 p-6">
+        <CreateSupportPersonForm onCreated={refreshList} />
 
-  {/* Left: Form */}
-  <div className="w-full lg:w-1/3">
-      <h4 className="text-2xl font-bold mb-4 text-blue-700">Create Support Person</h4>
-    <form onSubmit={handleSubmit} className="p-6 bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg">
-      
-      <div className="mb-4">
-        <label className="block mb-1 text-gray-700 font-medium">Name</label>
-        <input
-          type="text"
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="block mb-1 text-gray-700 font-medium">Phone Number</label>
-        <input
-          type="number"
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          name="number"
-          value={formData.number}
-          onChange={handleChange}
-          required
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="block mb-1 text-gray-700 font-medium">Email</label>
-        <input
-          type="email"
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-      </div>
-
-    <div className="mb-4 relative">
-  <label className="block mb-1 text-gray-700 font-medium">Password</label>
-
-  <input
-    type={showPassword ? "text" : "password"}
-    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 pr-10"
-    name="password"
-    value={formData.password}
-    onChange={handleChange}
-    required
-  />
-
-  <button
-    type="button"
-    onClick={() => setShowPassword((prev) => !prev)}
-className="absolute right-3 top-[70%] -translate-y-1/2 text-gray-500 hover:text-blue-600"
-  >
-    {showPassword ? (
-      // 👁️ Eye open
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-.38 1.221-1.049 2.343-1.958 3.271M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ) : (
-      // 🚫 Eye off
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18M10.477 10.477A3 3 0 0112 9c1.657 0 3 1.343 3 3 0 .524-.135 1.018-.373 1.446M9.88 9.88l-2.829 2.829M4.12 4.12A10.969 10.969 0 0012 5c4.478 0 8.268 2.943 9.542 7-.38 1.221-1.049 2.343-1.958 3.271M15 12a3 3 0 01-3 3" />
-      </svg>
-    )}
-  </button>
-</div>
-
-
-      <button
-        type="submit"
-        className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-semibold"
-      >
-        ➕ Create
-      </button>
-
-      {message && (
-        <div className="mt-4 p-3 bg-yellow-100 text-yellow-800 rounded-lg">{message}</div>
-      )}
-    </form>
-  </div>
-
-  {/* Right: Table */}
+        {/* Right: Table */}
   <div className="w-full lg:w-2/3">
     <h4 className="text-2xl font-bold mb-4 text-blue-700">📋 Assign Clients To Support Members</h4>
 
