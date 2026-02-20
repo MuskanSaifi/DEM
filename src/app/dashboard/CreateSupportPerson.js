@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, startTransition } from "react";
 import toast from "react-hot-toast";
 import Select from "react-select";
 import Swal from "sweetalert2";
@@ -46,7 +46,7 @@ const CreateSupportPersonForm = React.memo(({ onCreated }) => {
   );
 
   return (
-    <div className="w-full lg:w-1/3">
+    <div className="w-full lg:max-w-md shrink-0">
       <h4 className="text-2xl font-bold mb-4 text-blue-700">Create Support Person</h4>
       <form onSubmit={handleSubmit} className="p-6 bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg">
         <div className="mb-4">
@@ -127,7 +127,9 @@ const CreateSupportPerson = () => {
   const [selectedMember, setSelectedMember] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const refreshList = useCallback(() => setStateupdate((prev) => !prev), []);
+  const refreshList = useCallback(() => {
+    startTransition(() => setStateupdate((prev) => !prev));
+  }, []);
 
   const openModal = (member) => {
     setSelectedMember(member);
@@ -204,12 +206,14 @@ const CreateSupportPerson = () => {
       fetchAllClients();
     }, []);
     
-  const handleClientChange = (selectedOptions, memberId) => {
-      setSelectedClients(prev => ({
-        ...prev,
-        [memberId]: selectedOptions
-      }));
-    };
+  const handleClientChange = useCallback((selectedOptions, memberId) => {
+      startTransition(() => {
+        setSelectedClients(prev => ({
+          ...prev,
+          [memberId]: selectedOptions
+        }));
+      });
+    }, []);
     
 const handleClientUpdate = async (memberId) => {
   const result = await Swal.fire({
@@ -237,7 +241,7 @@ const handleClientUpdate = async (memberId) => {
       const data = await res.json();
       if (data.success) {
         toast.success('Clients assigned successfully');
-        setStateupdate(prev => !prev);
+        startTransition(() => setStateupdate(prev => !prev));
       } else {
         toast.error(data.message || 'Failed to assign clients');
       }
@@ -274,7 +278,7 @@ const handleDelete = async (id) => {
       const data = await res.json();
 
       if (data.success) {
-        setStateupdate(prev => !prev);
+        startTransition(() => setStateupdate(prev => !prev));
         toast.success('Successfully Deleted');
       } else {
         toast.error('Delete failed: ' + (data.message || 'Unknown error'));
@@ -290,12 +294,13 @@ const handleDelete = async (id) => {
     
   return (
     <>
-      <div className="flex flex-col lg:flex-row gap-6 p-6">
-        <CreateSupportPersonForm onCreated={refreshList} />
+      <div className="w-full max-w-full px-4 sm:px-6">
+        <div className="flex flex-col lg:flex-row gap-6 w-full">
+          <CreateSupportPersonForm onCreated={refreshList} />
 
-        {/* Right: Table */}
-  <div className="w-full lg:w-2/3">
-    <h4 className="text-2xl font-bold mb-4 text-blue-700">📋 Assign Clients To Support Members</h4>
+          {/* Right: Table - takes remaining full width */}
+          <div className="w-full flex-1 min-w-0">
+            <h4 className="text-2xl font-bold mb-4 text-blue-700">📋 Assign Clients To Support Members</h4>
 
 {loading ? (
   <div className="overflow-x-auto rounded-xl shadow-lg border border-blue-200 bg-white">
@@ -445,11 +450,9 @@ styles={{
 
       </div>
     )}
-  </div>
-
-</div>
-
-
+          </div>
+        </div>
+      </div>
     </>
   )
 }

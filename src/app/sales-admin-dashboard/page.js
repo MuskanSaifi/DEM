@@ -861,7 +861,7 @@ export default function SalesAdminDashboard() {
                   <span className="font-semibold">“View All Sales Team”</span> to see and
                   manage the full list.
                 </p>
-                <button
+                      <button
                   onClick={() => {
                     setShowAddEmployee(true);
                     setShowBulkImport(false);
@@ -869,7 +869,7 @@ export default function SalesAdminDashboard() {
                   className="mt-2 inline-flex items-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition text-sm"
                 >
                   ➕ Add Employee
-                </button>
+                      </button>
               </div>
             )}
           </div>
@@ -922,53 +922,53 @@ export default function SalesAdminDashboard() {
                 </button>
               </div>
               <form onSubmit={handleAddEmployee} className="px-6 pb-6 pt-4 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    placeholder="Full Name *"
-                    required
-                    value={employeeForm.fullname}
-                    onChange={(e) =>
-                      setEmployeeForm({ ...employeeForm, fullname: e.target.value })
-                    }
-                    className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email *"
-                    required
-                    value={employeeForm.email}
-                    onChange={(e) =>
-                      setEmployeeForm({ ...employeeForm, email: e.target.value })
-                    }
-                    className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
-                  />
-                  <input
-                    type="password"
-                    placeholder="Password *"
-                    required
-                    value={employeeForm.password}
-                    onChange={(e) =>
-                      setEmployeeForm({
-                        ...employeeForm,
-                        password: e.target.value,
-                      })
-                    }
-                    className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
-                  />
-                  <input
-                    type="tel"
-                    placeholder="Mobile"
-                    value={employeeForm.mobileNumber}
-                    onChange={(e) =>
-                      setEmployeeForm({
-                        ...employeeForm,
-                        mobileNumber: e.target.value,
-                      })
-                    }
-                    className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
-                  />
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <input
+                type="text"
+                placeholder="Full Name *"
+                required
+                value={employeeForm.fullname}
+                onChange={(e) =>
+                  setEmployeeForm({ ...employeeForm, fullname: e.target.value })
+                }
+                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+              />
+              <input
+                type="email"
+                placeholder="Email *"
+                required
+                value={employeeForm.email}
+                onChange={(e) =>
+                  setEmployeeForm({ ...employeeForm, email: e.target.value })
+                }
+                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+              />
+              <input
+                type="password"
+                placeholder="Password *"
+                required
+                value={employeeForm.password}
+                onChange={(e) =>
+                  setEmployeeForm({
+                    ...employeeForm,
+                    password: e.target.value,
+                  })
+                }
+                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+              />
+              <input
+                type="tel"
+                placeholder="Mobile"
+                value={employeeForm.mobileNumber}
+                onChange={(e) =>
+                  setEmployeeForm({
+                    ...employeeForm,
+                    mobileNumber: e.target.value,
+                  })
+                }
+                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+              />
+            </div>
                 <div className="flex justify-end gap-3 pt-2">
                   <button
                     type="button"
@@ -977,14 +977,14 @@ export default function SalesAdminDashboard() {
                   >
                     Cancel
                   </button>
-                  <button
-                    type="submit"
+            <button
+              type="submit"
                     className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition text-sm"
-                  >
-                    Add Employee
-                  </button>
+            >
+              Add Employee
+            </button>
                 </div>
-              </form>
+          </form>
             </div>
           </div>
         )}
@@ -1043,7 +1043,7 @@ export default function SalesAdminDashboard() {
                                 : "text-gray-800"
                             }`}
                           >
-                            {emp.fullname}
+                      {emp.fullname}
                           </button>
                         ))}
                       </div>
@@ -1131,55 +1131,55 @@ export default function SalesAdminDashboard() {
               <>
                 {/* Desktop / Tablet table */}
                 <table className="hidden md:table min-w-full">
-                  <thead className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-3.5 text-left">
-                        <input
-                          type="checkbox"
-                          checked={
-                            filteredLeads.length > 0 &&
-                            selectedLeads.length === filteredLeads.length
-                          }
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedLeads(filteredLeads.map((l) => l._id));
-                            } else {
-                              setSelectedLeads([]);
-                            }
-                          }}
-                          className="cursor-pointer"
-                        />
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Client
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Company
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Mobile
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Product
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Assigned To
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Payment
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Remarks
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
+              <thead className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3.5 text-left">
+                    <input
+                      type="checkbox"
+                      checked={
+                        filteredLeads.length > 0 &&
+                        selectedLeads.length === filteredLeads.length
+                      }
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedLeads(filteredLeads.map((l) => l._id));
+                        } else {
+                          setSelectedLeads([]);
+                        }
+                      }}
+                      className="cursor-pointer"
+                    />
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Client
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Company
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Mobile
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Product
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Assigned To
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Payment
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Remarks
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
                     {filteredLeads.map((lead, index) => (
                       <tr
                         key={lead._id}
@@ -1187,33 +1187,33 @@ export default function SalesAdminDashboard() {
                           index % 2 === 0 ? "bg-white" : "bg-gray-50/60"
                         }`}
                       >
-                        <td className="px-6 py-4">
-                          <input
-                            type="checkbox"
-                            checked={selectedLeads.includes(lead._id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedLeads([...selectedLeads, lead._id]);
-                              } else {
-                                setSelectedLeads(
-                                  selectedLeads.filter((id) => id !== lead._id)
-                                );
-                              }
-                            }}
-                            className="cursor-pointer w-4 h-4"
-                          />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {lead.clientName}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {lead.companyName || "-"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {lead.mobile}
-                        </td>
-                        <td className="px-6 py-4">{lead.product}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedLeads.includes(lead._id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedLeads([...selectedLeads, lead._id]);
+                          } else {
+                            setSelectedLeads(
+                              selectedLeads.filter((id) => id !== lead._id)
+                            );
+                          }
+                        }}
+                        className="cursor-pointer w-4 h-4"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {lead.clientName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {lead.companyName || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {lead.mobile}
+                    </td>
+                    <td className="px-6 py-4">{lead.product}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                           {lead.assignedTo ? (
                             <div className="flex items-center gap-2">
                               <span>{lead.assignedTo.fullname}</span>
@@ -1236,145 +1236,145 @@ export default function SalesAdminDashboard() {
                               )}
                             </span>
                           )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <select
-                            value={lead.status}
-                            onChange={(e) => {
-                              const token = localStorage.getItem("salesAdminToken");
-                              fetch(`/api/sales/leads/${lead._id}`, {
-                                method: "PATCH",
-                                headers: {
-                                  "Content-Type": "application/json",
-                                  Authorization: `Bearer ${token}`,
-                                },
-                                body: JSON.stringify({ status: e.target.value }),
-                              }).then(() => {
-                                fetchData(token);
-                                setToast({
-                                  type: "success",
-                                  message: "Status updated",
-                                });
-                                setTimeout(() => setToast(null), 2000);
-                              });
-                            }}
-                            className={`px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer ${
-                              lead.status === "converted"
-                                ? "bg-green-100 text-green-800"
-                                : lead.status === "qualified"
-                                ? "bg-blue-100 text-blue-800"
-                                : lead.status === "contacted"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : lead.status === "lost"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            <option value="new">New</option>
-                            <option value="contacted">Contacted</option>
-                            <option value="qualified">Qualified</option>
-                            <option value="converted">Converted</option>
-                            <option value="lost">Lost</option>
-                          </select>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <select
-                            value={lead.paymentStatus || "pending"}
-                            onChange={(e) => {
-                              const token = localStorage.getItem("salesAdminToken");
-                              fetch(`/api/sales/leads/${lead._id}`, {
-                                method: "PATCH",
-                                headers: {
-                                  "Content-Type": "application/json",
-                                  Authorization: `Bearer ${token}`,
-                                },
-                                body: JSON.stringify({ paymentStatus: e.target.value }),
-                              }).then(() => {
-                                fetchData(token);
-                                fetchLeaderboard(token);
-                                fetchDailyReport(token, reportDate);
-                                setToast({ type: "success", message: "Payment status updated" });
-                                setTimeout(() => setToast(null), 2000);
-                              });
-                            }}
-                            className={`px-2 py-1 rounded text-xs font-medium border cursor-pointer ${
-                              lead.paymentStatus === "paid"
-                                ? "bg-green-100 text-green-800"
-                                : lead.paymentStatus === "partial"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            <option value="pending">Pending</option>
-                            <option value="paid">Paid</option>
-                            <option value="partial">Partial</option>
-                            <option value="not_applicable">N/A</option>
-                          </select>
-                        </td>
-                        <td className="px-6 py-4">
-                          {lead.remarks?.length > 0 ? (
-                            <div className="text-sm">
-                              <span className="font-semibold">
-                                {lead.remarks.length} remark(s)
-                              </span>
-                              <div className="mt-1 space-y-1 max-h-20 overflow-y-auto">
-                                {lead.remarks.slice(-3).map((r, idx) => (
-                                  <div key={idx} className="text-xs text-gray-600">
-                                    <span className="font-semibold text-indigo-600">
-                                      {r.remarkType}:
-                                    </span>{" "}
-                                    {r.remark}
-                                  </div>
-                                ))}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <select
+                        value={lead.status}
+                        onChange={(e) => {
+                          const token = localStorage.getItem("salesAdminToken");
+                          fetch(`/api/sales/leads/${lead._id}`, {
+                            method: "PATCH",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({ status: e.target.value }),
+                          }).then(() => {
+                            fetchData(token);
+                            setToast({
+                              type: "success",
+                              message: "Status updated",
+                            });
+                            setTimeout(() => setToast(null), 2000);
+                          });
+                        }}
+                        className={`px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer ${
+                          lead.status === "converted"
+                            ? "bg-green-100 text-green-800"
+                            : lead.status === "qualified"
+                            ? "bg-blue-100 text-blue-800"
+                            : lead.status === "contacted"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : lead.status === "lost"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        <option value="new">New</option>
+                        <option value="contacted">Contacted</option>
+                        <option value="qualified">Qualified</option>
+                        <option value="converted">Converted</option>
+                        <option value="lost">Lost</option>
+                      </select>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <select
+                        value={lead.paymentStatus || "pending"}
+                        onChange={(e) => {
+                          const token = localStorage.getItem("salesAdminToken");
+                          fetch(`/api/sales/leads/${lead._id}`, {
+                            method: "PATCH",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({ paymentStatus: e.target.value }),
+                          }).then(() => {
+                            fetchData(token);
+                            fetchLeaderboard(token);
+                            fetchDailyReport(token, reportDate);
+                            setToast({ type: "success", message: "Payment status updated" });
+                            setTimeout(() => setToast(null), 2000);
+                          });
+                        }}
+                        className={`px-2 py-1 rounded text-xs font-medium border cursor-pointer ${
+                          lead.paymentStatus === "paid"
+                            ? "bg-green-100 text-green-800"
+                            : lead.paymentStatus === "partial"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
+                        <option value="partial">Partial</option>
+                        <option value="not_applicable">N/A</option>
+                      </select>
+                    </td>
+                    <td className="px-6 py-4">
+                      {lead.remarks?.length > 0 ? (
+                        <div className="text-sm">
+                          <span className="font-semibold">
+                            {lead.remarks.length} remark(s)
+                          </span>
+                          <div className="mt-1 space-y-1 max-h-20 overflow-y-auto">
+                            {lead.remarks.slice(-3).map((r, idx) => (
+                              <div key={idx} className="text-xs text-gray-600">
+                                <span className="font-semibold text-indigo-600">
+                                  {r.remarkType}:
+                                </span>{" "}
+                                {r.remark}
                               </div>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">No remarks</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap space-x-2">
-                          <button
-                            onClick={() => setShowRemarkModal(lead._id)}
-                            className="text-blue-600 hover:underline text-sm"
-                          >
-                            Remark
-                          </button>
-                          <select
-                            value={lead.assignedTo?._id || ""}
-                            onChange={(e) => {
-                              if (e.target.value) {
-                                fetch(`/api/sales/leads/${lead._id}`, {
-                                  method: "PATCH",
-                                  headers: {
-                                    "Content-Type": "application/json",
-                                    Authorization: `Bearer ${localStorage.getItem(
-                                      "salesAdminToken"
-                                    )}`,
-                                  },
-                                  body: JSON.stringify({
-                                    assignedTo: e.target.value,
-                                  }),
-                                }).then(() => {
-                                  const token =
-                                    localStorage.getItem("salesAdminToken");
-                                  fetchData(token);
-                                });
-                              }
-                            }}
-                            className="text-sm border rounded px-2 py-1"
-                          >
-                            <option value="">Assign</option>
-                            {employees.map((emp) => (
-                              <option key={emp._id} value={emp._id}>
-                                {emp.fullname}
-                              </option>
                             ))}
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">No remarks</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                      <button
+                        onClick={() => setShowRemarkModal(lead._id)}
+                        className="text-blue-600 hover:underline text-sm"
+                      >
+                        Remark
+                      </button>
+                      <select
+                        value={lead.assignedTo?._id || ""}
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            fetch(`/api/sales/leads/${lead._id}`, {
+                              method: "PATCH",
+                              headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${localStorage.getItem(
+                                  "salesAdminToken"
+                                )}`,
+                              },
+                              body: JSON.stringify({
+                                assignedTo: e.target.value,
+                              }),
+                            }).then(() => {
+                              const token =
+                                localStorage.getItem("salesAdminToken");
+                              fetchData(token);
+                            });
+                          }
+                        }}
+                        className="text-sm border rounded px-2 py-1"
+                      >
+                        <option value="">Assign</option>
+                        {employees.map((emp) => (
+                              <option key={emp._id} value={emp._id}>
+                            {emp.fullname}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
                 {/* Mobile cards */}
                 <div className="md:hidden divide-y divide-gray-100">

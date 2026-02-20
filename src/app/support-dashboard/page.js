@@ -12,7 +12,7 @@ import Buyers from "./Buyers";
 import Payments from "./Payments";
 import AllContacts from "./AllContacts";
 import AllSubscribers from "./AllSubscribers";
-import LeadsEnquiry from "./LeadsEnquiry";
+import LeadsEnquiry from "../dashboard/LeadsEnquiry";
 import toast from "react-hot-toast";
 import AddClientPayment from "./AddClientPayment";
 import AddRecording from "./AddRecording";

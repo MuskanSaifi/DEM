@@ -40,6 +40,13 @@ const purchaseRequestSchema = new mongoose.Schema({
     enum: ['pending', 'accepted', 'rejected'],
     default: 'pending',
   },
+  remarks: [
+    {
+      text: { type: String, required: true },
+      addedBy: { type: String, default: 'Admin' },
+      addedAt: { type: Date, default: Date.now },
+    },
+  ],
 }, { timestamps: true });
 
 export default mongoose.models.PurchaseRequest || mongoose.model("PurchaseRequest", purchaseRequestSchema);

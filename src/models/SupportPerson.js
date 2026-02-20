@@ -14,10 +14,9 @@ const supportPersonSchema = new mongoose.Schema(
     allSubscribersAccess: { type: Boolean, default: false }, 
     allPaymentsAccess: { type: Boolean, default: false }, 
 
-
     recordingurl: [
       {
-        url: { type: String, unique: true },
+        url: { type: String },
         uploadTime: { type: Date, default: Date.now },
         tag: {
           type: String,

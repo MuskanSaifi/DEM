@@ -1,10 +1,12 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { FaUser, FaStore } from "react-icons/fa";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+
+const PRESET_REMARKS = ["Follow up", "Called", "Emailed", "Resolved", "Closed", "Spam", "Not interested"];
 
 const LeadsEnquiry = () => {
   const [leads, setLeads] = useState([]);
@@ -14,23 +16,53 @@ const LeadsEnquiry = () => {
   const [selectedLead, setSelectedLead] = useState(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [remarkModal, setRemarkModal] = useState({ open: false, leadId: null });
+  const [customRemark, setCustomRemark] = useState("");
+  const [addingRemark, setAddingRemark] = useState(false);
+  const customRemarkInputRef = useRef(null);
+
+  const fetchLeads = async () => {
+    try {
+      const res = await fetch("/api/admin/leadandwnquiry");
+      const data = await res.json();
+      if (data.success) {
+        setLeads((data.data || []).reverse());
+      }
+    } catch (error) {
+      console.error("Failed to fetch leads:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchLeads = async () => {
-      try {
-        const res = await fetch("/api/admin/leadandwnquiry");
-        const data = await res.json();
-        if (data.success) {
-          setLeads(data.data.reverse());
-        }
-      } catch (error) {
-        console.error("Failed to fetch leads:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchLeads();
   }, []);
+
+  const addRemark = async (leadId, text) => {
+    if (!text?.trim()) return;
+    setAddingRemark(true);
+    try {
+      const res = await fetch(`/api/admin/leadandwnquiry/${leadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ remark: text.trim(), addedBy: "Admin" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRemarkModal({ open: false, leadId: null });
+        setCustomRemark("");
+        await fetchLeads();
+        if (selectedLead && selectedLead._id === leadId) {
+          setSelectedLead((prev) => (prev ? { ...prev, remarks: [...(prev.remarks || []), { text: text.trim(), addedBy: "Admin", addedAt: new Date() }] } : null));
+        }
+      }
+    } catch (err) {
+      console.error("Error adding remark:", err);
+    } finally {
+      setAddingRemark(false);
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -129,6 +161,7 @@ const LeadsEnquiry = () => {
                 <th className="px-4 py-3 text-left"><Skeleton width={70} /></th>
                 <th className="px-4 py-3 text-left"><Skeleton width={80} /></th>
                 <th className="px-4 py-3 text-left"><Skeleton width={100} /></th>
+                <th className="px-4 py-3 text-left"><Skeleton width={90} /></th>
               </tr>
             </thead>
             <tbody>
@@ -140,7 +173,9 @@ const LeadsEnquiry = () => {
                   <td className="px-4 py-3"><Skeleton height={24} /></td>
                   <td className="px-4 py-3"><Skeleton height={24} /></td>
                   <td className="px-4 py-3"><Skeleton height={24} /></td>
+                  <td className="px-4 py-3"><Skeleton height={24} /></td>
                   <td className="px-4 py-3"><Skeleton height={32} width={100} /></td>
+                  <td className="px-4 py-3"><Skeleton height={40} width={90} /></td>
                 </tr>
               ))}
             </tbody>
@@ -162,6 +197,7 @@ const LeadsEnquiry = () => {
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Created</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Action</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Remarks</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
@@ -242,6 +278,36 @@ const LeadsEnquiry = () => {
                         View Details
                       </button>
                     </td>
+                    <td className="px-4 py-3" style={{ minWidth: 180 }}>
+                      <div className="flex flex-col gap-1">
+                        {(lead.remarks && lead.remarks.length > 0) ? (
+                          <ul className="list-none space-y-1 text-xs">
+                            {lead.remarks.map((r, idx) => (
+                              <li key={idx} className="bg-gray-100 rounded px-2 py-1">
+                                <span className="text-gray-800">{r.text}</span>
+                                {r.addedAt && (
+                                  <span className="text-gray-500 ml-1">
+                                    {new Date(r.addedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                                  </span>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <span className="text-gray-400 text-xs">No remarks</span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRemarkModal({ open: true, leadId: lead._id });
+                            setCustomRemark("");
+                          }}
+                          className="text-left text-indigo-600 hover:text-indigo-800 text-xs font-medium mt-1"
+                        >
+                          + Add remark
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -313,7 +379,82 @@ const LeadsEnquiry = () => {
                     "No description available"}
                 </p>
               </div>
+
+              {selectedLead.remarks && selectedLead.remarks.length > 0 && (
+                <div className="bg-amber-50 p-3 rounded-lg">
+                  <p className="font-semibold text-amber-800 mb-2">Remarks</p>
+                  <ul className="space-y-1 text-sm">
+                    {selectedLead.remarks.map((r, idx) => (
+                      <li key={idx} className="flex justify-between gap-2">
+                        <span>{r.text}</span>
+                        <span className="text-gray-500 text-xs">
+                          {r.addedAt ? new Date(r.addedAt).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Remark Modal */}
+      {remarkModal.open && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-[95%] max-w-md">
+            <h4 className="text-lg font-bold text-indigo-700 mb-4">Add Remark</h4>
+            <p className="text-sm text-gray-600 mb-2">Preset (click to add):</p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {PRESET_REMARKS.map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => addRemark(remarkModal.leadId, preset)}
+                  disabled={addingRemark}
+                  className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm hover:bg-indigo-50 disabled:opacity-50"
+                >
+                  {preset}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => customRemarkInputRef.current?.focus()}
+                disabled={addingRemark}
+                className="px-3 py-1.5 rounded-lg border-2 border-indigo-400 bg-indigo-50 text-indigo-700 text-sm hover:bg-indigo-100 disabled:opacity-50 font-medium"
+              >
+                Custom
+              </button>
+            </div>
+            <hr className="my-4" />
+            <p className="text-sm text-gray-600 mb-2">Custom remark (type below):</p>
+            <div className="flex gap-2">
+              <input
+                ref={customRemarkInputRef}
+                type="text"
+                placeholder="Type custom remark..."
+                value={customRemark}
+                onChange={(e) => setCustomRemark(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addRemark(remarkModal.leadId, customRemark)}
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => addRemark(remarkModal.leadId, customRemark)}
+                disabled={addingRemark || !customRemark.trim()}
+                className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {addingRemark ? "..." : "Add"}
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setRemarkModal({ open: false, leadId: null }); setCustomRemark(""); }}
+              className="mt-4 w-full py-2 rounded-lg border border-gray-300 text-gray-700 text-sm"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
