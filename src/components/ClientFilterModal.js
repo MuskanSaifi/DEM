@@ -73,18 +73,22 @@ const ClientFilterModal = ({ isOpen, onClose, onApply }) => {
 
   if (!isOpen) return null;
 
-  /** Render one row with all normalized fields (same keys for User, Buyer, SalesLead) */
+  /** Render one row: always show labels with value or "—"; use text-gray-900 for values so they stay visible on support-dashboard */
   const renderRow = (row, idx) => {
-    const hasAny = row.name || row.email || row.phone || row.businessName || row.product || row.status;
-    if (!hasAny && !row.paymentStatus) return null;
+    const display = (val) => (val != null && String(val).trim() !== "" ? String(val).trim() : "—");
+    const Val = ({ children }) => <span className="text-gray-900">{children}</span>;
     return (
       <li key={idx} className="py-3 px-4 rounded-lg bg-white border border-gray-200 space-y-1.5 text-sm">
-        {row.name && <div><span className="font-medium text-gray-500">Name:</span> {row.name}</div>}
-        {row.email && <div><span className="font-medium text-gray-500">Email:</span> {row.email}</div>}
-        {row.phone && <div><span className="font-medium text-gray-500">Phone:</span> {row.phone}</div>}
-        {row.businessName && <div><span className="font-medium text-gray-500">Business:</span> {row.businessName}</div>}
-        {row.product && <div><span className="font-medium text-gray-500">Product:</span> {row.product}</div>}
-        {row.status && <div><span className="font-medium text-gray-500">Status:</span> {row.status}</div>}
+        <div><span className="font-medium text-gray-500">Name:</span> <Val>{display(row.name)}</Val></div>
+        <div><span className="font-medium text-gray-500">Email:</span> <Val>{display(row.email)}</Val></div>
+        <div><span className="font-medium text-gray-500">Phone:</span> <Val>{display(row.phone)}</Val></div>
+        <div><span className="font-medium text-gray-500">Business:</span> <Val>{display(row.businessName)}</Val></div>
+        {(row.product != null && String(row.product).trim() !== "") || (row.status != null && String(row.status).trim() !== "") ? (
+          <>
+            <div><span className="font-medium text-gray-500">Product:</span> <Val>{display(row.product)}</Val></div>
+            <div><span className="font-medium text-gray-500">Status:</span> <Val>{display(row.status)}</Val></div>
+          </>
+        ) : null}
         <div className="pt-1">
           <span className={`inline-block px-2.5 py-1 rounded-md text-xs font-semibold ${row.paymentStatus === "paid" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>
             {row.paymentStatus === "paid" ? "Paid" : "Unpaid"}
@@ -144,7 +148,7 @@ const ClientFilterModal = ({ isOpen, onClose, onApply }) => {
             ×
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-8 space-y-5">
+        <form onSubmit={handleSubmit} className="p-8 space-y-5 text-gray-900">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
@@ -153,7 +157,7 @@ const ClientFilterModal = ({ isOpen, onClose, onApply }) => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Filter by name"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
               />
             </div>
             <div>
@@ -163,7 +167,7 @@ const ClientFilterModal = ({ isOpen, onClose, onApply }) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Filter by email"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
               />
             </div>
             <div>
@@ -173,7 +177,7 @@ const ClientFilterModal = ({ isOpen, onClose, onApply }) => {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="Filter by phone number"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
               />
             </div>
             <div>
@@ -183,13 +187,13 @@ const ClientFilterModal = ({ isOpen, onClose, onApply }) => {
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
                 placeholder="Filter by business / company name"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
               />
             </div>
           </div>
 
           {lookupResult && (
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-6 text-gray-900">
               <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-4">
                 Result — Full details &amp; payment status
               </p>

@@ -110,7 +110,7 @@ useEffect(() => {
             onClose={() => setShowClientFilterModal(false)}
             onApply={(vals) => {
               setAppliedClientFilter(vals);
-              setShowClientFilterModal(false);
+              // Modal stays open so user can see search result
             }}
           />
           <button onClick={handleLogout} className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-full shadow-md transition duration-300 ease-in-out">

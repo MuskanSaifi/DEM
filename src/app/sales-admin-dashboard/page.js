@@ -549,7 +549,7 @@ export default function SalesAdminDashboard() {
                   search: parts.join(" "),
                   paymentStatus: vals.paymentStatus || "",
                 }));
-                setShowClientFilterModal(false);
+                // Modal stays open so user can see search result
               }}
             />
             <button

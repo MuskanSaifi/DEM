@@ -108,7 +108,7 @@ function ResponsiveDashboard() {
           onClose={() => setShowClientFilterModal(false)}
           onApply={(vals) => {
             setAppliedClientFilter(vals);
-            setShowClientFilterModal(false);
+            // Modal stays open so user can see search result; close via Close button or X
           }}
         />
         <div className="resdes-dynamic-content">

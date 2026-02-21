@@ -15,6 +15,7 @@ const AllUsers = ({ appliedClientFilter }) => {
   const [searchDate, setSearchDate] = useState(""); // ✅ Search state for registration date
  const [remarkFilter, setRemarkFilter] = useState(""); // ✅ Remark Filter
   const [paymentStatusFilter, setPaymentStatusFilter] = useState(""); // Paid / Unpaid
+  const [paymentModalUser, setPaymentModalUser] = useState(null); // click name → open modal to update payment
 
   useEffect(() => {
     if (!appliedClientFilter) return;
@@ -529,7 +530,7 @@ const handleDateFilter = (e) => {
            {usersToDisplay.length > 0 ? ( 
               usersToDisplay.map((user, index) => (
                 <React.Fragment key={user._id}>
-                  <tr className="text-sm"><td>{index + 1}</td><td>{user.fullname}</td><td>{user.email} | {user.mobileNumber}</td><td>{user.companyName} | {user.products?.length} | {user.supportPerson?.name}</td>
+                  <tr className="text-sm"><td>{index + 1}</td><td><span role="button" tabIndex={0} className="text-primary text-decoration-underline cursor-pointer" onClick={() => setPaymentModalUser(user)} onKeyDown={(e) => e.key === "Enter" && setPaymentModalUser(user)}>{user.fullname}</span></td><td>{user.email} | {user.mobileNumber}</td><td>{user.companyName} | {user.products?.length} | {user.supportPerson?.name}</td>
 
 <td className="py-2">
   <div className="flex items-center gap-2">
@@ -1102,6 +1103,46 @@ const handleDateFilter = (e) => {
 
 
         </Table>
+      )}
+
+      {/* Action modal: click name → update payment status (Paid/Unpaid) */}
+      {paymentModalUser && (
+        <div className="modal d-block bg-dark bg-opacity-25" tabIndex={-1} style={{ zIndex: 1050 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Update Payment Status</h5>
+                <button type="button" className="btn-close" onClick={() => setPaymentModalUser(null)} aria-label="Close" />
+              </div>
+              <div className="modal-body">
+                <p className="mb-2"><strong>User:</strong> {paymentModalUser.fullname}</p>
+                <p className="mb-3 text-muted small">{paymentModalUser.email} · {paymentModalUser.mobileNumber}</p>
+                <label className="form-label">Payment Status</label>
+                <Form.Select
+                  value={paymentModalUser.paymentStatus || "unpaid"}
+                  onChange={(e) => setPaymentModalUser((u) => u ? { ...u, paymentStatus: e.target.value } : null)}
+                  className="mb-3"
+                >
+                  <option value="unpaid">Unpaid</option>
+                  <option value="paid">Paid</option>
+                </Form.Select>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setPaymentModalUser(null)}>Cancel</button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    savePaymentStatus(paymentModalUser._id, paymentModalUser.paymentStatus || "unpaid");
+                    setPaymentModalUser(null);
+                  }}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
