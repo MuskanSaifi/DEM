@@ -194,7 +194,7 @@ const LeadsEnquiry = () => {
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Product</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Qty</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Frequency</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
+                  {/* <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Status</th> */}
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Created</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Action</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Remarks</th>
@@ -250,11 +250,11 @@ const LeadsEnquiry = () => {
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                       {lead.requirementFrequency || "—"}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    {/* <td className="px-4 py-3 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs rounded-full font-medium ${getStatusColor(lead.status)}`}>
                         {lead.status}
                       </span>
-                    </td>
+                    </td> */}
                     <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-500">
                       {new Date(lead.createdAt).toLocaleString("en-GB", {
                         day: "2-digit",
