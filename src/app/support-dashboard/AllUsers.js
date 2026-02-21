@@ -8,12 +8,25 @@ import ProductTags from "./components/ProductTags";
 import Image from "next/image";
 
 
-const AllUsers = ({ supportPersonId }) => {
+const AllUsers = ({ supportPersonId, appliedClientFilter }) => {
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState(""); // ✅ Search state for name, email, company, mobile
   const [searchDate, setSearchDate] = useState(""); // ✅ Search state for registration date
  const [remarkFilter, setRemarkFilter] = useState(""); // ✅ Remark Filter
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState(""); // Paid / Unpaid (filter only, no update)
 
+  useEffect(() => {
+    if (!appliedClientFilter) return;
+    const parts = [
+      appliedClientFilter.name,
+      appliedClientFilter.email,
+      appliedClientFilter.phone,
+      appliedClientFilter.businessName,
+    ].filter(Boolean);
+    if (parts.length) setSearchTerm(parts.join(" ").toLowerCase());
+    if (appliedClientFilter.paymentStatus !== undefined)
+      setPaymentStatusFilter(appliedClientFilter.paymentStatus || "");
+  }, [appliedClientFilter]);
 
 const [loading, setLoading] = useState(true);
 
@@ -159,7 +172,11 @@ const filteredUsers = users.filter((user) => {
   const matchesRemark =
     remarkFilter === "" || user.remark === remarkFilter;
 
-  return matchesSearch && matchesDate && matchesRemark;
+  const matchesPayment =
+    paymentStatusFilter === "" ||
+    (user.paymentStatus || "unpaid") === paymentStatusFilter;
+
+  return matchesSearch && matchesDate && matchesRemark && matchesPayment;
 });
 
 
@@ -211,6 +228,15 @@ const filteredUsers = users.filter((user) => {
     onChange={handleSearch}
     className="min-w-[250px]"
   />
+  <Form.Select
+    value={paymentStatusFilter}
+    onChange={(e) => setPaymentStatusFilter(e.target.value)}
+    className="min-w-[120px]"
+  >
+    <option value="">All (Paid/Unpaid)</option>
+    <option value="paid">Paid</option>
+    <option value="unpaid">Unpaid</option>
+  </Form.Select>
   <Form.Control
     type="date"
     value={searchDate}
@@ -249,6 +275,7 @@ const filteredUsers = users.filter((user) => {
       setSearchTerm("");
       setSearchDate("");
       setRemarkFilter("");
+      setPaymentStatusFilter("");
     }}
    className="min-w-[100px]"
   >
@@ -282,6 +309,7 @@ const filteredUsers = users.filter((user) => {
 </th>
 
               <th>Remark</th>
+              <th>Payment</th>
               <th>Registered On</th> {/* ✅ Added Date */}
               <th>Action</th>
             </tr>
@@ -359,6 +387,8 @@ const filteredUsers = users.filter((user) => {
   )}
 </td>
 
+<td>{(user.paymentStatus || "unpaid").charAt(0).toUpperCase() + (user.paymentStatus || "unpaid").slice(1)}</td>
+
 <td>
   {user.createdAt
     ? new Date(user.createdAt).toLocaleString("en-GB", {
@@ -378,7 +408,7 @@ const filteredUsers = users.filter((user) => {
                       </Button> 
                     </td>
 
-                  </tr><tr><td colSpan="7" className="td-bg">
+                  </tr><tr><td colSpan="8" className="td-bg">
                       {user.products?.length > 0 ? (
                         <Accordion>
                           {user.products.map((product, i) => {
@@ -778,7 +808,7 @@ const filteredUsers = users.filter((user) => {
               ))
             ) : (
               <tr>
-                <td colSpan="7" className="text-center">No matching users found.</td>
+                <td colSpan="8" className="text-center">No matching users found.</td>
               </tr>
             )}
           </tbody>

@@ -1,3 +1,4 @@
+// src/models/SalesLead.js
 import mongoose from "mongoose";
 
 const salesLeadSchema = new mongoose.Schema(
@@ -21,7 +22,7 @@ const salesLeadSchema = new mongoose.Schema(
     },
     product: {
       type: String,
-      required: true,
+      required: true, 
     },
     status: {
       type: String,

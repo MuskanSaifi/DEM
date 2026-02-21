@@ -5,62 +5,54 @@ import Swal from "sweetalert2";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
-const Buyers = ({ supportMember }) => {
+const Buyers = ({ supportMember, appliedClientFilter }) => {
   const [buyers, setBuyers] = useState([]);
-  const [filteredBuyers, setFilteredBuyers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchDate, setSearchDate] = useState("");
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
 
   useEffect(() => {
-    const fetchBuyers = async () => {
-      try {
-        const response = await fetch("/api/adminprofile/buyers");
-        if (!response.ok) throw new Error("Failed to fetch buyers");
-        const data = await response.json();
+    if (!appliedClientFilter) return;
+    const parts = [
+      appliedClientFilter.name,
+      appliedClientFilter.email,
+      appliedClientFilter.phone,
+      appliedClientFilter.businessName,
+    ].filter(Boolean);
+    if (parts.length) setSearchTerm(parts.join(" "));
+    if (appliedClientFilter.paymentStatus !== undefined)
+      setPaymentStatusFilter(appliedClientFilter.paymentStatus || "");
+  }, [appliedClientFilter]);
 
-        const sortedBuyers = data.buyers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setBuyers(sortedBuyers);
-        setFilteredBuyers(sortedBuyers);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchBuyers = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (searchTerm.trim()) params.set("searchTerm", searchTerm.trim());
+      if (paymentStatusFilter) params.set("paymentStatus", paymentStatusFilter);
+      const response = await fetch(`/api/adminprofile/buyers?${params.toString()}`);
+      if (!response.ok) throw new Error("Failed to fetch buyers");
+      const data = await response.json();
+      setBuyers(data.buyers || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchBuyers();
-  }, []);
+  }, [searchTerm, paymentStatusFilter]);
 
-  const handleSearch = (e) => {
-    const term = e.target.value;
-    setSearchTerm(term);
-    filterBuyers(term, searchDate);
-  };
-
-  const handleDateFilter = (e) => {
-    const date = e.target.value;
-    setSearchDate(date);
-    filterBuyers(searchTerm, date);
-  };
-
-  const filterBuyers = (term, date) => {
-    let filtered = buyers;
-    if (term) {
-      filtered = filtered.filter(
-        (buyer) =>
-          buyer.fullname.toLowerCase().includes(term.toLowerCase()) ||
-          buyer.email.toLowerCase().includes(term.toLowerCase()) ||
-          buyer.mobileNumber.includes(term) ||
-          buyer.productname.toLowerCase().includes(term.toLowerCase())
-      );
-    }
-    if (date) {
-      filtered = filtered.filter((buyer) => buyer.otpExpires?.startsWith(date));
-    }
-    setFilteredBuyers(filtered);
-  };
+  const filteredBuyers = searchDate
+    ? buyers.filter((b) => {
+        const d = b.createdAt ? new Date(b.createdAt).toISOString().split("T")[0] : "";
+        return d === searchDate;
+      })
+    : buyers;
 
   const handleDeleteBuyer = () => {
     Swal.fire({
@@ -86,20 +78,31 @@ const Buyers = ({ supportMember }) => {
           All Buyers
         </h6>
 
-        <Form className="mb-3 d-flex gap-2 res-color2 rounded-3 common-shad p-3">
+        <Form className="mb-3 d-flex gap-2 res-color2 rounded-3 common-shad p-3 flex-wrap">
           <Form.Control
             type="text"
-            placeholder="Search by name, email, or phone number"
+            placeholder="Search by name, email, phone, or business name"
             value={searchTerm}
-            onChange={handleSearch}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="min-w-[200px]"
           />
-          <Form.Control type="date" value={searchDate} onChange={handleDateFilter} />
+          <Form.Control type="date" value={searchDate} onChange={(e) => setSearchDate(e.target.value)} />
+          <Form.Select
+            value={paymentStatusFilter}
+            onChange={(e) => setPaymentStatusFilter(e.target.value)}
+            style={{ minWidth: 120 }}
+          >
+            <option value="">All (Paid/Unpaid)</option>
+            <option value="paid">Paid</option>
+            <option value="unpaid">Unpaid</option>
+          </Form.Select>
           <Button
             variant="secondary"
             onClick={() => {
               setSearchTerm("");
               setSearchDate("");
-              setFilteredBuyers(buyers);
+              setPaymentStatusFilter("");
+              fetchBuyers();
             }}
           >
             Reset
@@ -117,6 +120,7 @@ const Buyers = ({ supportMember }) => {
               <th>Email</th>
               <th>Mobile Number</th>
               <th>Product Name</th>
+              <th>Payment</th>
               <th>Created At</th>
               <th>Action</th>
             </tr>
@@ -130,6 +134,7 @@ const Buyers = ({ supportMember }) => {
                   <td><Skeleton width={150} /></td>
                   <td><Skeleton width={120} /></td>
                   <td><Skeleton width={130} /></td>
+                  <td><Skeleton width={80} /></td>
                   <td><Skeleton width={170} /></td>
                   <td><Skeleton width={60} height={30} /></td>
                 </tr>
@@ -142,6 +147,7 @@ const Buyers = ({ supportMember }) => {
                   <td>{buyer.email || "N/A"}</td>
                   <td>{buyer.mobileNumber || "N/A"}</td>
                   <td>{buyer.productname || "N/A"}</td>
+                  <td>{(buyer.paymentStatus || "unpaid").charAt(0).toUpperCase() + (buyer.paymentStatus || "unpaid").slice(1)}</td>
                   <td>
                     {buyer.createdAt
                       ? new Date(buyer.createdAt).toLocaleString("en-GB", {

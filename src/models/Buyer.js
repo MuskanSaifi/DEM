@@ -1,3 +1,4 @@
+// src/models/Buyer.js
 import mongoose from "mongoose";
 
 const BuyerSchema = new mongoose.Schema({
@@ -20,6 +21,8 @@ const BuyerSchema = new mongoose.Schema({
   otp: Number,
   otpExpires: Date,
   remark: { type: String, default: "" },
+  companyName: { type: String, default: "" },
+  paymentStatus: { type: String, enum: ["paid", "unpaid"], default: "unpaid" },
   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
 }, { timestamps: true });
 

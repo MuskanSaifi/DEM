@@ -17,12 +17,15 @@ import toast from "react-hot-toast";
 import AddClientPayment from "./AddClientPayment";
 import AddRecording from "./AddRecording";
 import AllSellers from "./AllSellers";
+import ClientFilterModal from "@/components/ClientFilterModal";
 
 function ResponsiveDashboard() {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeContent, setActiveContent] = useState("Dashboard");
   const [loading, setLoading] = useState(true);
+  const [showClientFilterModal, setShowClientFilterModal] = useState(false);
+  const [appliedClientFilter, setAppliedClientFilter] = useState(null);
 
   const [supportPersonId, setSupportPersonId] = useState(null);
 const [supportPerson, setSupportPerson] = useState(null);
@@ -95,6 +98,21 @@ useEffect(() => {
             &#9776;
           </button>
           <h1>{activeContent}</h1>
+          <button
+            type="button"
+            onClick={() => setShowClientFilterModal(true)}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-full shadow-md transition duration-300 ease-in-out"
+          >
+            <span>🔍</span> Filter Clients
+          </button>
+          <ClientFilterModal
+            isOpen={showClientFilterModal}
+            onClose={() => setShowClientFilterModal(false)}
+            onApply={(vals) => {
+              setAppliedClientFilter(vals);
+              setShowClientFilterModal(false);
+            }}
+          />
           <button onClick={handleLogout} className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-full shadow-md transition duration-300 ease-in-out">
   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1m0-10V5"/>
@@ -106,10 +124,10 @@ useEffect(() => {
 {activeContent === "Payments" &&( <Payments supportMember={supportPerson} />)}
 
 {activeContent === "All Products" && <AllProducts />}
-{activeContent === "All Your Seller" && <AllUsers supportPersonId={supportPersonId} />}
+{activeContent === "All Your Seller" && <AllUsers supportPersonId={supportPersonId} appliedClientFilter={appliedClientFilter} />}
 {activeContent === "All Sellers" && <AllSellers supportPersonId={supportPersonId} supportMember={supportPerson}/>}
 
-{activeContent === "All Buyers" && (<Buyers supportMember={supportPerson} />)}
+{activeContent === "All Buyers" && (<Buyers supportMember={supportPerson} appliedClientFilter={appliedClientFilter} />)}
 {activeContent === "All Subscribers" && (<AllSubscribers supportMember={supportPerson} />)}
 {activeContent === "All Contacts" && (<AllContacts supportMember={supportPerson} />)}
 {activeContent === "Leads & Enquiry" && <LeadsEnquiry />}

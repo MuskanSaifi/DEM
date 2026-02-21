@@ -35,12 +35,15 @@ import Banner from "./Banner";
 import Plans from "./Plans";
 import AddTemplate from "./ManageTemplates";
 import ProductsDiagnostic from "./ProductsDiagnostic";
+import ClientFilterModal from "@/components/ClientFilterModal";
 
 function ResponsiveDashboard() {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeContent, setActiveContent] = useState("Dashboard");
   const [loading, setLoading] = useState(true);
+  const [showClientFilterModal, setShowClientFilterModal] = useState(false);
+  const [appliedClientFilter, setAppliedClientFilter] = useState(null);
 
   useEffect(() => {
     const checkAdminAuth = async () => {
@@ -100,8 +103,18 @@ function ResponsiveDashboard() {
 </button>
 
    </div>
+        <ClientFilterModal
+          isOpen={showClientFilterModal}
+          onClose={() => setShowClientFilterModal(false)}
+          onApply={(vals) => {
+            setAppliedClientFilter(vals);
+            setShowClientFilterModal(false);
+          }}
+        />
         <div className="resdes-dynamic-content">
-          {activeContent === "Dashboard" && <Dashboard />}
+          {activeContent === "Dashboard" && (
+            <Dashboard onOpenClientFilter={() => setShowClientFilterModal(true)} />
+          )}
           {activeContent === "DEM Banners" && <Banner />}
           {activeContent === "Our Packages" && <Plans />}
           {activeContent === "Client Payments" && <Payments />}
@@ -112,8 +125,12 @@ function ResponsiveDashboard() {
           {activeContent === "Update Category" && <UpdateCategory />}
           {activeContent === "All Category" && <AllCategory />}
           {activeContent === "All Sub Category" && <AllSubcategory />}
-          {activeContent === "All Seller" && <AllUsers />}
-          {activeContent === "All Buyers" && <Buyers />}
+          {activeContent === "All Seller" && (
+            <AllUsers appliedClientFilter={appliedClientFilter} />
+          )}
+          {activeContent === "All Buyers" && (
+            <Buyers appliedClientFilter={appliedClientFilter} />
+          )}
           {activeContent === "All Blogs" && <AllBlogs />}
           {activeContent === "Create Blogs" && <CreateBlog />}
           {activeContent === "All Subscribers" && <AllSubscribers />}

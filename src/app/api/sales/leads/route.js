@@ -35,6 +35,8 @@ export async function GET(req) {
     const status = searchParams.get("status");
     const assignedTo = searchParams.get("assignedTo");
     const employeeId = searchParams.get("employeeId");
+    const search = (searchParams.get("search") || searchParams.get("searchTerm") || "").trim();
+    const paymentStatus = searchParams.get("paymentStatus") || "";
 
     let query = {};
 
@@ -56,6 +58,26 @@ export async function GET(req) {
         { createdBy: employeeId },
         { assignedTo: employeeId },
       ];
+    }
+
+    if (search) {
+      const regex = new RegExp(search, "i");
+      query.$and = query.$and || [];
+      query.$and.push({
+        $or: [
+          { clientName: regex },
+          { companyName: regex },
+          { mobile: regex },
+          { email: regex },
+          { product: regex },
+        ],
+      });
+    }
+
+    if (paymentStatus && ["pending", "paid", "partial", "not_applicable"].includes(paymentStatus)) {
+      query.paymentStatus = paymentStatus;
+    } else if (paymentStatus === "unpaid") {
+      query.paymentStatus = { $in: ["pending", "partial"] };
     }
 
     const leads = await SalesLead.find(query)

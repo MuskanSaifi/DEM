@@ -1,3 +1,4 @@
+// src/models/User.js
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
@@ -37,6 +38,7 @@ const userSchema = new mongoose.Schema({
   enum: ["none", "deactivate", "delete"],
   default: "none"
 },
+  paymentStatus: { type: String, enum: ["paid", "unpaid"], default: "unpaid" },
 
   // ✅ Add this line to reference products
   products: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],

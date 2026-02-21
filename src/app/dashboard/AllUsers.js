@@ -9,11 +9,26 @@ import Image from "next/image";
 import Link from "next/link";
 
 
-const AllUsers = () => {
+const AllUsers = ({ appliedClientFilter }) => {
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState(""); // ✅ Search state for name, email, company, mobile
   const [searchDate, setSearchDate] = useState(""); // ✅ Search state for registration date
  const [remarkFilter, setRemarkFilter] = useState(""); // ✅ Remark Filter
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState(""); // Paid / Unpaid
+
+  useEffect(() => {
+    if (!appliedClientFilter) return;
+    const parts = [
+      appliedClientFilter.name,
+      appliedClientFilter.email,
+      appliedClientFilter.phone,
+      appliedClientFilter.businessName,
+    ].filter(Boolean);
+    if (parts.length) setSearchTerm(parts.join(" "));
+    if (appliedClientFilter.paymentStatus !== undefined)
+      setPaymentStatusFilter(appliedClientFilter.paymentStatus || "");
+    setCurrentPage(1);
+  }, [appliedClientFilter]);
 
  const [loading, setLoading] = useState(true);
 const [fetchError, setFetchError] = useState(null); // ✅ New state for robust error reporting
@@ -49,7 +64,7 @@ const handleCustomRemarkChange = (userId, value) => {
   useEffect(() => {
     fetchUsers();
     fetchCategories();
-}, [currentPage, searchTerm, searchDate, remarkFilter]);
+}, [currentPage, searchTerm, searchDate, remarkFilter, paymentStatusFilter]);
 
   // ✅ Fetch categories for dropdown
   const fetchCategories = async () => {
@@ -87,7 +102,8 @@ const handlePageChange = (newPage) => {
     const apiUrl = `/api/adminprofile/users?page=${currentPage}&limit=${limit}` +
                    `&searchTerm=${searchTerm}` +
                    `&searchDate=${searchDate}` +
-                   `&remarkFilter=${remarkFilter}`;
+                   `&remarkFilter=${remarkFilter}` +
+                   `&paymentStatus=${paymentStatusFilter}`;
                        
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error("Request timed out")), 45000) 
@@ -303,6 +319,32 @@ const handleDateFilter = (e) => {
     setCurrentPage(1);
   };
 
+  const handlePaymentStatusFilterChange = (e) => {
+    setPaymentStatusFilter(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const savePaymentStatus = async (userId, paymentStatus) => {
+    try {
+      const res = await fetch(`/api/adminprofile/users?id=${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentStatus }),
+      });
+      const data = await res.json();
+      if (res.ok && data.user) {
+        toast.success("Payment status updated");
+        setUsers((prev) =>
+          prev.map((u) => (u._id === userId ? { ...u, paymentStatus } : u))
+        );
+      } else {
+        toast.error(data.message || "Failed to update");
+      }
+    } catch (err) {
+      toast.error("Failed to update payment status");
+    }
+  };
+
   const usersToDisplay = users;
 
   // 🚨 Filter users is now performed only on the users fetched for the current page.
@@ -405,12 +447,22 @@ const handleDateFilter = (e) => {
       <option value="Paid Client">Paid Client</option>
       <option value="Other">Other</option>
     </Form.Select>
+    <Form.Select
+      value={paymentStatusFilter}
+      onChange={handlePaymentStatusFilterChange}
+      className="min-w-[120px]"
+    >
+      <option value="">All (Paid/Unpaid)</option>
+      <option value="paid">Paid</option>
+      <option value="unpaid">Unpaid</option>
+    </Form.Select>
 <Button
       variant="secondary"
       onClick={() => {
         setSearchTerm("");
         setSearchDate("");
         setRemarkFilter("");
+        setPaymentStatusFilter("");
         setCurrentPage(1); // ✅ Reset page on reset filters
       }}
       className="min-w-[100px]"
@@ -469,6 +521,7 @@ const handleDateFilter = (e) => {
 
 </th>
               <th>Remark</th>
+              <th>Payment</th>
               <th>Registered On</th> {/* ✅ Added Date */}
               <th>Action</th></tr>
           </thead>
@@ -544,6 +597,17 @@ const handleDateFilter = (e) => {
   )}
 </td>
 
+<td className="py-2">
+  <Form.Select
+    size="sm"
+    value={user.paymentStatus || "unpaid"}
+    onChange={(e) => savePaymentStatus(user._id, e.target.value)}
+    className="w-auto"
+  >
+    <option value="unpaid">Unpaid</option>
+    <option value="paid">Paid</option>
+  </Form.Select>
+</td>
 
 <td>
   {user.createdAt
@@ -562,7 +626,7 @@ const handleDateFilter = (e) => {
                       <Button variant="danger" size="sm" onClick={() => handleDeleteUser(user._id)}>
                         🗑️
                       </Button>
-                    </td></tr><tr><td colSpan="7" className="td-bg">
+                    </td></tr><tr><td colSpan="8" className="td-bg">
                       {user.products?.length > 0 ? (
                         <Accordion>
                           {user.products.map((product, i) => {

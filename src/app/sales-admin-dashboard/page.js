@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import BulkImportLeads from "@/components/sales/BulkImportLeads";
+import ClientFilterModal from "@/components/ClientFilterModal";
 import "@/components/styles/sales-dashboards.css";
 
 export default function SalesAdminDashboard() {
@@ -52,6 +53,7 @@ export default function SalesAdminDashboard() {
   const chatEndRef = useRef(null);
   const router = useRouter();
   const [showAssignDropdown, setShowAssignDropdown] = useState(false);
+  const [showClientFilterModal, setShowClientFilterModal] = useState(false);
 
   const filteredAssignEmployees = useMemo(() => {
     const query = employeeSearch.trim().toLowerCase();
@@ -107,9 +109,15 @@ export default function SalesAdminDashboard() {
       );
     }
     if (filters.paymentStatus) {
-      filtered = filtered.filter(
-        (lead) => (lead.paymentStatus || "pending") === filters.paymentStatus
-      );
+      if (filters.paymentStatus === "unpaid") {
+        filtered = filtered.filter(
+          (lead) => ["pending", "partial"].includes(lead.paymentStatus || "pending")
+        );
+      } else {
+        filtered = filtered.filter(
+          (lead) => (lead.paymentStatus || "pending") === filters.paymentStatus
+        );
+      }
     }
     if (filters.search) {
       const search = filters.search.toLowerCase();
@@ -118,6 +126,7 @@ export default function SalesAdminDashboard() {
           lead.clientName?.toLowerCase().includes(search) ||
           lead.companyName?.toLowerCase().includes(search) ||
           lead.mobile?.includes(search) ||
+          lead.email?.toLowerCase().includes(search) ||
           lead.product?.toLowerCase().includes(search)
       );
     }
@@ -524,6 +533,26 @@ export default function SalesAdminDashboard() {
           </h1>
           <div className="flex items-center gap-3">
             <button
+              type="button"
+              onClick={() => setShowClientFilterModal(true)}
+              className="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white rounded-xl font-medium transition border border-white/20 flex items-center gap-2"
+            >
+              🔍 Filter Clients
+            </button>
+            <ClientFilterModal
+              isOpen={showClientFilterModal}
+              onClose={() => setShowClientFilterModal(false)}
+              onApply={(vals) => {
+                const parts = [vals.name, vals.email, vals.phone, vals.businessName].filter(Boolean);
+                setFilters((f) => ({
+                  ...f,
+                  search: parts.join(" "),
+                  paymentStatus: vals.paymentStatus || "",
+                }));
+                setShowClientFilterModal(false);
+              }}
+            />
+            <button
               onClick={() => setShowChat(!showChat)}
               className="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white rounded-xl font-medium transition relative border border-white/20"
             >
@@ -616,7 +645,7 @@ export default function SalesAdminDashboard() {
               <label className="block text-xs font-medium text-gray-500 mb-1.5">Search</label>
               <input
                 type="text"
-                placeholder="Name, company, mobile, product…"
+                placeholder="Name, email, phone, company, product…"
                 value={filters.search}
                 onChange={(e) =>
                   setFilters({ ...filters, search: e.target.value })
@@ -634,8 +663,9 @@ export default function SalesAdminDashboard() {
                 className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-gray-50/50 focus:bg-white transition"
               >
                 <option value="">All</option>
-                <option value="pending">Pending</option>
                 <option value="paid">Paid</option>
+                <option value="unpaid">Unpaid</option>
+                <option value="pending">Pending</option>
                 <option value="partial">Partial</option>
                 <option value="not_applicable">N/A</option>
               </select>

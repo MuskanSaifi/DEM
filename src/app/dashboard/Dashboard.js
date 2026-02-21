@@ -4,7 +4,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { FaUsers, FaUserTie, FaShoppingBag, FaMoneyBillWave } from "react-icons/fa";
 
-const Dashboard = () => {
+const Dashboard = ({ onOpenClientFilter }) => {
   const [users, setUsers] = useState(null);
   const [buyers, setBuyers] = useState(null);
   const [products, setProducts] = useState(null);
@@ -77,6 +77,17 @@ const Dashboard = () => {
                 Welcome back, Admin! Keep leading with excellence. Every decision
                 you make shapes the platform’s success 🚀
               </p>
+              {onOpenClientFilter && (
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={onOpenClientFilter}
+                    className="btn btn-light btn-sm shadow-sm border-0 rounded-pill px-4 py-2 d-inline-flex align-items-center gap-2"
+                  >
+                    <span className="opacity-90">🔍</span> Filter Clients
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

@@ -60,6 +60,7 @@ export async function GET(req) {
     const searchTerm = searchParams.get('searchTerm') || '';
     const remarkFilter = searchParams.get('remarkFilter') || '';
     const searchDate = searchParams.get('searchDate') || '';
+    const paymentStatus = searchParams.get('paymentStatus') || '';
 
     limit = Math.min(limit, MAX_LIMIT);
     const skip = (page - 1) * limit;
@@ -95,6 +96,11 @@ export async function GET(req) {
         $gte: startOfDay,
         $lt: endOfDay
       };
+    }
+
+    // D. Payment status filter (paid / unpaid)
+    if (paymentStatus && ["paid", "unpaid"].includes(paymentStatus)) {
+      query.paymentStatus = paymentStatus;
     }
 
     // ✅ 3. फ़िल्टर की गई कुल संख्या (Filtered Count)
@@ -156,16 +162,20 @@ export async function PATCH(req) {
   }
 
   const body = await req.json();
-  const { remark } = body;
+  const { remark, paymentStatus } = body;
 
-  if (!remark) {
-    return NextResponse.json({ message: "Remark is required" }, { status: 400 });
+  const update = {};
+  if (typeof remark === "string") update.remark = remark;
+  if (paymentStatus && ["paid", "unpaid"].includes(paymentStatus)) update.paymentStatus = paymentStatus;
+
+  if (Object.keys(update).length === 0) {
+    return NextResponse.json({ message: "Remark or paymentStatus is required" }, { status: 400 });
   }
 
   try {
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { remark },
+      update,
       { new: true }
     );
 
