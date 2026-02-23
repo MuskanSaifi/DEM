@@ -360,7 +360,7 @@ export default function SalesAdminDashboard() {
     }
   };
 
-  const handleBulkImport = async (leadsData, assignedToId) => {
+  const handleBulkImport = async (leadsData, assignedToId, markAsPaid = false) => {
     const token = localStorage.getItem("salesAdminToken");
     try {
       // Handle undefined or empty assignedToId
@@ -377,6 +377,7 @@ export default function SalesAdminDashboard() {
         body: JSON.stringify({
           leads: leadsData,
           assignedTo: assignToValue,
+          markAsPaid: !!markAsPaid,
         }),
       });
       const data = await res.json();
@@ -645,7 +646,7 @@ export default function SalesAdminDashboard() {
               <label className="block text-xs font-medium text-gray-500 mb-1.5">Search</label>
               <input
                 type="text"
-                placeholder="Name, email, phone, company, product…"
+                placeholder="Search by client, company, mobile or product…"
                 value={filters.search}
                 onChange={(e) =>
                   setFilters({ ...filters, search: e.target.value })
@@ -690,8 +691,8 @@ export default function SalesAdminDashboard() {
               <h2 className="text-lg font-bold text-gray-900">Best Performers</h2>
               <p className="text-xs text-gray-500 mt-0.5">Ranked by converted → paid → contacted</p>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
+<div className="overflow-x-auto overflow-y-auto h-[400px]">
+                <table className="min-w-full">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
@@ -747,9 +748,10 @@ export default function SalesAdminDashboard() {
               </span>
             )}
           </div>
-          <div className="overflow-x-auto">
-            {dailyReport && dailyReport.report && dailyReport.report.length > 0 ? (
-              <table className="min-w-full divide-y divide-gray-200">
+<div className="relative h-[400px] overflow-hidden">
+  <div className="h-full overflow-y-auto overflow-x-auto">
+    {dailyReport && dailyReport.report && dailyReport.report.length > 0 ? (
+      <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"></th>
@@ -850,6 +852,7 @@ export default function SalesAdminDashboard() {
               </div>
             )}
           </div>
+           </div>
         </div>
 
         {/* Employees List – summary card + sidebar trigger */}
@@ -1117,28 +1120,56 @@ export default function SalesAdminDashboard() {
 
         {/* Leads Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center flex-wrap gap-2">
-            <h2 className="text-lg font-bold text-gray-900">
-              All Leads ({filteredLeads.length})
-            </h2>
-            {filteredLeads.length > 0 && (
-              <button
-                onClick={() => {
-                  if (selectedLeads.length === filteredLeads.length) {
-                    setSelectedLeads([]);
-                  } else {
-                    setSelectedLeads(filteredLeads.map((l) => l._id));
+          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h2 className="text-lg font-bold text-gray-900">
+                All Leads ({filteredLeads.length})
+              </h2>
+              <div className="flex flex-wrap items-center gap-3">
+                <input
+                  type="text"
+                  placeholder="Search by client, company, mobile or product…"
+                  value={filters.search}
+                  onChange={(e) =>
+                    setFilters({ ...filters, search: e.target.value })
                   }
-                }}
-                className="text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:underline transition"
-              >
-                {selectedLeads.length === filteredLeads.length
-                  ? "Deselect All"
-                  : "Select All"}
-              </button>
-            )}
+                  className="sales-input-focus min-w-[200px] max-w-xs border border-gray-300 rounded-lg px-3 py-2 text-sm placeholder:text-gray-400 bg-white focus:bg-white transition"
+                />
+                <select
+                  value={filters.paymentStatus}
+                  onChange={(e) =>
+                    setFilters({ ...filters, paymentStatus: e.target.value })
+                  }
+                  className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:bg-white transition"
+                  title="Filter by payment status"
+                >
+                  <option value="">All (Payment)</option>
+                  <option value="paid">Paid only</option>
+                  <option value="unpaid">Unpaid</option>
+                  <option value="pending">Pending</option>
+                  <option value="partial">Partial</option>
+                </select>
+                {filteredLeads.length > 0 && (
+                  <button
+                    onClick={() => {
+                      if (selectedLeads.length === filteredLeads.length) {
+                        setSelectedLeads([]);
+                      } else {
+                        setSelectedLeads(filteredLeads.map((l) => l._id));
+                      }
+                    }}
+                    className="text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:underline transition"
+                  >
+                    {selectedLeads.length === filteredLeads.length
+                      ? "Deselect All"
+                      : "Select All"}
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="overflow-x-auto">
+          <div className="relative h-[600px] overflow-hidden">
+    <div className="h-full overflow-y-auto overflow-x-auto">
             {filteredLeads.length === 0 ? (
               <div className="sales-empty-state">
                 <div className="sales-empty-state-icon">📋</div>
@@ -1595,6 +1626,7 @@ export default function SalesAdminDashboard() {
               </>
             )}
           </div>
+        </div>
         </div>
       </main>
 

@@ -8,6 +8,7 @@ export default function BulkImportLeads({ onImport, employees }) {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [assignedTo, setAssignedTo] = useState("");
+  const [markAsPaid, setMarkAsPaid] = useState(false);
   const [error, setError] = useState("");
 
   const downloadTemplate = () => {
@@ -136,7 +137,7 @@ export default function BulkImportLeads({ onImport, employees }) {
 
     try {
       // Use preview data for both CSV and Excel (both are parsed now)
-      await onImport(preview, assignedTo);
+      await onImport(preview, assignedTo, markAsPaid);
     } catch (err) {
       setError("Import failed: " + err.message);
     } finally {
@@ -193,6 +194,19 @@ export default function BulkImportLeads({ onImport, employees }) {
         <p className="text-xs text-gray-500">
           Optional: COMPANY NAME, Email, STATE
         </p>
+      </div>
+
+      <div className="mb-4">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={markAsPaid}
+            onChange={(e) => setMarkAsPaid(e.target.checked)}
+            className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+          />
+          <span className="text-sm font-medium text-gray-700">Mark all imported leads as Paid</span>
+        </label>
+        <p className="text-xs text-gray-500 mt-1 ml-6">If checked, payment status of all imported leads will be set to Paid.</p>
       </div>
 
       {employees && employees.length > 0 && (
@@ -272,6 +286,7 @@ export default function BulkImportLeads({ onImport, employees }) {
             setPreview(null);
             setError("");
             setAssignedTo("");
+            setMarkAsPaid(false);
           }}
           className="px-6 py-2 bg-gray-200 rounded"
         >

@@ -7,10 +7,12 @@ async function verifyAdmin(req) {
   try {
     const token = req.headers.get("authorization")?.replace("Bearer ", "");
     if (!token) return null;
+
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET || "your-secret-key"
     );
+
     if (decoded.role !== "sales-admin") return null;
     return decoded;
   } catch {
@@ -31,7 +33,7 @@ export async function POST(req) {
       );
     }
 
-    const { leads, assignedTo } = await req.json();
+    const { leads, assignedTo, markAsPaid } = await req.json();
 
     if (!leads || !Array.isArray(leads) || leads.length === 0) {
       return NextResponse.json(
@@ -41,7 +43,8 @@ export async function POST(req) {
     }
 
     // Handle assignedTo - convert empty string to null
-    const assignedToId = assignedTo && assignedTo.trim() !== "" ? assignedTo : null;
+    const assignedToId =
+      assignedTo && assignedTo.trim() !== "" ? assignedTo : null;
 
     // Validate and format leads
     const formattedLeads = leads
@@ -53,28 +56,34 @@ export async function POST(req) {
           lead.clientName ||
           lead["CLIENTNAME"] ||
           "";
+
         const companyName =
           lead["COMPANY NAME"] ||
           lead["Company Name"] ||
           lead.companyName ||
           lead["COMPANYNAME"] ||
           "";
+
         const mobile =
           lead["MOBILE"] ||
           lead["Mobile"] ||
           lead.mobile ||
           lead["MOBILENUMBER"] ||
+          lead["MOBILE NUMBER"] ||
           "";
+
         const email =
           lead["Email"] ||
           lead["EMAIL"] ||
           lead.email ||
           "";
+
         const state =
           lead["STATE"] ||
           lead["State"] ||
           lead.state ||
           "";
+
         const product =
           lead["PRODUCT"] ||
           lead["Product"] ||
@@ -83,19 +92,20 @@ export async function POST(req) {
           lead["PRODUCT(description)"] ||
           "";
 
-        // Required fields validation
-        if (!clientName || !mobile || !product) {
+        // ✅ Only clientName and mobile are required
+        if (!clientName || !mobile) {
           return null; // Skip invalid rows
         }
 
         return {
-          clientName: clientName.trim(),
-          companyName: companyName?.trim() || "",
+          clientName: clientName.toString().trim(),
+          companyName: companyName ? companyName.toString().trim() : "",
           mobile: mobile.toString().trim(),
-          email: email?.trim() || "",
-          state: state?.trim() || "",
-          product: product.trim(),
+          email: email ? email.toString().trim() : "",
+          state: state ? state.toString().trim() : "",
+          product: product ? product.toString().trim() : "Not specified",
           status: "new",
+          paymentStatus: markAsPaid ? "paid" : "pending",
           assignedTo: assignedToId,
           assignedAt: assignedToId ? new Date() : null,
           assignedBy: assignedToId ? admin.id : null,
