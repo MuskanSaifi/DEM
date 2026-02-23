@@ -38,6 +38,7 @@ const userSchema = new mongoose.Schema({
   enum: ["none", "deactivate", "delete"],
   default: "none"
 },
+
   paymentStatus: { type: String, enum: ["paid", "unpaid"], default: "unpaid" },
 
   // ✅ Add this line to reference products
@@ -46,7 +47,7 @@ const userSchema = new mongoose.Schema({
   // ✅ Add this line for the wishlist
   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
 
-    // 👇 User package info added here
+  // 👇 User package info added here
     userPackage: [
       {
         packageName: String,
@@ -69,7 +70,8 @@ const userSchema = new mongoose.Schema({
           expiredAt: { type: Date, default: Date.now }
         }
       ],
-          // ⭐⭐⭐ NEW FIELD ADDED ⭐⭐⭐
+      
+// ⭐⭐⭐ NEW FIELD ADDED ⭐⭐⭐
     createdBy: {
         type: String,
         enum: ["user", "data-entry"],

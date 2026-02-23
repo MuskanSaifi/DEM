@@ -26,7 +26,18 @@ const salesLeadSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["new", "contacted", "qualified", "converted", "lost"],
+      enum: [
+        "new",
+        "contacted",
+        "qualified",
+        "converted",
+        "lost",
+        "followup",
+        "proposal",
+        "not_interested",
+        "ringing",
+        "hotfollowup",
+      ],
       default: "new",
     },
     paymentStatus: {
@@ -83,5 +94,6 @@ salesLeadSchema.index({ createdBy: 1 });
 salesLeadSchema.index({ status: 1 });
 salesLeadSchema.index({ paymentStatus: 1 });
 
-export default mongoose.models.SalesLead ||
-  mongoose.model("SalesLead", salesLeadSchema);
+// Avoid using cached model with stale schema (e.g. after adding new enum values)
+if (mongoose.models.SalesLead) delete mongoose.models.SalesLead;
+export default mongoose.model("SalesLead", salesLeadSchema);

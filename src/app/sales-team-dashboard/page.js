@@ -61,8 +61,11 @@ export default function SalesTeamDashboard() {
   }, []);
 
   useEffect(() => {
-    // Apply filters
-    let filtered = [...leads];
+    // Paid leads are hidden from list: only show non-paid in My Leads
+    const visibleLeads = leads.filter(
+      (lead) => (lead.paymentStatus || "pending") !== "paid"
+    );
+    let filtered = [...visibleLeads];
     if (filters.status) {
       filtered = filtered.filter((lead) => lead.status === filters.status);
     }
@@ -378,6 +381,11 @@ export default function SalesTeamDashboard() {
                 <option value="qualified">Qualified</option>
                 <option value="converted">Converted</option>
                 <option value="lost">Lost</option>
+                <option value="followup">Follow-up</option>
+                <option value="proposal">Proposal</option>
+                <option value="not_interested">Not interested</option>
+                <option value="ringing">Ringing</option>
+                <option value="hotfollowup">Hot follow-up</option>
               </select>
             </div>
             <div>
@@ -420,29 +428,61 @@ export default function SalesTeamDashboard() {
           </div>
         </div>
 
-        {/* My Summary */}
+        {/* My Summary - total counts for each status / payment */}
         {leads.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="sales-card-hover bg-white p-5 rounded-xl shadow-sm border-l-4 border-indigo-500">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3 mb-6">
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Assigned to me</div>
-              <div className="mt-1 text-2xl font-bold text-gray-900">{leads.length}</div>
-            </div>
-            <div className="sales-card-hover bg-white p-5 rounded-xl shadow-sm border-l-4 border-amber-500">
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Contacted</div>
-              <div className="mt-1 text-2xl font-bold text-gray-900">
-                {leads.filter((l) => (l.remarks?.length || 0) > 0).length}
+              <div className="mt-1 text-xl font-bold text-gray-900">
+                {leads.filter((l) => (l.paymentStatus || "pending") !== "paid").length}
               </div>
             </div>
-            <div className="sales-card-hover bg-white p-5 rounded-xl shadow-sm border-l-4 border-emerald-500">
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-amber-500">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Contacted</div>
+              <div className="mt-1 text-xl font-bold text-gray-900">
+                {leads.filter((l) => l.status === "contacted").length}
+              </div>
+            </div>
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-emerald-500">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Paid</div>
-              <div className="mt-1 text-2xl font-bold text-emerald-600">
+              <div className="mt-1 text-xl font-bold text-emerald-600">
                 {leads.filter((l) => l.paymentStatus === "paid").length}
               </div>
             </div>
-            <div className="sales-card-hover bg-white p-5 rounded-xl shadow-sm border-l-4 border-indigo-500">
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Converted</div>
-              <div className="mt-1 text-2xl font-bold text-indigo-600">
+              <div className="mt-1 text-xl font-bold text-indigo-600">
                 {leads.filter((l) => l.status === "converted").length}
+              </div>
+            </div>
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-sky-500">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Follow-up</div>
+              <div className="mt-1 text-xl font-bold text-gray-900">
+                {leads.filter((l) => l.status === "followup").length}
+              </div>
+            </div>
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-violet-500">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Proposal</div>
+              <div className="mt-1 text-xl font-bold text-gray-900">
+                {leads.filter((l) => l.status === "proposal").length}
+              </div>
+            </div>
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-400">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Not interested</div>
+              <div className="mt-1 text-xl font-bold text-gray-900">
+                {leads.filter((l) => l.status === "not_interested").length}
+              </div>
+            </div>
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ringing</div>
+              <div className="mt-1 text-xl font-bold text-gray-900">
+                {leads.filter((l) => l.status === "ringing").length}
+              </div>
+            </div>
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-rose-500">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Hot follow-up</div>
+              <div className="mt-1 text-xl font-bold text-gray-900">
+                {leads.filter((l) => l.status === "hotfollowup").length}
               </div>
             </div>
           </div>
@@ -613,6 +653,16 @@ export default function SalesTeamDashboard() {
                             ? "bg-yellow-100 text-yellow-800"
                             : lead.status === "lost"
                             ? "bg-red-100 text-red-800"
+                            : lead.status === "followup"
+                            ? "bg-sky-100 text-sky-800"
+                            : lead.status === "proposal"
+                            ? "bg-violet-100 text-violet-800"
+                            : lead.status === "not_interested"
+                            ? "bg-red-100 text-red-800"
+                            : lead.status === "ringing"
+                            ? "bg-orange-100 text-orange-800"
+                            : lead.status === "hotfollowup"
+                            ? "bg-rose-100 text-rose-800"
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
@@ -621,20 +671,50 @@ export default function SalesTeamDashboard() {
                         <option value="qualified">Qualified</option>
                         <option value="converted">Converted</option>
                         <option value="lost">Lost</option>
+                        <option value="followup">Follow-up</option>
+                        <option value="proposal">Proposal</option>
+                        <option value="not_interested">Not interested</option>
+                        <option value="ringing">Ringing</option>
+                        <option value="hotfollowup">Hot follow-up</option>
                       </select>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
+                      <select
+                        value={lead.paymentStatus || "pending"}
+                        onChange={(e) => {
+                          const token = localStorage.getItem("salesEmployeeToken");
+                          const newVal = e.target.value;
+                          fetch(`/api/sales/leads/${lead._id}`, {
+                            method: "PATCH",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({ paymentStatus: newVal }),
+                          }).then(() => {
+                            fetchLeads(token);
+                            setToast({
+                              type: "success",
+                              message: newVal === "paid" ? "Marked paid. Lead will no longer show in list." : "Payment status updated",
+                            });
+                            setTimeout(() => setToast(null), 2500);
+                          });
+                        }}
+                        className={`px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer ${
                           lead.paymentStatus === "paid"
                             ? "bg-green-100 text-green-800"
                             : lead.paymentStatus === "partial"
-                            ? "bg-yellow-100 text-yellow-800"
+                            ? "bg-amber-100 text-amber-800"
+                            : lead.paymentStatus === "not_applicable"
+                            ? "bg-gray-100 text-gray-600"
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
-                        {lead.paymentStatus || "pending"}
-                      </span>
+                        <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
+                        <option value="partial">Partial</option>
+                        <option value="not_applicable">N/A</option>
+                      </select>
                     </td>
                     <td className="px-6 py-4">
                       {lead.remarks?.length > 0 ? (

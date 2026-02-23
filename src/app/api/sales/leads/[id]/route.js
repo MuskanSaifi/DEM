@@ -61,12 +61,6 @@ export async function PATCH(req, { params }) {
       paymentStatus &&
       ["pending", "paid", "partial", "not_applicable"].includes(paymentStatus)
     ) {
-      if (user.role !== "sales-admin") {
-        return NextResponse.json(
-          { success: false, message: "Only sales admin can update payment status" },
-          { status: 403 }
-        );
-      }
       lead.paymentStatus = paymentStatus;
     }
 

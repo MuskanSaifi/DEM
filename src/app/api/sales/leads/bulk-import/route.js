@@ -3,6 +3,11 @@ import connectdb from "@/lib/dbConnect";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
+function normalizeMobile(m) {
+  if (!m || typeof m !== "string") return "";
+  return m.replace(/\D/g, "").trim();
+}
+
 async function verifyAdmin(req) {
   try {
     const token = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -121,8 +126,48 @@ export async function POST(req) {
       );
     }
 
-    // Insert all leads
-    const insertedLeads = await SalesLead.insertMany(formattedLeads);
+    // Build sets of existing mobile (normalized) and email (lowercase) to skip duplicates
+    const existing = await SalesLead.find({}, { mobile: 1, email: 1 }).lean();
+    const existingMobileSet = new Set(
+      existing.map((l) => normalizeMobile(l.mobile)).filter(Boolean)
+    );
+    const existingEmailSet = new Set(
+      existing
+        .map((l) => (l.email && l.email.trim() ? l.email.trim().toLowerCase() : null))
+        .filter(Boolean)
+    );
+
+    const toInsert = [];
+    const skippedDuplicates = { mobile: 0, email: 0 };
+    for (const lead of formattedLeads) {
+      const mobNorm = normalizeMobile(lead.mobile);
+      const emailNorm = lead.email ? lead.email.trim().toLowerCase() : "";
+      if (existingMobileSet.has(mobNorm)) {
+        skippedDuplicates.mobile++;
+        continue;
+      }
+      if (emailNorm && existingEmailSet.has(emailNorm)) {
+        skippedDuplicates.email++;
+        continue;
+      }
+      toInsert.push(lead);
+      if (mobNorm) existingMobileSet.add(mobNorm);
+      if (emailNorm) existingEmailSet.add(emailNorm);
+    }
+
+    if (toInsert.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "All rows are duplicates. No new leads to import. Same mobile or email already exists in the portal.",
+          skippedDuplicates,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Insert only new (non-duplicate) leads
+    const insertedLeads = await SalesLead.insertMany(toInsert);
 
     const populatedLeads = await SalesLead.find({
       _id: { $in: insertedLeads.map((l) => l._id) },
@@ -130,13 +175,26 @@ export async function POST(req) {
       .populate("assignedTo", "fullname email")
       .populate("createdBy", "fullname email");
 
+    const totalSkipped = skippedDuplicates.mobile + skippedDuplicates.email;
+    let message = `${insertedLeads.length} leads imported successfully`;
+    if (totalSkipped > 0) {
+      const parts = [];
+      if (skippedDuplicates.mobile) parts.push(`${skippedDuplicates.mobile} duplicate mobile`);
+      if (skippedDuplicates.email) parts.push(`${skippedDuplicates.email} duplicate email`);
+      message += `. ${totalSkipped} row(s) skipped (already saved: ${parts.join(", ")}).`;
+    }
+    if (leads.length - formattedLeads.length > 0) {
+      message += ` ${leads.length - formattedLeads.length} invalid row(s) skipped.`;
+    }
+
     return NextResponse.json(
       {
         success: true,
-        message: `${insertedLeads.length} leads imported successfully`,
+        message,
         leads: populatedLeads,
         imported: insertedLeads.length,
         skipped: leads.length - insertedLeads.length,
+        skippedDuplicates,
       },
       { status: 201 }
     );

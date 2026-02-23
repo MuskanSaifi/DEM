@@ -95,6 +95,16 @@ export async function GET(req) {
   }
 }
 
+// Normalize mobile for duplicate check (digits only)
+function normalizeMobile(m) {
+  if (!m || typeof m !== "string") return "";
+  return m.replace(/\D/g, "").trim();
+}
+
+function escapeRegex(s) {
+  return (s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 // POST - Add new lead
 export async function POST(req) {
   try {
@@ -116,6 +126,32 @@ export async function POST(req) {
         { success: false, message: "Client name, mobile, and product required" },
         { status: 400 }
       );
+    }
+
+    const mobileNorm = normalizeMobile(mobile);
+    const emailNorm = email && String(email).trim() ? String(email).trim().toLowerCase() : "";
+
+    // Duplicate check: same mobile or same email already saved (reason message for portal)
+    if (mobileNorm) {
+      const existingMobiles = await SalesLead.find({}, { mobile: 1 }).lean();
+      const hasSameMobile = existingMobiles.some((l) => normalizeMobile(l.mobile) === mobileNorm);
+      if (hasSameMobile) {
+        return NextResponse.json(
+          { success: false, message: "This mobile number is already saved. A lead with the same number exists in the portal." },
+          { status: 400 }
+        );
+      }
+    }
+    if (emailNorm) {
+      const existingByEmail = await SalesLead.findOne({
+        email: new RegExp(`^${escapeRegex(emailNorm)}$`, "i"),
+      });
+      if (existingByEmail) {
+        return NextResponse.json(
+          { success: false, message: "This email is already saved. A lead with the same email exists in the portal." },
+          { status: 400 }
+        );
+      }
     }
 
     const lead = await SalesLead.create({

@@ -384,7 +384,7 @@ export default function SalesAdminDashboard() {
       if (data.success) {
         setToast({
           type: "success",
-          message: `${data.imported} leads imported successfully${
+          message: data.message || `${data.imported} leads imported successfully${
             data.skipped > 0 ? `, ${data.skipped} skipped` : ""
           }`,
         });
@@ -578,28 +578,48 @@ export default function SalesAdminDashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats */}
+        {/* Stats – same status cards as sales-team-dashboard */}
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-            <div className="sales-card-hover bg-white p-5 rounded-xl shadow-sm border-l-4 border-indigo-500">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-8">
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Leads</div>
-              <div className="mt-1 text-2xl font-bold text-gray-900">{stats.totalLeads}</div>
+              <div className="mt-1 text-xl font-bold text-gray-900">{stats.totalLeads}</div>
             </div>
-            <div className="sales-card-hover bg-white p-5 rounded-xl shadow-sm border-l-4 border-gray-400">
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-gray-400">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">New</div>
-              <div className="mt-1 text-2xl font-bold text-gray-900">{stats.newLeads}</div>
+              <div className="mt-1 text-xl font-bold text-gray-900">{stats.newLeads}</div>
             </div>
-            <div className="sales-card-hover bg-white p-5 rounded-xl shadow-sm border-l-4 border-amber-500">
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-amber-500">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Contacted</div>
-              <div className="mt-1 text-2xl font-bold text-gray-900">{stats.contactedLeads}</div>
+              <div className="mt-1 text-xl font-bold text-gray-900">{stats.contactedLeads}</div>
             </div>
-            <div className="sales-card-hover bg-white p-5 rounded-xl shadow-sm border-l-4 border-blue-500">
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Qualified</div>
-              <div className="mt-1 text-2xl font-bold text-gray-900">{stats.qualifiedLeads}</div>
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-emerald-500">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Paid</div>
+              <div className="mt-1 text-xl font-bold text-emerald-600">{stats.paidLeads ?? 0}</div>
             </div>
-            <div className="sales-card-hover bg-white p-5 rounded-xl shadow-sm border-l-4 border-emerald-500">
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Converted</div>
-              <div className="mt-1 text-2xl font-bold text-gray-900">{stats.convertedLeads}</div>
+              <div className="mt-1 text-xl font-bold text-indigo-600">{stats.convertedLeads}</div>
+            </div>
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-sky-500">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Follow-up</div>
+              <div className="mt-1 text-xl font-bold text-gray-900">{stats.followupLeads ?? 0}</div>
+            </div>
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-violet-500">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Proposal</div>
+              <div className="mt-1 text-xl font-bold text-gray-900">{stats.proposalLeads ?? 0}</div>
+            </div>
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-400">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Not interested</div>
+              <div className="mt-1 text-xl font-bold text-gray-900">{stats.notInterestedLeads ?? 0}</div>
+            </div>
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ringing</div>
+              <div className="mt-1 text-xl font-bold text-gray-900">{stats.ringingLeads ?? 0}</div>
+            </div>
+            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-rose-500">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Hot follow-up</div>
+              <div className="mt-1 text-xl font-bold text-gray-900">{stats.hotfollowupLeads ?? 0}</div>
             </div>
           </div>
         )}
@@ -623,6 +643,11 @@ export default function SalesAdminDashboard() {
                 <option value="qualified">Qualified</option>
                 <option value="converted">Converted</option>
                 <option value="lost">Lost</option>
+                <option value="followup">Follow-up</option>
+                <option value="proposal">Proposal</option>
+                <option value="not_interested">Not interested</option>
+                <option value="ringing">Ringing</option>
+                <option value="hotfollowup">Hot follow-up</option>
               </select>
             </div>
             <div>
@@ -1328,6 +1353,16 @@ export default function SalesAdminDashboard() {
                             ? "bg-yellow-100 text-yellow-800"
                             : lead.status === "lost"
                             ? "bg-red-100 text-red-800"
+                            : lead.status === "followup"
+                            ? "bg-sky-100 text-sky-800"
+                            : lead.status === "proposal"
+                            ? "bg-violet-100 text-violet-800"
+                            : lead.status === "not_interested"
+                            ? "bg-red-100 text-red-800"
+                            : lead.status === "ringing"
+                            ? "bg-orange-100 text-orange-800"
+                            : lead.status === "hotfollowup"
+                            ? "bg-rose-100 text-rose-800"
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
@@ -1336,6 +1371,11 @@ export default function SalesAdminDashboard() {
                         <option value="qualified">Qualified</option>
                         <option value="converted">Converted</option>
                         <option value="lost">Lost</option>
+                        <option value="followup">Follow-up</option>
+                        <option value="proposal">Proposal</option>
+                        <option value="not_interested">Not interested</option>
+                        <option value="ringing">Ringing</option>
+                        <option value="hotfollowup">Hot follow-up</option>
                       </select>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -1523,6 +1563,16 @@ export default function SalesAdminDashboard() {
                               ? "bg-yellow-100 text-yellow-800"
                               : lead.status === "lost"
                               ? "bg-red-100 text-red-800"
+                              : lead.status === "followup"
+                              ? "bg-sky-100 text-sky-800"
+                              : lead.status === "proposal"
+                              ? "bg-violet-100 text-violet-800"
+                              : lead.status === "not_interested"
+                              ? "bg-red-100 text-red-800"
+                              : lead.status === "ringing"
+                              ? "bg-orange-100 text-orange-800"
+                              : lead.status === "hotfollowup"
+                              ? "bg-rose-100 text-rose-800"
                               : "bg-gray-100 text-gray-800"
                           }`}
                         >
@@ -1531,6 +1581,11 @@ export default function SalesAdminDashboard() {
                           <option value="qualified">Qualified</option>
                           <option value="converted">Converted</option>
                           <option value="lost">Lost</option>
+                          <option value="followup">Follow-up</option>
+                          <option value="proposal">Proposal</option>
+                          <option value="not_interested">Not interested</option>
+                          <option value="ringing">Ringing</option>
+                          <option value="hotfollowup">Hot follow-up</option>
                         </select>
                         <select
                           value={lead.paymentStatus || "pending"}
