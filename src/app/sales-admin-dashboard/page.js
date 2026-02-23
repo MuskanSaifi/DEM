@@ -54,6 +54,8 @@ export default function SalesAdminDashboard() {
   const router = useRouter();
   const [showAssignDropdown, setShowAssignDropdown] = useState(false);
   const [showClientFilterModal, setShowClientFilterModal] = useState(false);
+  const [showBestPerformerModal, setShowBestPerformerModal] = useState(false);
+  const [showDailyReportModal, setShowDailyReportModal] = useState(false);
 
   const filteredAssignEmployees = useMemo(() => {
     const query = employeeSearch.trim().toLowerCase();
@@ -578,308 +580,147 @@ export default function SalesAdminDashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats – same status cards as sales-team-dashboard */}
+        {/* Status cards – clickable to filter */}
         {stats && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-8">
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-6">
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "", paymentStatus: "" }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Leads</div>
               <div className="mt-1 text-xl font-bold text-gray-900">{stats.totalLeads}</div>
-            </div>
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-gray-400">
+            </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "new", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-gray-400 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">New</div>
               <div className="mt-1 text-xl font-bold text-gray-900">{stats.newLeads}</div>
-            </div>
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-amber-500">
+            </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "contacted", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-amber-500 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Contacted</div>
               <div className="mt-1 text-xl font-bold text-gray-900">{stats.contactedLeads}</div>
-            </div>
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-emerald-500">
+            </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: f.status, paymentStatus: "paid" }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-emerald-500 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Paid</div>
               <div className="mt-1 text-xl font-bold text-emerald-600">{stats.paidLeads ?? 0}</div>
-            </div>
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
+            </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "converted", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Converted</div>
               <div className="mt-1 text-xl font-bold text-indigo-600">{stats.convertedLeads}</div>
-            </div>
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-sky-500">
+            </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "followup", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-sky-500 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Follow-up</div>
               <div className="mt-1 text-xl font-bold text-gray-900">{stats.followupLeads ?? 0}</div>
-            </div>
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-violet-500">
+            </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "proposal", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-violet-500 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Proposal</div>
               <div className="mt-1 text-xl font-bold text-gray-900">{stats.proposalLeads ?? 0}</div>
-            </div>
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-400">
+            </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "not_interested", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-400 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Not interested</div>
               <div className="mt-1 text-xl font-bold text-gray-900">{stats.notInterestedLeads ?? 0}</div>
-            </div>
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500">
+            </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "ringing", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ringing</div>
               <div className="mt-1 text-xl font-bold text-gray-900">{stats.ringingLeads ?? 0}</div>
-            </div>
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-rose-500">
+            </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "hotfollowup", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-rose-500 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Hot follow-up</div>
               <div className="mt-1 text-xl font-bold text-gray-900">{stats.hotfollowupLeads ?? 0}</div>
-            </div>
+            </button>
           </div>
         )}
 
-        {/* Filters */}
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">Filters</h3>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Status</label>
-              <select
-                value={filters.status}
-                onChange={(e) =>
-                  setFilters({ ...filters, status: e.target.value })
-                }
-                className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-gray-50/50 focus:bg-white transition"
-              >
-                <option value="">All Status</option>
-                <option value="new">New</option>
-                <option value="contacted">Contacted</option>
-                <option value="qualified">Qualified</option>
-                <option value="converted">Converted</option>
-                <option value="lost">Lost</option>
-                <option value="followup">Follow-up</option>
-                <option value="proposal">Proposal</option>
-                <option value="not_interested">Not interested</option>
-                <option value="ringing">Ringing</option>
-                <option value="hotfollowup">Hot follow-up</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Assigned To</label>
-              <select
-                value={filters.assignedTo}
-                onChange={(e) =>
-                  setFilters({ ...filters, assignedTo: e.target.value })
-                }
-                className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-gray-50/50 focus:bg-white transition"
-              >
-                <option value="">All Employees</option>
-                {employees.map((emp) => (
-                  <option key={emp._id} value={emp._id}>
-                    {emp.fullname}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Search</label>
-              <input
-                type="text"
-                placeholder="Search by client, company, mobile or product…"
-                value={filters.search}
-                onChange={(e) =>
-                  setFilters({ ...filters, search: e.target.value })
-                }
-                className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm placeholder:text-gray-400 bg-gray-50/50 focus:bg-white transition"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Payment</label>
-              <select
-                value={filters.paymentStatus}
-                onChange={(e) =>
-                  setFilters({ ...filters, paymentStatus: e.target.value })
-                }
-                className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-gray-50/50 focus:bg-white transition"
-              >
-                <option value="">All</option>
-                <option value="paid">Paid</option>
-                <option value="unpaid">Unpaid</option>
-                <option value="pending">Pending</option>
-                <option value="partial">Partial</option>
-                <option value="not_applicable">N/A</option>
-              </select>
-            </div>
-            <div className="flex items-end">
-              <button
-                onClick={() =>
-                  setFilters({ status: "", assignedTo: "", paymentStatus: "", search: "" })
-                }
-                className="sales-btn-primary px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg border border-gray-200 transition"
-              >
-                Clear Filters
-              </button>
-            </div>
-          </div>
+        {/* Buttons: Best Performer & Daily Report (open modals) */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          <button
+            type="button"
+            onClick={() => setShowBestPerformerModal(true)}
+            className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-xl shadow-sm transition"
+          >
+            🏆 Best Performer
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowDailyReportModal(true)}
+            className="px-5 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-medium rounded-xl shadow-sm transition"
+          >
+            📅 Daily Report
+          </button>
         </div>
 
-        {/* Best Performers / Leaderboard */}
-        {leaderboard && leaderboard.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-              <h2 className="text-lg font-bold text-gray-900">Best Performers</h2>
-              <p className="text-xs text-gray-500 mt-0.5">Ranked by converted → paid → contacted</p>
-            </div>
-<div className="overflow-x-auto overflow-y-auto h-[400px]">
-                <table className="min-w-full">
-                <thead className="bg-gray-50 sticky top-0">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Assigned</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Contacted</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Paid</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Converted</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {leaderboard.slice(0, 10).map((row) => (
-                    <tr key={row.employeeId} className="sales-table-row-hover transition">
-                      <td className="px-6 py-3">
-                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
-                          row.rank === 1 ? "bg-amber-100 text-amber-800" :
-                          row.rank === 2 ? "bg-slate-200 text-slate-700" :
-                          row.rank === 3 ? "bg-orange-100 text-orange-800" :
-                          "bg-gray-100 text-gray-600"
-                        }`}>
-                          {row.rank}
-                        </span>
-                      </td>
-                      <td className="px-6 py-3 font-medium text-gray-900">{row.fullname}</td>
-                      <td className="px-6 py-3 text-gray-600">{row.assignedTotal}</td>
-                      <td className="px-6 py-3 text-gray-600">{row.contactedTotal}</td>
-                      <td className="px-6 py-3 font-semibold text-emerald-600">{row.paidCount}</td>
-                      <td className="px-6 py-3 font-semibold text-indigo-600">{row.convertedCount}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Daily Report */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex flex-wrap items-center gap-4">
-            <h2 className="text-lg font-bold text-gray-900">Daily Report</h2>
-            <label className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">Date</span>
-              <input
-                type="date"
-                value={reportDate}
-                onChange={(e) => setReportDate(e.target.value)}
-                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white"
-              />
-            </label>
-            {reportLoading && (
-              <span className="flex items-center gap-2 text-sm text-gray-500">
-                <span className="sales-spinner-sm inline-block" /> Loading…
-              </span>
-            )}
-          </div>
-<div className="relative h-[400px] overflow-hidden">
-  <div className="h-full overflow-y-auto overflow-x-auto">
-    {dailyReport && dailyReport.report && dailyReport.report.length > 0 ? (
-      <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"></th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Member</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned Today</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contacted</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contacted Today</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Paid</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Converted</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lost</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {dailyReport.report.map((row) => {
-                    const expanded = expandedReportEmployeeId === row.employeeId?.toString();
-                    return (
-                      <React.Fragment key={row.employeeId}>
-                        <tr className="hover:bg-gray-50">
-                          <td className="px-6 py-3">
-                            <button
-                              onClick={() =>
-                                setExpandedReportEmployeeId(expanded ? null : row.employeeId?.toString())
-                              }
-                              className="text-gray-500 hover:text-indigo-600"
-                            >
-                              {expanded ? "▼" : "▶"}
-                            </button>
-                          </td>
-                          <td className="px-6 py-3 font-medium">{row.fullname}</td>
-                          <td className="px-6 py-3">{row.assignedTotal}</td>
-                          <td className="px-6 py-3">{row.assignedToday}</td>
-                          <td className="px-6 py-3">{row.contactedTotal}</td>
-                          <td className="px-6 py-3">{row.contactedToday}</td>
-                          <td className="px-6 py-3 text-green-600">{row.paidCount}</td>
-                          <td className="px-6 py-3 text-indigo-600">{row.convertedCount}</td>
-                          <td className="px-6 py-3 text-red-600">{row.lostCount}</td>
-                          <td className="px-6 py-3">
-                            <button
-                              onClick={() =>
-                                setFilters({ ...filters, assignedTo: String(row.employeeId) })
-                              }
-                              className="text-indigo-600 hover:underline text-sm"
-                            >
-                              View leads
-                            </button>
-                          </td>
-                        </tr>
-                        {expanded && row.leads && row.leads.length > 0 && (
-                          <tr>
-                            <td colSpan={10} className="px-6 py-4 bg-gray-50">
-                              <div className="text-sm space-y-2 max-h-64 overflow-y-auto">
-                                {row.leads.map((l) => (
-                                  <div
-                                    key={l._id}
-                                    className="flex flex-wrap items-center gap-4 py-2 border-b border-gray-200 last:border-0"
-                                  >
-                                    <span className="font-medium">{l.clientName}</span>
-                                    <span className="text-gray-600">{l.companyName || "-"}</span>
-                                    <span className="text-gray-600">{l.product}</span>
-                                    <span className={`px-2 py-0.5 rounded text-xs ${
-                                      l.status === "converted" ? "bg-green-100" :
-                                      l.status === "lost" ? "bg-red-100" : "bg-gray-100"
-                                    }`}>
-                                      {l.status}
-                                    </span>
-                                    <span className={`px-2 py-0.5 rounded text-xs ${
-                                      l.paymentStatus === "paid" ? "bg-green-100" : "bg-gray-100"
-                                    }`}>
-                                      {l.paymentStatus || "pending"}
-                                    </span>
-                                    {l.lastRemark && (
-                                      <span className="text-gray-500 truncate max-w-[200px]" title={l.lastRemark.remark}>
-                                        {l.lastRemark.remarkType}: {l.lastRemark.remark}
-                                      </span>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
-            ) : (
-              <div className="sales-empty-state">
-                <div className="sales-empty-state-icon">📅</div>
-                <p className="font-medium text-gray-600">
-                  {reportLoading ? "Loading…" : "No report data for this date."}
-                </p>
-                <p className="text-sm mt-1">
-                  {reportLoading ? "" : "Select another date or add employees and assign leads."}
-                </p>
+        {/* Main layout: left sidebar (filters) + content */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Left sidebar – Filters */}
+          <aside className="lg:w-64 flex-shrink-0">
+            <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 sticky top-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">Filters</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Status</label>
+                  <select
+                    value={filters.status}
+                    onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                    className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-gray-50/50 focus:bg-white transition"
+                  >
+                    <option value="">All Status</option>
+                    <option value="new">New</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="qualified">Qualified</option>
+                    <option value="converted">Converted</option>
+                    <option value="lost">Lost</option>
+                    <option value="followup">Follow-up</option>
+                    <option value="proposal">Proposal</option>
+                    <option value="not_interested">Not interested</option>
+                    <option value="ringing">Ringing</option>
+                    <option value="hotfollowup">Hot follow-up</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Assigned To</label>
+                  <select
+                    value={filters.assignedTo}
+                    onChange={(e) => setFilters({ ...filters, assignedTo: e.target.value })}
+                    className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-gray-50/50 focus:bg-white transition"
+                  >
+                    <option value="">All Employees</option>
+                    {employees.map((emp) => (
+                      <option key={emp._id} value={emp._id}>{emp.fullname}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Search</label>
+                  <input
+                    type="text"
+                    placeholder="Client, company, mobile, product…"
+                    value={filters.search}
+                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                    className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm placeholder:text-gray-400 bg-gray-50/50 focus:bg-white transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Payment</label>
+                  <select
+                    value={filters.paymentStatus}
+                    onChange={(e) => setFilters({ ...filters, paymentStatus: e.target.value })}
+                    className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-gray-50/50 focus:bg-white transition"
+                  >
+                    <option value="">All</option>
+                    <option value="paid">Paid</option>
+                    <option value="unpaid">Unpaid</option>
+                    <option value="pending">Pending</option>
+                    <option value="partial">Partial</option>
+                    <option value="not_applicable">N/A</option>
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFilters({ status: "", assignedTo: "", paymentStatus: "", search: "" })}
+                  className="w-full px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg border border-gray-200 transition text-sm"
+                >
+                  Clear Filters
+                </button>
               </div>
-            )}
-          </div>
-           </div>
-        </div>
+            </div>
+          </aside>
 
+          <div className="flex-1 min-w-0">
         {/* Employees List – summary card + sidebar trigger */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center gap-3">
@@ -1413,33 +1254,11 @@ export default function SalesAdminDashboard() {
                       </select>
                     </td>
                     <td className="px-6 py-4">
-                      {lead.remarks?.length > 0 ? (
-                        <div className="text-sm">
-                          <span className="font-semibold">
-                            {lead.remarks.length} remark(s)
-                          </span>
-                          <div className="mt-1 space-y-1 max-h-20 overflow-y-auto">
-                            {lead.remarks.slice(-3).map((r, idx) => (
-                              <div key={idx} className="text-xs text-gray-600">
-                                <span className="font-semibold text-indigo-600">
-                                  {r.remarkType}:
-                                </span>{" "}
-                                {r.remark}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">No remarks</span>
-                      )}
+                      <button type="button" onClick={() => setShowRemarkModal(lead._id)} className="text-indigo-600 hover:underline font-medium text-sm">
+                        {lead.remarks?.length ? `${lead.remarks.length} remark(s)` : "Remark"}
+                      </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap space-x-2">
-                      <button
-                        onClick={() => setShowRemarkModal(lead._id)}
-                        className="text-blue-600 hover:underline text-sm"
-                      >
-                        Remark
-                      </button>
                       <select
                         value={lead.assignedTo?._id || ""}
                         onChange={(e) => {
@@ -1622,27 +1441,11 @@ export default function SalesAdminDashboard() {
                           <option value="partial">Partial</option>
                           <option value="not_applicable">N/A</option>
                         </select>
-                        <button
-                          onClick={() => setShowRemarkModal(lead._id)}
-                          className="ml-auto text-xs text-indigo-600 underline"
-                        >
+                        <button type="button" onClick={() => setShowRemarkModal(lead._id)} className="ml-auto text-xs text-indigo-600 font-medium underline">
                           {lead.remarks?.length ? `${lead.remarks.length} remark(s)` : "Remark"}
                         </button>
                       </div>
                       <div className="flex items-center justify-between mt-1 gap-2">
-                        <div className="text-xs text-gray-500 truncate max-w-[60%]">
-                          {lead.remarks?.length > 0 ? (
-                            <>
-                              <span className="font-semibold">
-                                Last: {lead.remarks[lead.remarks.length - 1].remarkType}
-                                :
-                              </span>{" "}
-                              {lead.remarks[lead.remarks.length - 1].remark}
-                            </>
-                          ) : (
-                            "No remarks"
-                          )}
-                        </div>
                         <select
                           value={lead.assignedTo?._id || ""}
                           onChange={(e) => {
@@ -1683,61 +1486,199 @@ export default function SalesAdminDashboard() {
           </div>
         </div>
         </div>
+          </div>
+        </div>
       </main>
 
-      {/* Remark Modal */}
-      {showRemarkModal && (
+      {/* Best Performer Modal */}
+      {showBestPerformerModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Add Remark</h2>
-            <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Remark Type</label>
-              <select
-                value={remarkData.remarkType}
-                onChange={(e) =>
-                  setRemarkData({ ...remarkData, remarkType: e.target.value })
-                }
-                className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
-              >
-                {remarkTypes.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+            <div className="px-6 py-4 border-b flex justify-between items-center flex-shrink-0">
+              <h2 className="text-lg font-bold text-gray-900">Best Performers</h2>
+              <button type="button" onClick={() => setShowBestPerformerModal(false)} className="text-gray-500 hover:text-gray-700 rounded-full p-1" aria-label="Close">✕</button>
             </div>
-            <div className="mb-5">
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Remark</label>
-              <textarea
-                value={remarkData.remark}
-                onChange={(e) =>
-                  setRemarkData({ ...remarkData, remark: e.target.value })
-                }
-                rows={4}
-                className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm placeholder:text-gray-400"
-                placeholder="Enter your remark…"
-              />
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => handleAddRemark(showRemarkModal)}
-                className="flex-1 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition"
-              >
-                Add
-              </button>
-              <button
-                onClick={() => {
-                  setShowRemarkModal(null);
-                  setRemarkData({ remark: "", remarkType: "general" });
-                }}
-                className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition"
-              >
-                Cancel
-              </button>
+            <div className="flex-1 overflow-auto p-4">
+              {leaderboard && leaderboard.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">#</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Assigned</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Contacted</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Paid</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Converted</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {leaderboard.slice(0, 20).map((row) => (
+                        <tr key={row.employeeId} className="hover:bg-gray-50">
+                          <td className="px-6 py-3">
+                            <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
+                              row.rank === 1 ? "bg-amber-100 text-amber-800" :
+                              row.rank === 2 ? "bg-slate-200 text-slate-700" :
+                              row.rank === 3 ? "bg-orange-100 text-orange-800" :
+                              "bg-gray-100 text-gray-600"
+                            }`}>{row.rank}</span>
+                          </td>
+                          <td className="px-6 py-3 font-medium text-gray-900">{row.fullname}</td>
+                          <td className="px-6 py-3 text-gray-600">{row.assignedTotal}</td>
+                          <td className="px-6 py-3 text-gray-600">{row.contactedTotal}</td>
+                          <td className="px-6 py-3 font-semibold text-emerald-600">{row.paidCount}</td>
+                          <td className="px-6 py-3 font-semibold text-indigo-600">{row.convertedCount}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-8">No leaderboard data yet.</p>
+              )}
             </div>
           </div>
         </div>
       )}
+
+      {/* Daily Report Modal */}
+      {showDailyReportModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col">
+            <div className="px-6 py-4 border-b flex flex-wrap items-center justify-between gap-4 flex-shrink-0">
+              <h2 className="text-lg font-bold text-gray-900">Daily Report</h2>
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">Date</span>
+                  <input type="date" value={reportDate} onChange={(e) => setReportDate(e.target.value)} className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white" />
+                </label>
+                {reportLoading && <span className="flex items-center gap-2 text-sm text-gray-500"><span className="sales-spinner-sm inline-block" /> Loading…</span>}
+                <button type="button" onClick={() => setShowDailyReportModal(false)} className="text-gray-500 hover:text-gray-700 rounded-full p-1" aria-label="Close">✕</button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto p-4">
+              {dailyReport && dailyReport.report && dailyReport.report.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"></th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Member</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned Today</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contacted</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contacted Today</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Paid</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Converted</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lost</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {dailyReport.report.map((row) => {
+                        const expanded = expandedReportEmployeeId === row.employeeId?.toString();
+                        return (
+                          <React.Fragment key={row.employeeId}>
+                            <tr className="hover:bg-gray-50">
+                              <td className="px-6 py-3">
+                                <button type="button" onClick={() => setExpandedReportEmployeeId(expanded ? null : row.employeeId?.toString())} className="text-gray-500 hover:text-indigo-600">{expanded ? "▼" : "▶"}</button>
+                              </td>
+                              <td className="px-6 py-3 font-medium">{row.fullname}</td>
+                              <td className="px-6 py-3">{row.assignedTotal}</td>
+                              <td className="px-6 py-3">{row.assignedToday}</td>
+                              <td className="px-6 py-3">{row.contactedTotal}</td>
+                              <td className="px-6 py-3">{row.contactedToday}</td>
+                              <td className="px-6 py-3 text-green-600">{row.paidCount}</td>
+                              <td className="px-6 py-3 text-indigo-600">{row.convertedCount}</td>
+                              <td className="px-6 py-3 text-red-600">{row.lostCount}</td>
+                              <td className="px-6 py-3">
+                                <button type="button" onClick={() => { setFilters((f) => ({ ...f, assignedTo: String(row.employeeId) })); setShowDailyReportModal(false); }} className="text-indigo-600 hover:underline text-sm">View leads</button>
+                              </td>
+                            </tr>
+                            {expanded && row.leads && row.leads.length > 0 && (
+                              <tr>
+                                <td colSpan={10} className="px-6 py-4 bg-gray-50">
+                                  <div className="text-sm space-y-2 max-h-64 overflow-y-auto">
+                                    {row.leads.map((l) => (
+                                      <div key={l._id} className="flex flex-wrap items-center gap-4 py-2 border-b border-gray-200 last:border-0">
+                                        <span className="font-medium">{l.clientName}</span>
+                                        <span className="text-gray-600">{l.companyName || "-"}</span>
+                                        <span className="text-gray-600">{l.product}</span>
+                                        <span className={`px-2 py-0.5 rounded text-xs ${l.status === "converted" ? "bg-green-100" : l.status === "lost" ? "bg-red-100" : "bg-gray-100"}`}>{l.status}</span>
+                                        <span className={`px-2 py-0.5 rounded text-xs ${l.paymentStatus === "paid" ? "bg-green-100" : "bg-gray-100"}`}>{l.paymentStatus || "pending"}</span>
+                                        {l.lastRemark && <span className="text-gray-500 truncate max-w-[200px]" title={l.lastRemark.remark}>{l.lastRemark.remarkType}: {l.lastRemark.remark}</span>}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="sales-empty-state py-12">
+                  <div className="sales-empty-state-icon">📅</div>
+                  <p className="font-medium text-gray-600">{reportLoading ? "Loading…" : "No report data for this date."}</p>
+                  <p className="text-sm mt-1 text-gray-500">{reportLoading ? "" : "Select another date or add employees and assign leads."}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Remark Modal – all remarks/chats shown inside modal */}
+      {showRemarkModal && (() => {
+        const leadForRemark = leads.find((l) => l._id === showRemarkModal);
+        const remarksList = leadForRemark?.remarks || [];
+        return (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+              <div className="px-6 py-4 border-b flex justify-between items-center flex-shrink-0">
+                <h2 className="text-lg font-bold text-gray-900">Remarks {leadForRemark ? `– ${leadForRemark.clientName}` : ""}</h2>
+                <button type="button" onClick={() => { setShowRemarkModal(null); setRemarkData({ remark: "", remarkType: "general" }); }} className="text-gray-500 hover:text-gray-700 rounded-full p-1" aria-label="Close">✕</button>
+              </div>
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3 min-h-0">
+                {remarksList.length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-gray-500 uppercase">All remarks</p>
+                    {remarksList.map((r, idx) => (
+                      <div key={idx} className="bg-gray-50 rounded-lg px-3 py-2 text-sm border border-gray-100">
+                        <span className="font-semibold text-indigo-600">{r.remarkType}:</span>{" "}
+                        <span className="text-gray-800">{r.remark}</span>
+                        {r.createdAt && <span className="block text-xs text-gray-400 mt-1">{new Date(r.createdAt).toLocaleString()}</span>}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">No remarks yet.</p>
+                )}
+                <div className="border-t pt-4 mt-4 flex-shrink-0">
+                  <p className="text-xs font-semibold text-gray-500 mb-2">Add new remark</p>
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Remark Type</label>
+                    <select value={remarkData.remarkType} onChange={(e) => setRemarkData({ ...remarkData, remarkType: e.target.value })} className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm">
+                      {remarkTypes.map((type) => (<option key={type.value} value={type.value}>{type.label}</option>))}
+                    </select>
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Remark</label>
+                    <textarea value={remarkData.remark} onChange={(e) => setRemarkData({ ...remarkData, remark: e.target.value })} rows={3} className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm placeholder:text-gray-400" placeholder="Enter your remark…" />
+                  </div>
+                  <div className="flex gap-3">
+                    <button type="button" onClick={() => handleAddRemark(showRemarkModal)} className="flex-1 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition">Add</button>
+                    <button type="button" onClick={() => { setShowRemarkModal(null); setRemarkData({ remark: "", remarkType: "general" }); }} className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Chat Modal */}
       {showChat && (

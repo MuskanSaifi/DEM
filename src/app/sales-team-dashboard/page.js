@@ -428,63 +428,63 @@ export default function SalesTeamDashboard() {
           </div>
         </div>
 
-        {/* My Summary - total counts for each status / payment */}
+        {/* My Summary – status cards clickable to filter */}
         {leads.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3 mb-6">
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "", paymentStatus: "" }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Assigned to me</div>
               <div className="mt-1 text-xl font-bold text-gray-900">
                 {leads.filter((l) => (l.paymentStatus || "pending") !== "paid").length}
               </div>
-            </div>
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-amber-500">
+            </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "contacted", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-amber-500 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Contacted</div>
               <div className="mt-1 text-xl font-bold text-gray-900">
                 {leads.filter((l) => l.status === "contacted").length}
               </div>
-            </div>
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-emerald-500">
+            </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: f.status, paymentStatus: "paid" }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-emerald-500 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Paid</div>
               <div className="mt-1 text-xl font-bold text-emerald-600">
                 {leads.filter((l) => l.paymentStatus === "paid").length}
               </div>
-            </div>
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
+            </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "converted", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Converted</div>
               <div className="mt-1 text-xl font-bold text-indigo-600">
                 {leads.filter((l) => l.status === "converted").length}
               </div>
-            </div>
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-sky-500">
+            </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "followup", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-sky-500 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Follow-up</div>
               <div className="mt-1 text-xl font-bold text-gray-900">
                 {leads.filter((l) => l.status === "followup").length}
               </div>
-            </div>
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-violet-500">
+            </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "proposal", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-violet-500 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Proposal</div>
               <div className="mt-1 text-xl font-bold text-gray-900">
                 {leads.filter((l) => l.status === "proposal").length}
               </div>
-            </div>
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-400">
+            </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "not_interested", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-400 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Not interested</div>
               <div className="mt-1 text-xl font-bold text-gray-900">
                 {leads.filter((l) => l.status === "not_interested").length}
               </div>
-            </div>
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500">
+            </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "ringing", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ringing</div>
               <div className="mt-1 text-xl font-bold text-gray-900">
                 {leads.filter((l) => l.status === "ringing").length}
               </div>
-            </div>
-            <div className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-rose-500">
+            </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "hotfollowup", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-rose-500 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Hot follow-up</div>
               <div className="mt-1 text-xl font-bold text-gray-900">
                 {leads.filter((l) => l.status === "hotfollowup").length}
               </div>
-            </div>
+            </button>
           </div>
         )}
 
@@ -717,25 +717,9 @@ export default function SalesTeamDashboard() {
                       </select>
                     </td>
                     <td className="px-6 py-4">
-                      {lead.remarks?.length > 0 ? (
-                        <div className="text-sm">
-                          <span className="font-semibold">
-                            {lead.remarks.length} remark(s)
-                          </span>
-                          <div className="mt-1 space-y-1 max-h-20 overflow-y-auto">
-                            {lead.remarks.slice(-3).map((r, idx) => (
-                              <div key={idx} className="text-xs text-gray-600">
-                                <span className="font-semibold text-indigo-600">
-                                  {r.remarkType}:
-                                </span>{" "}
-                                {r.remark}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">No remarks</span>
-                      )}
+                      <button type="button" onClick={() => setShowRemarkModal(lead._id)} className="text-indigo-600 hover:underline font-medium text-sm">
+                        {lead.remarks?.length ? `${lead.remarks.length} remark(s)` : "Remark"}
+                      </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap space-x-2">
                       <div className="flex gap-2">
@@ -747,11 +731,8 @@ export default function SalesTeamDashboard() {
                             ✋ Self Assign
                           </button>
                         )}
-                        <button
-                          onClick={() => setShowRemarkModal(lead._id)}
-                          className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
-                        >
-                          💬 Add Remark
+                        <button type="button" onClick={() => setShowRemarkModal(lead._id)} className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
+                          💬 Remark
                         </button>
                       </div>
                     </td>
@@ -764,59 +745,54 @@ export default function SalesTeamDashboard() {
         </div>
       </main>
 
-      {/* Remark Modal */}
-      {showRemarkModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Add Remark</h2>
-            <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Remark Type</label>
-              <select
-                value={remarkData.remarkType}
-                onChange={(e) =>
-                  setRemarkData({ ...remarkData, remarkType: e.target.value })
-                }
-                className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
-              >
-                {remarkTypes.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="mb-5">
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Remark</label>
-              <textarea
-                value={remarkData.remark}
-                onChange={(e) =>
-                  setRemarkData({ ...remarkData, remark: e.target.value })
-                }
-                rows={4}
-                className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm placeholder:text-gray-400"
-                placeholder="Enter your remark…"
-              />
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => handleAddRemark(showRemarkModal)}
-                className="flex-1 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition"
-              >
-                Add
-              </button>
-              <button
-                onClick={() => {
-                  setShowRemarkModal(null);
-                  setRemarkData({ remark: "", remarkType: "general" });
-                }}
-                className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition"
-              >
-                Cancel
-              </button>
+      {/* Remark Modal – all remarks shown inside modal, same as admin */}
+      {showRemarkModal && (() => {
+        const leadForRemark = leads.find((l) => l._id === showRemarkModal);
+        const remarksList = leadForRemark?.remarks || [];
+        return (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+              <div className="px-6 py-4 border-b flex justify-between items-center flex-shrink-0">
+                <h2 className="text-lg font-bold text-gray-900">Remarks {leadForRemark ? `– ${leadForRemark.clientName}` : ""}</h2>
+                <button type="button" onClick={() => { setShowRemarkModal(null); setRemarkData({ remark: "", remarkType: "general" }); }} className="text-gray-500 hover:text-gray-700 rounded-full p-1" aria-label="Close">✕</button>
+              </div>
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3 min-h-0">
+                {remarksList.length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-gray-500 uppercase">All remarks</p>
+                    {remarksList.map((r, idx) => (
+                      <div key={idx} className="bg-gray-50 rounded-lg px-3 py-2 text-sm border border-gray-100">
+                        <span className="font-semibold text-indigo-600">{r.remarkType}:</span>{" "}
+                        <span className="text-gray-800">{r.remark}</span>
+                        {r.createdAt && <span className="block text-xs text-gray-400 mt-1">{new Date(r.createdAt).toLocaleString()}</span>}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">No remarks yet.</p>
+                )}
+                <div className="border-t pt-4 mt-4 flex-shrink-0">
+                  <p className="text-xs font-semibold text-gray-500 mb-2">Add new remark</p>
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Remark Type</label>
+                    <select value={remarkData.remarkType} onChange={(e) => setRemarkData({ ...remarkData, remarkType: e.target.value })} className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm">
+                      {remarkTypes.map((type) => (<option key={type.value} value={type.value}>{type.label}</option>))}
+                    </select>
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Remark</label>
+                    <textarea value={remarkData.remark} onChange={(e) => setRemarkData({ ...remarkData, remark: e.target.value })} rows={3} className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm placeholder:text-gray-400" placeholder="Enter your remark…" />
+                  </div>
+                  <div className="flex gap-3">
+                    <button type="button" onClick={() => handleAddRemark(showRemarkModal)} className="flex-1 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition">Add</button>
+                    <button type="button" onClick={() => { setShowRemarkModal(null); setRemarkData({ remark: "", remarkType: "general" }); }} className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition">Cancel</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Chat Modal */}
       {showChat && (
