@@ -31,14 +31,38 @@ export async function GET(req) {
       );
     }
 
+    const { searchParams } = new URL(req.url);
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+    const byDay = searchParams.get("byDay");
+
+    let dateFilter = {};
+    if (byDay) {
+      const d = new Date(byDay);
+      d.setHours(0, 0, 0, 0);
+      const next = new Date(d);
+      next.setDate(next.getDate() + 1);
+      dateFilter.createdAt = { $gte: d, $lt: next };
+    } else if (startDate || endDate) {
+      dateFilter.createdAt = {};
+      if (startDate) {
+        const d = new Date(startDate);
+        d.setHours(0, 0, 0, 0);
+        dateFilter.createdAt.$gte = d;
+      }
+      if (endDate) {
+        const d = new Date(endDate);
+        d.setHours(23, 59, 59, 999);
+        dateFilter.createdAt.$lte = d;
+      }
+    }
+
     const employees = await SalesEmployee.find({ isActive: true })
       .select("_id fullname email")
       .lean();
 
-    const leadDocs = await SalesLead.find({
-      assignedTo: { $exists: true, $ne: null },
-    })
-      .select("assignedTo status paymentStatus remarks")
+    const leadDocs = await SalesLead.find(dateFilter)
+      .select("assignedTo createdBy status paymentStatus remarks")
       .lean();
 
     const map = new Map();
@@ -57,11 +81,13 @@ export async function GET(req) {
     }
 
     for (const lead of leadDocs) {
-      const empId = lead.assignedTo?.toString();
-      if (!empId || !map.has(empId)) continue;
+      const assignedId = lead.assignedTo?.toString();
+      const createdById = lead.createdBy?.toString();
+      const ownerId = assignedId || createdById;
+      if (!ownerId || !map.has(ownerId)) continue;
 
-      const rec = map.get(empId);
-      rec.assignedTotal += 1;
+      const rec = map.get(ownerId);
+      if (assignedId) rec.assignedTotal += 1;
 
       const remarks = lead.remarks || [];
       if (remarks.length > 0) rec.contactedTotal += 1;

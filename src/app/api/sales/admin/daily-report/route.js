@@ -46,10 +46,11 @@ export async function GET(req) {
       .select("_id fullname email")
       .lean();
 
-    const leadDocs = await SalesLead.find({ assignedTo: { $exists: true, $ne: null } })
+    const leadDocs = await SalesLead.find({})
       .populate("assignedTo", "fullname email")
+      .populate("createdBy", "fullname email")
       .populate("remarks.addedBy", "fullname")
-      .sort({ assignedAt: -1 })
+      .sort({ assignedAt: -1, createdAt: -1 })
       .lean();
 
     const map = new Map();
@@ -73,11 +74,14 @@ export async function GET(req) {
     }
 
     for (const lead of leadDocs) {
-      const empId = lead.assignedTo?._id?.toString();
-      if (!empId || !map.has(empId)) continue;
+      const assignedId = lead.assignedTo?._id?.toString();
+      const createdById =
+        lead.createdBy?._id?.toString() || lead.createdBy?.toString();
+      const ownerId = assignedId || createdById;
+      if (!ownerId || !map.has(ownerId)) continue;
 
-      const rec = map.get(empId);
-      rec.assignedTotal += 1;
+      const rec = map.get(ownerId);
+      if (assignedId) rec.assignedTotal += 1;
 
       const assignedAt = lead.assignedAt ? new Date(lead.assignedAt) : null;
       if (assignedAt && assignedAt >= start && assignedAt <= end) {

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import BulkImportLeads from "@/components/sales/BulkImportLeads";
 import ClientFilterModal from "@/components/ClientFilterModal";
+import { useSalesChatSocket } from "@/lib/salesChatSocket";
 import "@/components/styles/sales-dashboards.css";
 
 export default function SalesAdminDashboard() {
@@ -50,12 +51,20 @@ export default function SalesAdminDashboard() {
     remark: "",
     remarkType: "general",
   });
+  const [editingRemarkIndex, setEditingRemarkIndex] = useState(null);
+  const [editingRemarkText, setEditingRemarkText] = useState("");
+  const [editingRemarkType, setEditingRemarkType] = useState("general");
   const chatEndRef = useRef(null);
   const router = useRouter();
   const [showAssignDropdown, setShowAssignDropdown] = useState(false);
   const [showClientFilterModal, setShowClientFilterModal] = useState(false);
   const [showBestPerformerModal, setShowBestPerformerModal] = useState(false);
   const [showDailyReportModal, setShowDailyReportModal] = useState(false);
+  const [leaderboardDateFilter, setLeaderboardDateFilter] = useState({
+    byDay: "",
+    startDate: "",
+    endDate: "",
+  });
 
   const filteredAssignEmployees = useMemo(() => {
     const query = employeeSearch.trim().toLowerCase();
@@ -70,6 +79,28 @@ export default function SalesAdminDashboard() {
     [employees, assignTo]
   );
 
+  // Chat list: all employees for admin, with last message & unread from conversations; sort unread first, then recent
+  const chatList = useMemo(() => {
+    const list = employees.map((emp) => {
+      const conv = conversations.find(
+        (c) => String(c.userId) === String(emp._id)
+      );
+      return {
+        userId: emp._id,
+        user: { fullname: emp.fullname, email: emp.email },
+        lastMessage: conv?.lastMessage ?? null,
+        unreadCount: conv?.unreadCount ?? 0,
+      };
+    });
+    return list.sort((a, b) => {
+      if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
+      if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
+      const timeA = a.lastMessage?.createdAt ? new Date(a.lastMessage.createdAt).getTime() : 0;
+      const timeB = b.lastMessage?.createdAt ? new Date(b.lastMessage.createdAt).getTime() : 0;
+      return timeB - timeA;
+    });
+  }, [employees, conversations]);
+
   const remarkTypes = [
     { value: "general", label: "General" },
     { value: "call", label: "Call" },
@@ -78,6 +109,37 @@ export default function SalesAdminDashboard() {
     { value: "followup", label: "Follow-up" },
     { value: "other", label: "Other" },
   ];
+
+  const currentUserId = admin?.id;
+
+  const { connected: socketConnected, emitNewMessage, emitMarkRead } = useSalesChatSocket(
+    currentUserId,
+    {
+      onNewMessage: (message) => {
+        const fromId = message?.from?._id || message?.from;
+        const toId = message?.to?._id || message?.to;
+        const isForCurrentConversation =
+          selectedConversation &&
+          (String(fromId) === String(selectedConversation.userId) ||
+            String(toId) === String(selectedConversation.userId));
+        if (isForCurrentConversation) {
+          setChatMessages((prev) => {
+            if (prev.some((m) => m._id === message._id)) return prev;
+            return [...prev, message];
+          });
+        }
+        const token = localStorage.getItem("salesAdminToken");
+        if (token) fetchConversations(token);
+      },
+      onMessagesRead: (payload) => {
+        if (selectedConversation && String(payload?.readBy) === String(selectedConversation.userId)) {
+          setChatMessages((prev) =>
+            prev.map((m) => ({ ...m, isRead: true }))
+          );
+        }
+      },
+    }
+  );
 
   useEffect(() => {
     const token = localStorage.getItem("salesAdminToken");
@@ -138,13 +200,19 @@ export default function SalesAdminDashboard() {
   useEffect(() => {
     if (selectedConversation) {
       const token = localStorage.getItem("salesAdminToken");
-      fetchChatMessages(token, selectedConversation.userId);
-      const interval = setInterval(() => {
+      if (token) {
         fetchChatMessages(token, selectedConversation.userId);
-      }, 3000);
-      return () => clearInterval(interval);
+        if (currentUserId) emitMarkRead(currentUserId, selectedConversation.userId);
+      }
     }
-  }, [selectedConversation]);
+  }, [selectedConversation, currentUserId]);
+
+  useEffect(() => {
+    if (showChat) {
+      const token = localStorage.getItem("salesAdminToken");
+      if (token) fetchConversations(token);
+    }
+  }, [showChat]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -226,11 +294,18 @@ export default function SalesAdminDashboard() {
     }
   };
 
-  const fetchLeaderboard = async (token) => {
+  const fetchLeaderboard = async (token, dateFilter = null) => {
     try {
-      const res = await fetch("/api/sales/admin/leaderboard", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const params = new URLSearchParams();
+      const filter = dateFilter || leaderboardDateFilter;
+      if (filter.byDay) params.set("byDay", filter.byDay);
+      if (filter.startDate) params.set("startDate", filter.startDate);
+      if (filter.endDate) params.set("endDate", filter.endDate);
+      const qs = params.toString();
+      const res = await fetch(
+        `/api/sales/admin/leaderboard${qs ? `?${qs}` : ""}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       const data = await res.json();
       if (data.success) setLeaderboard(data.leaderboard);
       else setLeaderboard([]);
@@ -362,6 +437,37 @@ export default function SalesAdminDashboard() {
     }
   };
 
+  const handleSaveEditRemark = async (leadId) => {
+    if (editingRemarkIndex == null || !editingRemarkText.trim()) return;
+    const token = localStorage.getItem("salesAdminToken");
+    try {
+      const res = await fetch(`/api/sales/leads/${leadId}/remarks`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          remarkIndex: editingRemarkIndex,
+          remark: editingRemarkText.trim(),
+          remarkType: editingRemarkType,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEditingRemarkIndex(null);
+        setEditingRemarkText("");
+        setEditingRemarkType("general");
+        fetchData(token);
+      } else {
+        setToast({ type: "error", message: data.message || "Could not edit remark" });
+        setTimeout(() => setToast(null), 3000);
+      }
+    } catch (err) {
+      console.error("Edit remark error:", err);
+    }
+  };
+
   const handleBulkImport = async (leadsData, assignedToId, markAsPaid = false) => {
     const token = localStorage.getItem("salesAdminToken");
     try {
@@ -484,8 +590,11 @@ export default function SalesAdminDashboard() {
       const data = await res.json();
       if (data.success) {
         setNewMessage("");
-        fetchChatMessages(token, selectedConversation.userId);
-        fetchConversations(token);
+        setChatMessages((prev) => [...prev, data.message]);
+        if (currentUserId && selectedConversation)
+          emitNewMessage(selectedConversation.userId, data.message);
+        const token = localStorage.getItem("salesAdminToken");
+        if (token) fetchConversations(token);
       }
     } catch (err) {
       console.error("Send message error:", err);
@@ -557,12 +666,15 @@ export default function SalesAdminDashboard() {
             />
             <button
               onClick={() => setShowChat(!showChat)}
-              className="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white rounded-xl font-medium transition relative border border-white/20"
+              className="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white rounded-xl font-medium transition relative border border-white/20 flex items-center gap-2"
             >
               💬 Chat
-              {conversations.some((c) => c.unreadCount > 0) && (
+              {socketConnected && (
+                <span className="h-2 w-2 rounded-full bg-green-400" title="Connected" />
+              )}
+              {chatList.some((c) => c.unreadCount > 0) && (
                 <span className="absolute -top-1 -right-1 bg-red-400 text-white rounded-full min-w-[1.25rem] h-5 px-1.5 text-xs flex items-center justify-center font-bold">
-                  {conversations.reduce((sum, c) => sum + c.unreadCount, 0)}
+                  {chatList.reduce((sum, c) => sum + c.unreadCount, 0)}
                 </span>
               )}
             </button>
@@ -1498,6 +1610,57 @@ export default function SalesAdminDashboard() {
               <h2 className="text-lg font-bold text-gray-900">Best Performers</h2>
               <button type="button" onClick={() => setShowBestPerformerModal(false)} className="text-gray-500 hover:text-gray-700 rounded-full p-1" aria-label="Close">✕</button>
             </div>
+            <div className="px-6 py-3 border-b bg-gray-50/50 flex flex-wrap items-center gap-3 flex-shrink-0">
+              <span className="text-xs font-semibold text-gray-600">Filter by date:</span>
+              <label className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-500">By day</span>
+                <input
+                  type="date"
+                  value={leaderboardDateFilter.byDay}
+                  onChange={(e) => setLeaderboardDateFilter((f) => ({ ...f, byDay: e.target.value, startDate: "", endDate: "" }))}
+                  className="border border-gray-300 rounded px-2 py-1.5 text-sm"
+                />
+              </label>
+              <label className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-500">Start</span>
+                <input
+                  type="date"
+                  value={leaderboardDateFilter.startDate}
+                  onChange={(e) => setLeaderboardDateFilter((f) => ({ ...f, startDate: e.target.value, byDay: "" }))}
+                  className="border border-gray-300 rounded px-2 py-1.5 text-sm"
+                />
+              </label>
+              <label className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-500">End</span>
+                <input
+                  type="date"
+                  value={leaderboardDateFilter.endDate}
+                  onChange={(e) => setLeaderboardDateFilter((f) => ({ ...f, endDate: e.target.value, byDay: "" }))}
+                  className="border border-gray-300 rounded px-2 py-1.5 text-sm"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  const token = localStorage.getItem("salesAdminToken");
+                  if (token) fetchLeaderboard(token, leaderboardDateFilter);
+                }}
+                className="px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"
+              >
+                Apply
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setLeaderboardDateFilter({ byDay: "", startDate: "", endDate: "" });
+                  const token = localStorage.getItem("salesAdminToken");
+                  if (token) fetchLeaderboard(token, { byDay: "", startDate: "", endDate: "" });
+                }}
+                className="px-3 py-1.5 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300"
+              >
+                Clear
+              </button>
+            </div>
             <div className="flex-1 overflow-auto p-4">
               {leaderboard && leaderboard.length > 0 ? (
                 <div className="overflow-x-auto">
@@ -1640,19 +1803,85 @@ export default function SalesAdminDashboard() {
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
               <div className="px-6 py-4 border-b flex justify-between items-center flex-shrink-0">
                 <h2 className="text-lg font-bold text-gray-900">Remarks {leadForRemark ? `– ${leadForRemark.clientName}` : ""}</h2>
-                <button type="button" onClick={() => { setShowRemarkModal(null); setRemarkData({ remark: "", remarkType: "general" }); }} className="text-gray-500 hover:text-gray-700 rounded-full p-1" aria-label="Close">✕</button>
+                <button type="button" onClick={() => { setShowRemarkModal(null); setRemarkData({ remark: "", remarkType: "general" }); setEditingRemarkIndex(null); }} className="text-gray-500 hover:text-gray-700 rounded-full p-1" aria-label="Close">✕</button>
               </div>
               <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3 min-h-0">
                 {remarksList.length > 0 ? (
                   <div className="space-y-2">
                     <p className="text-xs font-semibold text-gray-500 uppercase">All remarks</p>
-                    {remarksList.map((r, idx) => (
-                      <div key={idx} className="bg-gray-50 rounded-lg px-3 py-2 text-sm border border-gray-100">
-                        <span className="font-semibold text-indigo-600">{r.remarkType}:</span>{" "}
-                        <span className="text-gray-800">{r.remark}</span>
-                        {r.createdAt && <span className="block text-xs text-gray-400 mt-1">{new Date(r.createdAt).toLocaleString()}</span>}
-                      </div>
-                    ))}
+                    {remarksList.map((r, idx) => {
+                      const isFromAdmin = r.addedByType === "SalesAdmin";
+                      const canEdit = isFromAdmin && (String(r.addedBy?._id ?? r.addedBy) === String(admin?.id));
+                      const isEditing = editingRemarkIndex === idx;
+                      return (
+                        <div
+                          key={idx}
+                          className={`flex ${isFromAdmin ? "justify-end" : "justify-start"}`}
+                        >
+                          <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm border ${
+                            isFromAdmin
+                              ? "bg-indigo-50 border-indigo-200 text-indigo-900"
+                              : "bg-gray-50 border-gray-200 text-gray-800"
+                          }`}>
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <span className="text-xs font-semibold text-gray-500">
+                                {isFromAdmin ? "Admin" : "Team"}
+                              </span>
+                              {canEdit && !isEditing && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingRemarkIndex(idx);
+                                    setEditingRemarkText(r.remark || "");
+                                    setEditingRemarkType(r.remarkType || "general");
+                                  }}
+                                  className="text-xs text-indigo-600 hover:underline"
+                                >
+                                  Edit
+                                </button>
+                              )}
+                            </div>
+                            {isEditing ? (
+                              <div className="mt-2 space-y-2">
+                                <select
+                                  value={editingRemarkType}
+                                  onChange={(e) => setEditingRemarkType(e.target.value)}
+                                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                                >
+                                  {remarkTypes.map((t) => (
+                                    <option key={t.value} value={t.value}>{t.label}</option>
+                                  ))}
+                                </select>
+                                <textarea
+                                  value={editingRemarkText}
+                                  onChange={(e) => setEditingRemarkText(e.target.value)}
+                                  rows={2}
+                                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                                />
+                                <div className="flex gap-2">
+                                  <button type="button" onClick={() => handleSaveEditRemark(showRemarkModal)} className="text-xs px-2 py-1 bg-indigo-600 text-white rounded">Save</button>
+                                  <button type="button" onClick={() => { setEditingRemarkIndex(null); setEditingRemarkText(""); }} className="text-xs px-2 py-1 bg-gray-200 rounded">Cancel</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <span className="font-semibold text-indigo-600"> · {r.remarkType}:</span>{" "}
+                                <span>{r.remark}</span>
+                                {r.editedAt && (
+                                  <span className="block text-xs text-gray-500 italic">Edited</span>
+                                )}
+                                {r.createdAt && (
+                                  <span className="block text-xs text-gray-400 mt-1">
+                                    {new Date(r.createdAt).toLocaleString()}
+                                    {r.editedAt ? ` · Edited ${new Date(r.editedAt).toLocaleString()}` : ""}
+                                  </span>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-sm text-gray-500">No remarks yet.</p>
@@ -1698,7 +1927,12 @@ export default function SalesAdminDashboard() {
             </div>
             <div className="flex flex-1 overflow-hidden">
               <div className="w-1/3 border-r overflow-y-auto">
-                {conversations.map((conv) => (
+                {chatList.length === 0 ? (
+                  <div className="p-4 text-sm text-gray-500 text-center">
+                    No team members yet. Add employees to start chatting.
+                  </div>
+                ) : (
+                  chatList.map((conv) => (
                   <div
                     key={conv.userId}
                     onClick={() => setSelectedConversation(conv)}
@@ -1712,7 +1946,7 @@ export default function SalesAdminDashboard() {
                       {conv.user?.fullname || "Employee"}
                     </div>
                     <div className="text-sm text-gray-600 truncate">
-                      {conv.lastMessage?.message}
+                      {conv.lastMessage?.message || "No messages yet"}
                     </div>
                     {conv.unreadCount > 0 && (
                       <span className="text-xs bg-red-500 text-white rounded-full px-2 py-1">
@@ -1720,7 +1954,7 @@ export default function SalesAdminDashboard() {
                       </span>
                     )}
                   </div>
-                ))}
+                )))}
               </div>
               <div className="flex-1 flex flex-col">
                 {selectedConversation ? (
@@ -1730,14 +1964,14 @@ export default function SalesAdminDashboard() {
                         <div
                           key={msg._id}
                           className={`flex ${
-                            msg.from._id === admin?.id
+                            String(msg.from._id) === String(admin?.id)
                               ? "justify-end"
                               : "justify-start"
                           }`}
                         >
                           <div
                             className={`max-w-xs rounded-lg p-2 ${
-                              msg.from._id === admin?.id
+                              String(msg.from._id) === String(admin?.id)
                                 ? "bg-blue-500 text-white"
                                 : "bg-gray-200"
                             }`}
@@ -1746,8 +1980,13 @@ export default function SalesAdminDashboard() {
                               {msg.from.fullname}
                             </div>
                             <div>{msg.message}</div>
-                            <div className="text-xs opacity-75 mt-1">
-                              {new Date(msg.createdAt).toLocaleTimeString()}
+                            <div className="text-xs opacity-75 mt-1 flex items-center justify-between gap-2">
+                              <span>{new Date(msg.createdAt).toLocaleTimeString()}</span>
+                              {String(msg.from._id) === String(admin?.id) && (
+                                <span className={msg.isRead ? "text-blue-200" : "text-white/80"}>
+                                  {msg.isRead ? "✓✓ Read" : "✓ Sent"}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>

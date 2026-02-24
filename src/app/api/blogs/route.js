@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import connectdb from "@/lib/dbConnect";
 import Blog from "@/models/Blogs";
 import cloudinary from "@/lib/cloudinary";
-import { validateContent } from "@/middleware/contentValidation";
+import { validateContent, sanitizeContent } from "@/middleware/contentValidation";
 import { Readable } from "stream"; // ✅ Import for Buffer conversion
 
 // ✅ Convert File to Buffer
@@ -52,7 +52,7 @@ export async function POST(req) {
     const title = formData.get("title")?.trim();
     const slug = formData.get("slug")?.trim();
     const author = formData.get("author")?.trim();
-    const content = formData.get("content")?.trim();
+    let content = formData.get("content")?.trim();
     const metaTitle = formData.get("metaTitle")?.trim();
     const metaDescription = formData.get("metaDescription")?.trim();
     const metaKeywords = formData.get("metaKeywords")?.trim();
@@ -74,14 +74,17 @@ export async function POST(req) {
     }
 
     try {
+      // Title / meta fields ko validate karte hain (SEO spam ke liye)
       validateContent(title, "title");
-      validateContent(content, "content");
       if (metaTitle) validateContent(metaTitle, "metaTitle");
       if (metaDescription) validateContent(metaDescription, "metaDescription");
       if (metaKeywords) validateContent(metaKeywords, "metaKeywords");
     } catch (err) {
       return NextResponse.json({ error: err.message }, { status: 400 });
     }
+
+    // Blog ke main HTML content ko block na karke sirf sanitize karenge
+    content = sanitizeContent(content);
 
     const existingBlog = await Blog.findOne({ slug });
     if (existingBlog) {
@@ -141,7 +144,7 @@ export async function PATCH(req) {
     const title = formData.get("title")?.trim();
     const slug = formData.get("slug")?.trim();
     const author = formData.get("author")?.trim();
-    const content = formData.get("content")?.trim();
+    let content = formData.get("content")?.trim();
     const metaTitle = formData.get("metaTitle")?.trim();
     const metaDescription = formData.get("metaDescription")?.trim();
     const metaKeywords = formData.get("metaKeywords")?.trim();
@@ -162,13 +165,15 @@ export async function PATCH(req) {
 
     try {
       validateContent(title, "title");
-      validateContent(content, "content");
       if (metaTitle) validateContent(metaTitle, "metaTitle");
       if (metaDescription) validateContent(metaDescription, "metaDescription");
       if (metaKeywords) validateContent(metaKeywords, "metaKeywords");
     } catch (err) {
       return NextResponse.json({ error: err.message }, { status: 400 });
     }
+
+    // Main HTML content ko sanitize karke save karte hain
+    content = sanitizeContent(content);
 
     // ✅ Update fields (use provided values, not fallback to old values)
     blog.title = title;

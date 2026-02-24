@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import ClientFilterModal from "@/components/ClientFilterModal";
+import { useSalesChatSocket } from "@/lib/salesChatSocket";
 import "@/components/styles/sales-dashboards.css";
 
 export default function SalesTeamDashboard() {
@@ -14,6 +15,7 @@ export default function SalesTeamDashboard() {
   const [showRemarkModal, setShowRemarkModal] = useState(null);
   const [showChat, setShowChat] = useState(false);
   const [conversations, setConversations] = useState([]);
+  const [chatContacts, setChatContacts] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -36,6 +38,9 @@ export default function SalesTeamDashboard() {
     remark: "",
     remarkType: "general",
   });
+  const [editingRemarkIndex, setEditingRemarkIndex] = useState(null);
+  const [editingRemarkText, setEditingRemarkText] = useState("");
+  const [editingRemarkType, setEditingRemarkType] = useState("general");
   const chatEndRef = useRef(null);
   const router = useRouter();
 
@@ -48,6 +53,59 @@ export default function SalesTeamDashboard() {
     { value: "other", label: "Other" },
   ];
 
+  const currentUserId = employee?.id;
+
+  // Chat list: admins to chat with, merged with conversation data; sort unread first, then recent
+  const chatList = useMemo(() => {
+    const list = chatContacts.map((contact) => {
+      const conv = conversations.find(
+        (c) => String(c.userId) === String(contact.userId)
+      );
+      return {
+        userId: contact.userId,
+        user: contact.user,
+        lastMessage: conv?.lastMessage ?? null,
+        unreadCount: conv?.unreadCount ?? 0,
+      };
+    });
+    return list.sort((a, b) => {
+      if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
+      if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
+      const timeA = a.lastMessage?.createdAt ? new Date(a.lastMessage.createdAt).getTime() : 0;
+      const timeB = b.lastMessage?.createdAt ? new Date(b.lastMessage.createdAt).getTime() : 0;
+      return timeB - timeA;
+    });
+  }, [chatContacts, conversations]);
+
+  const { connected: socketConnected, emitNewMessage, emitMarkRead } = useSalesChatSocket(
+    currentUserId,
+    {
+      onNewMessage: (message) => {
+        const fromId = message?.from?._id || message?.from;
+        const toId = message?.to?._id || message?.to;
+        const isForCurrentConversation =
+          selectedConversation &&
+          (String(fromId) === String(selectedConversation.userId) ||
+            String(toId) === String(selectedConversation.userId));
+        if (isForCurrentConversation) {
+          setChatMessages((prev) => {
+            if (prev.some((m) => m._id === message._id)) return prev;
+            return [...prev, message];
+          });
+        }
+        const token = localStorage.getItem("salesEmployeeToken");
+        if (token) fetchConversations(token);
+      },
+      onMessagesRead: (payload) => {
+        if (selectedConversation && String(payload?.readBy) === String(selectedConversation.userId)) {
+          setChatMessages((prev) =>
+            prev.map((m) => ({ ...m, isRead: true }))
+          );
+        }
+      },
+    }
+  );
+
   useEffect(() => {
     const token = localStorage.getItem("salesEmployeeToken");
     const emp = localStorage.getItem("salesEmployee");
@@ -58,7 +116,20 @@ export default function SalesTeamDashboard() {
     setEmployee(JSON.parse(emp));
     fetchLeads(token);
     fetchConversations(token);
+    fetchChatContacts(token);
   }, []);
+
+  const fetchChatContacts = async (token) => {
+    try {
+      const res = await fetch("/api/sales/chat/contacts", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) setChatContacts(data.contacts || []);
+    } catch (err) {
+      console.error("Fetch chat contacts error:", err);
+    }
+  };
 
   useEffect(() => {
     // Paid leads are hidden from list: only show non-paid in My Leads
@@ -97,13 +168,22 @@ export default function SalesTeamDashboard() {
   useEffect(() => {
     if (selectedConversation) {
       const token = localStorage.getItem("salesEmployeeToken");
-      fetchChatMessages(token, selectedConversation.userId);
-      const interval = setInterval(() => {
+      if (token) {
         fetchChatMessages(token, selectedConversation.userId);
-      }, 3000);
-      return () => clearInterval(interval);
+        if (currentUserId) emitMarkRead(currentUserId, selectedConversation.userId);
+      }
     }
-  }, [selectedConversation]);
+  }, [selectedConversation, currentUserId]);
+
+  useEffect(() => {
+    if (showChat) {
+      const token = localStorage.getItem("salesEmployeeToken");
+      if (token) {
+        fetchConversations(token);
+        fetchChatContacts(token);
+      }
+    }
+  }, [showChat]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -222,6 +302,37 @@ export default function SalesTeamDashboard() {
     }
   };
 
+  const handleSaveEditRemark = async (leadId) => {
+    if (editingRemarkIndex == null || !editingRemarkText.trim()) return;
+    const token = localStorage.getItem("salesEmployeeToken");
+    try {
+      const res = await fetch(`/api/sales/leads/${leadId}/remarks`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          remarkIndex: editingRemarkIndex,
+          remark: editingRemarkText.trim(),
+          remarkType: editingRemarkType,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEditingRemarkIndex(null);
+        setEditingRemarkText("");
+        setEditingRemarkType("general");
+        fetchLeads(token);
+      } else {
+        setToast({ type: "error", message: data.message || "Could not edit remark" });
+        setTimeout(() => setToast(null), 3000);
+      }
+    } catch (err) {
+      console.error("Edit remark error:", err);
+    }
+  };
+
   const handleSelfAssign = async (leadId) => {
     const token = localStorage.getItem("salesEmployeeToken");
     try {
@@ -266,8 +377,11 @@ export default function SalesTeamDashboard() {
       const data = await res.json();
       if (data.success) {
         setNewMessage("");
-        fetchChatMessages(token, selectedConversation.userId);
-        fetchConversations(token);
+        setChatMessages((prev) => [...prev, data.message]);
+        if (currentUserId && selectedConversation)
+          emitNewMessage(selectedConversation.userId, data.message);
+        const token = localStorage.getItem("salesEmployeeToken");
+        if (token) fetchConversations(token);
       }
     } catch (err) {
       console.error("Send message error:", err);
@@ -339,12 +453,15 @@ export default function SalesTeamDashboard() {
             />
             <button
               onClick={() => setShowChat(!showChat)}
-              className="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white rounded-xl font-medium transition relative border border-white/20"
+              className="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white rounded-xl font-medium transition relative border border-white/20 flex items-center gap-2"
             >
               💬 Chat
-              {conversations.some((c) => c.unreadCount > 0) && (
+              {socketConnected && (
+                <span className="h-2 w-2 rounded-full bg-green-400" title="Connected" />
+              )}
+              {chatList.some((c) => c.unreadCount > 0) && (
                 <span className="absolute -top-1 -right-1 bg-red-400 text-white rounded-full min-w-[1.25rem] h-5 px-1.5 text-xs flex items-center justify-center font-bold">
-                  {conversations.reduce((sum, c) => sum + c.unreadCount, 0)}
+                  {chatList.reduce((sum, c) => sum + c.unreadCount, 0)}
                 </span>
               )}
             </button>
@@ -754,19 +871,85 @@ export default function SalesTeamDashboard() {
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
               <div className="px-6 py-4 border-b flex justify-between items-center flex-shrink-0">
                 <h2 className="text-lg font-bold text-gray-900">Remarks {leadForRemark ? `– ${leadForRemark.clientName}` : ""}</h2>
-                <button type="button" onClick={() => { setShowRemarkModal(null); setRemarkData({ remark: "", remarkType: "general" }); }} className="text-gray-500 hover:text-gray-700 rounded-full p-1" aria-label="Close">✕</button>
+                <button type="button" onClick={() => { setShowRemarkModal(null); setRemarkData({ remark: "", remarkType: "general" }); setEditingRemarkIndex(null); }} className="text-gray-500 hover:text-gray-700 rounded-full p-1" aria-label="Close">✕</button>
               </div>
               <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3 min-h-0">
                 {remarksList.length > 0 ? (
                   <div className="space-y-2">
                     <p className="text-xs font-semibold text-gray-500 uppercase">All remarks</p>
-                    {remarksList.map((r, idx) => (
-                      <div key={idx} className="bg-gray-50 rounded-lg px-3 py-2 text-sm border border-gray-100">
-                        <span className="font-semibold text-indigo-600">{r.remarkType}:</span>{" "}
-                        <span className="text-gray-800">{r.remark}</span>
-                        {r.createdAt && <span className="block text-xs text-gray-400 mt-1">{new Date(r.createdAt).toLocaleString()}</span>}
-                      </div>
-                    ))}
+                    {remarksList.map((r, idx) => {
+                      const isFromTeam = r.addedByType === "SalesEmployee";
+                      const canEdit = isFromTeam && (String(r.addedBy?._id ?? r.addedBy) === String(employee?.id));
+                      const isEditing = editingRemarkIndex === idx;
+                      return (
+                        <div
+                          key={idx}
+                          className={`flex ${isFromTeam ? "justify-end" : "justify-start"}`}
+                        >
+                          <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm border ${
+                            isFromTeam
+                              ? "bg-indigo-50 border-indigo-200 text-indigo-900"
+                              : "bg-gray-50 border-gray-200 text-gray-800"
+                          }`}>
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <span className="text-xs font-semibold text-gray-500">
+                                {isFromTeam ? "Team" : "Admin"}
+                              </span>
+                              {canEdit && !isEditing && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingRemarkIndex(idx);
+                                    setEditingRemarkText(r.remark || "");
+                                    setEditingRemarkType(r.remarkType || "general");
+                                  }}
+                                  className="text-xs text-indigo-600 hover:underline"
+                                >
+                                  Edit
+                                </button>
+                              )}
+                            </div>
+                            {isEditing ? (
+                              <div className="mt-2 space-y-2">
+                                <select
+                                  value={editingRemarkType}
+                                  onChange={(e) => setEditingRemarkType(e.target.value)}
+                                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                                >
+                                  {remarkTypes.map((t) => (
+                                    <option key={t.value} value={t.value}>{t.label}</option>
+                                  ))}
+                                </select>
+                                <textarea
+                                  value={editingRemarkText}
+                                  onChange={(e) => setEditingRemarkText(e.target.value)}
+                                  rows={2}
+                                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                                />
+                                <div className="flex gap-2">
+                                  <button type="button" onClick={() => handleSaveEditRemark(showRemarkModal)} className="text-xs px-2 py-1 bg-indigo-600 text-white rounded">Save</button>
+                                  <button type="button" onClick={() => { setEditingRemarkIndex(null); setEditingRemarkText(""); }} className="text-xs px-2 py-1 bg-gray-200 rounded">Cancel</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <span className="font-semibold text-indigo-600"> · {r.remarkType}:</span>{" "}
+                                <span>{r.remark}</span>
+                                {r.editedAt && (
+                                  <span className="block text-xs text-gray-500 italic">Edited</span>
+                                )}
+                                {r.createdAt && (
+                                  <span className="block text-xs text-gray-400 mt-1">
+                                    {new Date(r.createdAt).toLocaleString()}
+                                    {r.editedAt ? ` · Edited ${new Date(r.editedAt).toLocaleString()}` : ""}
+                                  </span>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-sm text-gray-500">No remarks yet.</p>
@@ -812,7 +995,12 @@ export default function SalesTeamDashboard() {
             </div>
             <div className="flex flex-1 overflow-hidden">
               <div className="w-1/3 border-r overflow-y-auto">
-                {conversations.map((conv) => (
+                {chatList.length === 0 ? (
+                  <div className="p-4 text-sm text-gray-500 text-center">
+                    Loading contacts…
+                  </div>
+                ) : (
+                  chatList.map((conv) => (
                   <div
                     key={conv.userId}
                     onClick={() => setSelectedConversation(conv)}
@@ -826,7 +1014,7 @@ export default function SalesTeamDashboard() {
                       {conv.user?.fullname || "Admin"}
                     </div>
                     <div className="text-sm text-gray-600 truncate">
-                      {conv.lastMessage?.message}
+                      {conv.lastMessage?.message || "No messages yet"}
                     </div>
                     {conv.unreadCount > 0 && (
                       <span className="text-xs bg-red-500 text-white rounded-full px-2 py-1">
@@ -834,7 +1022,7 @@ export default function SalesTeamDashboard() {
                       </span>
                     )}
                   </div>
-                ))}
+                )))}
               </div>
               <div className="flex-1 flex flex-col">
                 {selectedConversation ? (
@@ -844,14 +1032,14 @@ export default function SalesTeamDashboard() {
                         <div
                           key={msg._id}
                           className={`flex ${
-                            msg.from._id === employee?.id
+                            String(msg.from._id) === String(employee?.id)
                               ? "justify-end"
                               : "justify-start"
                           }`}
                         >
                           <div
                             className={`max-w-xs rounded-lg p-2 ${
-                              msg.from._id === employee?.id
+                              String(msg.from._id) === String(employee?.id)
                                 ? "bg-blue-500 text-white"
                                 : "bg-gray-200"
                             }`}
@@ -860,8 +1048,13 @@ export default function SalesTeamDashboard() {
                               {msg.from.fullname}
                             </div>
                             <div>{msg.message}</div>
-                            <div className="text-xs opacity-75 mt-1">
-                              {new Date(msg.createdAt).toLocaleTimeString()}
+                            <div className="text-xs opacity-75 mt-1 flex items-center justify-between gap-2">
+                              <span>{new Date(msg.createdAt).toLocaleTimeString()}</span>
+                              {String(msg.from._id) === String(employee?.id) && (
+                                <span className={msg.isRead ? "text-blue-200" : "text-white/80"}>
+                                  {msg.isRead ? "✓✓ Read" : "✓ Sent"}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>

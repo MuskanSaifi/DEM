@@ -7,7 +7,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint --no-cache"
+    "lint": "next lint --no-cache",
+    "socket": "node server/socket-server.js"
   },
   "dependencies": {
     "@next/eslint-plugin-next": "^15.3.5",
@@ -63,6 +64,8 @@
     "react-slick": "^0.30.3",
     "slick-carousel": "^1.8.1",
     "slugify": "^1.6.6",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
     "sweetalert2": "^11.17.2",
     "swiper": "^11.2.6",
     "trim-canvas": "^0.1.1",
