@@ -754,13 +754,41 @@ export default function SalesAdminDashboard() {
           >
             📅 Daily Report
           </button>
+              <button
+            onClick={() => {
+              setShowBulkImport(!showBulkImport);
+              setShowAddEmployee(false);
+            }}
+            className="sales-btn-primary px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl shadow-sm transition flex items-center gap-2"
+          >
+            {showBulkImport ? "Cancel Import" : "📥 Bulk Import Leads"}
+          </button>
+
+ <button
+                  onClick={() => {
+                    setShowAddEmployee(true);
+                    setShowBulkImport(false);
+                  }}
+            className="px-5 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-medium rounded-xl shadow-sm transition"
+                >
+                  ➕ Add Employee - {employees.length} 
+                </button>
+          
+              <button
+                onClick={() => setShowEmployeeSidebar(true)}
+                className="ml-auto px-4 py-2.5 text-sm font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-100 transition"
+              >
+                View All Sales Team -
+              </button>
+           
+
         </div>
 
         {/* Main layout: left sidebar (filters) + content */}
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left sidebar – Filters */}
           <aside className="lg:w-64 flex-shrink-0">
-            <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 sticky top-4">
+            <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 sticky top-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-4">Filters</h3>
               <div className="space-y-4">
                 <div>
@@ -833,79 +861,11 @@ export default function SalesAdminDashboard() {
           </aside>
 
           <div className="flex-1 min-w-0">
-        {/* Employees List – summary card + sidebar trigger */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center gap-3">
-            <h2 className="text-lg font-bold text-gray-900">
-              Sales Team ({employees.length})
-            </h2>
-            {employees.length > 0 && (
-              <button
-                onClick={() => setShowEmployeeSidebar(true)}
-                className="ml-auto px-4 py-2.5 text-sm font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-100 transition"
-              >
-                View All Sales Team
-              </button>
-            )}
-          </div>
-          <div className="p-6">
-            {employees.length === 0 ? (
-              <div className="sales-empty-state">
-                <div className="sales-empty-state-icon">👥</div>
-                <p className="font-medium text-gray-600">No employees yet</p>
-                <p className="text-sm mt-1 text-gray-500">Add your first sales team member to get started.</p>
-                <button
-                  onClick={() => {
-                    setShowAddEmployee(true);
-                    setShowBulkImport(false);
-                  }}
-                  className="mt-4 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition"
-                >
-                  ➕ Add Employee
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-2 text-sm text-gray-600">
-                <p className="font-medium">
-                  You have <span className="font-semibold">{employees.length}</span> sales
-                  team member{employees.length > 1 ? "s" : ""}. Use{" "}
-                  <span className="font-semibold">“View All Sales Team”</span> to see and
-                  manage the full list.
-                </p>
-                      <button
-                  onClick={() => {
-                    setShowAddEmployee(true);
-                    setShowBulkImport(false);
-                  }}
-                  className="mt-2 inline-flex items-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition text-sm"
-                >
-                  ➕ Add Employee
-                      </button>
-              </div>
-            )}
-          </div>
-        </div>
+
 
         {/* Action Buttons */}
         <div className="mb-6 flex gap-3 flex-wrap">
-          <button
-            onClick={() => {
-              setShowBulkImport(!showBulkImport);
-              setShowAddEmployee(false);
-            }}
-            className="sales-btn-primary px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl shadow-sm transition flex items-center gap-2"
-          >
-            {showBulkImport ? "Cancel Import" : "📥 Bulk Import Leads"}
-          </button>
-          <button
-            onClick={() => {
-              setShowAddEmployee(!showAddEmployee);
-              setShowBulkImport(false);
-            }}
-            className="sales-btn-primary px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition flex items-center gap-2"
-          >
-            {showAddEmployee ? "Cancel" : "➕ Add Employee"}
-          </button>
+      
         </div>
 
         {/* Bulk Import */}
@@ -1002,7 +962,7 @@ export default function SalesAdminDashboard() {
 
         {/* Bulk Assign - Sticky Bar */}
         {selectedLeads.length > 0 && (
-          <div className="fixed bottom-0 left-0 right-0 bg-amber-400 border-t border-amber-500/50 p-4 shadow-xl z-40">
+          <div className="fixed bottom-0 left-0 right-0 bg-amber-400 border-t border-amber-500/50 p-3 shadow-xl z-40">
             <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-4 flex-wrap">
                 <div className="bg-white/90 rounded-xl px-4 py-2.5 shadow-sm">
@@ -1098,9 +1058,9 @@ export default function SalesAdminDashboard() {
 
         {/* Leads Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <h2 className="text-lg font-bold text-gray-900">
+          <div className="px-3 py-2 border-b border-gray-100 bg-gray-50/50">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <h2 className="text-sm font-bold text-gray-900">
                 All Leads ({filteredLeads.length})
               </h2>
               <div className="flex flex-wrap items-center gap-3">
@@ -1146,8 +1106,8 @@ export default function SalesAdminDashboard() {
               </div>
             </div>
           </div>
-          <div className="relative h-[600px] overflow-hidden">
-    <div className="h-full overflow-y-auto overflow-x-auto">
+    <div className="relative h-[70vh] max-h-[350px] border border-gray-200 rounded-xl overflow-hidden">
+  <div className="h-full overflow-auto">
             {filteredLeads.length === 0 ? (
               <div className="sales-empty-state">
                 <div className="sales-empty-state-icon">📋</div>
@@ -1170,7 +1130,7 @@ export default function SalesAdminDashboard() {
               <>
                 {/* Desktop / Tablet table */}
                 <table className="hidden md:table min-w-full">
-              <thead className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
+            <thead className="bg-gray-50 sticky top-0 z-20 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-3.5 text-left">
                     <input

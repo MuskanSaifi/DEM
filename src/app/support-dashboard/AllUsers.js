@@ -44,8 +44,15 @@ const handleCustomRemarkChange = (userId, value) => {
 
 
 useEffect(() => {
-  const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  // Guard against missing window / bootstrap in some environments (e.g. production)
+  if (typeof window === "undefined" || !window.bootstrap || !window.bootstrap.Tooltip) {
+    return;
+  }
+  const tooltipTriggerList = Array.from(
+    document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  );
   tooltipTriggerList.forEach((tooltipTriggerEl) => {
+    // eslint-disable-next-line no-undef
     new window.bootstrap.Tooltip(tooltipTriggerEl);
   });
 }, []);
