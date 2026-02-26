@@ -1,5 +1,6 @@
 // app/layout.js
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import Providers from "./store/providers";
 import LayoutWrapper from "../components/LayoutWrapper";
 import "./globals.css";
@@ -62,6 +63,17 @@ export default function RootLayout({ children }) {
         <meta name="p:domain_verify" content="d98356c446071847eac6ef2c6611c6cf"/>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-RMD1BWW0YY"
+        />
+        <Script
+          id="gtag-init"
+          strategy="afterInteractive"
+        >{`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-RMD1BWW0YY');`}</Script>
         <Providers>
          <AppInitializer> 
             <LayoutWrapper>{children}</LayoutWrapper>

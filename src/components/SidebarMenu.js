@@ -96,11 +96,10 @@ const SidebarMenu = () => {
   return (
     <div className="menu bg-white rounded-md w-64 d-none-mob" ref={menuRef}>
       {/* Top Categories */}
-      <Link href="/industry">
         <h2 className="category font-normal text-lg text-web mb-2">
           Top B2B Categories
         </h2>
-      </Link>
+   
 
       {/* ----------- CATEGORY LIST (SAME UI) ------------- */}
       <ul className="border top-cat-list border-b border-gray-300 p-2">
