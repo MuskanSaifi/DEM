@@ -20,6 +20,10 @@ const salesLeadSchema = new mongoose.Schema(
     state: {
       type: String,
     },
+    gst: {
+      type: String,
+      default: "",
+    },
     product: {
       type: String,
       required: true, 

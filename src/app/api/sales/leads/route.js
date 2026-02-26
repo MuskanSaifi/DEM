@@ -37,6 +37,7 @@ export async function GET(req) {
     const employeeId = searchParams.get("employeeId");
     const search = (searchParams.get("search") || searchParams.get("searchTerm") || "").trim();
     const paymentStatus = searchParams.get("paymentStatus") || "";
+    const gst = (searchParams.get("gst") || "").trim();
 
     let query = {};
 
@@ -80,6 +81,11 @@ export async function GET(req) {
       query.paymentStatus = { $in: ["pending", "partial"] };
     }
 
+    if (gst) {
+      query.$and = query.$and || [];
+      query.$and.push({ gst: new RegExp(gst, "i") });
+    }
+
     const leads = await SalesLead.find(query)
       .populate("assignedTo", "fullname email")
       .populate("createdBy", "fullname email")
@@ -118,7 +124,7 @@ export async function POST(req) {
       );
     }
 
-    const { clientName, companyName, mobile, email, state, product } =
+    const { clientName, companyName, mobile, email, state, product, gst: gstIn } =
       await req.json();
 
     if (!clientName || !mobile || !product) {
@@ -161,6 +167,7 @@ export async function POST(req) {
       email,
       state,
       product,
+      gst: (gstIn != null && String(gstIn).trim()) ? String(gstIn).trim() : "",
       createdBy: user.id,
     });
 

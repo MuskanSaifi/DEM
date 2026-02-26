@@ -31,7 +31,7 @@ export async function PATCH(req, { params }) {
     }
 
     const { id } = await params;
-    const { assignedTo, status, remark, selfAssign, paymentStatus } = await req.json();
+    const { assignedTo, status, remark, selfAssign, paymentStatus, gst } = await req.json();
 
     const lead = await SalesLead.findById(id);
     if (!lead) {
@@ -62,6 +62,10 @@ export async function PATCH(req, { params }) {
       ["pending", "paid", "partial", "not_applicable"].includes(paymentStatus)
     ) {
       lead.paymentStatus = paymentStatus;
+    }
+
+    if (gst !== undefined) {
+      lead.gst = gst != null && String(gst).trim() ? String(gst).trim() : "";
     }
 
     // Add remark

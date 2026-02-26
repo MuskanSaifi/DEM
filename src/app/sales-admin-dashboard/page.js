@@ -30,6 +30,9 @@ export default function SalesAdminDashboard() {
     assignedTo: "",
     search: "",
     paymentStatus: "",
+    gst: "",
+    dateFrom: "",
+    dateTo: "",
   });
   const [reportDate, setReportDate] = useState(() => {
     const d = new Date();
@@ -169,7 +172,9 @@ export default function SalesAdminDashboard() {
     if (filters.assignedTo) {
       const aid = String(filters.assignedTo);
       filtered = filtered.filter(
-        (lead) => lead.assignedTo?._id && String(lead.assignedTo._id) === aid
+        (lead) =>
+          (lead.assignedTo?._id && String(lead.assignedTo._id) === aid) ||
+          (lead.createdBy?._id && String(lead.createdBy._id) === aid)
       );
     }
     if (filters.paymentStatus) {
@@ -193,6 +198,29 @@ export default function SalesAdminDashboard() {
           lead.email?.toLowerCase().includes(search) ||
           lead.product?.toLowerCase().includes(search)
       );
+    }
+    if (filters.gst) {
+      const gstLower = filters.gst.toLowerCase();
+      filtered = filtered.filter(
+        (lead) => (lead.gst || "").toLowerCase().includes(gstLower)
+      );
+    }
+    if (filters.dateFrom || filters.dateTo) {
+      filtered = filtered.filter((lead) => {
+        const created = lead.createdAt ? new Date(lead.createdAt) : null;
+        if (!created) return false;
+        if (filters.dateFrom) {
+          const from = new Date(filters.dateFrom);
+          from.setHours(0, 0, 0, 0);
+          if (created < from) return false;
+        }
+        if (filters.dateTo) {
+          const to = new Date(filters.dateTo);
+          to.setHours(23, 59, 59, 999);
+          if (created > to) return false;
+        }
+        return true;
+      });
     }
     setFilteredLeads(filtered);
   }, [leads, filters]);
@@ -849,9 +877,44 @@ export default function SalesAdminDashboard() {
                     <option value="not_applicable">N/A</option>
                   </select>
                 </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">GST</label>
+                  <input
+                    type="text"
+                    placeholder="Search by GST"
+                    value={filters.gst}
+                    onChange={(e) => setFilters({ ...filters, gst: e.target.value })}
+                    className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm placeholder:text-gray-400 bg-gray-50/50 focus:bg-white transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">From date</label>
+                  <input
+                    type="date"
+                    value={filters.dateFrom}
+                    onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+                    className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-gray-50/50 focus:bg-white transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">To date</label>
+                  <input
+                    type="date"
+                    value={filters.dateTo}
+                    onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                    className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-gray-50/50 focus:bg-white transition"
+                  />
+                </div>
                 <button
                   type="button"
-                  onClick={() => setFilters({ status: "", assignedTo: "", paymentStatus: "", search: "" })}
+                  onClick={() => setFilters({ ...filters, dateFrom: "", dateTo: "" })}
+                  className="w-full px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition"
+                >
+                  All time
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilters({ status: "", assignedTo: "", paymentStatus: "", search: "", gst: "", dateFrom: "", dateTo: "" })}
                   className="w-full px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg border border-gray-200 transition text-sm"
                 >
                   Clear Filters
@@ -1162,6 +1225,9 @@ export default function SalesAdminDashboard() {
                     Product
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    GST
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Assigned To
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -1212,6 +1278,7 @@ export default function SalesAdminDashboard() {
                       {lead.mobile}
                     </td>
                     <td className="px-6 py-4">{lead.product}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{lead.gst || "-"}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                           {lead.assignedTo ? (
                             <div className="flex items-center gap-2">
@@ -1422,6 +1489,12 @@ export default function SalesAdminDashboard() {
                         <p className="text-xs text-gray-600">
                           <span className="font-semibold">Product: </span>
                           {lead.product}
+                        </p>
+                      )}
+                      {lead.gst && (
+                        <p className="text-xs text-gray-600">
+                          <span className="font-semibold">GST: </span>
+                          {lead.gst}
                         </p>
                       )}
                       <div className="flex flex-wrap items-center gap-2">

@@ -26,12 +26,14 @@ export default function SalesTeamDashboard() {
     mobile: "",
     email: "",
     state: "",
+    gst: "",
     product: "",
   });
   const [filters, setFilters] = useState({
     status: "",
     search: "",
     paymentStatus: "",
+    gst: "",
   });
   const [showClientFilterModal, setShowClientFilterModal] = useState(false);
   const [remarkData, setRemarkData] = useState({
@@ -162,6 +164,12 @@ export default function SalesTeamDashboard() {
           lead.product?.toLowerCase().includes(search)
       );
     }
+    if (filters.gst) {
+      const gstLower = filters.gst.toLowerCase();
+      filtered = filtered.filter(
+        (lead) => (lead.gst || "").toLowerCase().includes(gstLower)
+      );
+    }
     setFilteredLeads(filtered);
   }, [leads, filters]);
 
@@ -239,7 +247,7 @@ export default function SalesTeamDashboard() {
   const handleAddLead = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("salesEmployeeToken");
-    const { clientName, companyName, mobile, email, state, product } = formData;
+    const { clientName, companyName, mobile, email, state, gst, product } = formData;
     if (!clientName || !mobile || !product) {
       alert("Client name, mobile, and product are required");
       return;
@@ -251,7 +259,7 @@ export default function SalesTeamDashboard() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ clientName, companyName, mobile, email, state, product }),
+        body: JSON.stringify({ clientName, companyName, mobile, email, state, gst: gst || undefined, product }),
       });
       const data = await res.json();
       if (data.success) {
@@ -263,6 +271,7 @@ export default function SalesTeamDashboard() {
           mobile: "",
           email: "",
           state: "",
+          gst: "",
           product: "",
         });
         fetchLeads(token);
@@ -482,7 +491,7 @@ export default function SalesTeamDashboard() {
         {/* Filters */}
         <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6">
           <h3 className="text-sm font-semibold text-gray-700 mb-4">Filters</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1.5">Status</label>
               <select
@@ -534,9 +543,19 @@ export default function SalesTeamDashboard() {
                 className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm placeholder:text-gray-400 bg-gray-50/50 focus:bg-white transition"
               />
             </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">GST</label>
+              <input
+                type="text"
+                value={filters.gst}
+                onChange={(e) => setFilters({ ...filters, gst: e.target.value })}
+                placeholder="Search by GST"
+                className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm placeholder:text-gray-400 bg-gray-50/50 focus:bg-white transition"
+              />
+            </div>
             <div className="flex items-end">
               <button
-                onClick={() => setFilters({ status: "", paymentStatus: "", search: "" })}
+                onClick={() => setFilters({ status: "", paymentStatus: "", search: "", gst: "" })}
                 className="sales-btn-primary px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg border border-gray-200 transition"
               >
                 Clear Filters
@@ -670,6 +689,15 @@ export default function SalesTeamDashboard() {
               />
               <input
                 type="text"
+                placeholder="GST (optional)"
+                value={formData.gst}
+                onChange={(e) =>
+                  setFormData({ ...formData, gst: e.target.value })
+                }
+                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
+              />
+              <input
+                type="text"
                 placeholder="Product Description *"
                 required
                 value={formData.product}
@@ -721,6 +749,7 @@ export default function SalesTeamDashboard() {
                   <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Company</th>
                   <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Mobile</th>
                   <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">GST</th>
                   <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment</th>
                   <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Remarks</th>
@@ -740,6 +769,7 @@ export default function SalesTeamDashboard() {
                       {lead.mobile}
                     </td>
                     <td className="px-6 py-4">{lead.product}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{lead.gst || "-"}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <select
                         value={lead.status}
