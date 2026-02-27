@@ -5,12 +5,12 @@ export const metadata = {
   description: "Create your account on Dial Export Mart and connect with verified global buyers and suppliers. Join India’s trusted export-import platform today.",
   keywords: ["Register Dial Export Mart", "Sign Up Export Platform", "Join Global Trade", "Export Import India", "B2B Marketplace Registration"],
   alternates: {
-    canonical: "https://www.dialexportmart.com/register",
+    canonical: "https://www.dialexportmart.com/user/register",
   },
   openGraph: {
     title: "Register | Join DialExportMart | Start Your Global Trade Journey",
     description: "Create your account on Dial Export Mart and connect with verified global buyers and suppliers. Join India’s trusted export-import platform today.",
-    url: "https://www.dialexportmart.com/register",
+    url: "https://www.dialexportmart.com/user/register",
     siteName: "Dial Export Mart",
     images: [
       {

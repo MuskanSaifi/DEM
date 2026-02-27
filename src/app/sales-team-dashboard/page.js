@@ -445,7 +445,7 @@ export default function SalesTeamDashboard() {
               onClick={() => setShowClientFilterModal(true)}
               className="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white rounded-xl font-medium transition border border-white/20 flex items-center gap-2"
             >
-              🔍 Filter Clients
+              🔍 Filter Paid Clients
             </button>
             <ClientFilterModal
               isOpen={showClientFilterModal}
@@ -698,7 +698,7 @@ export default function SalesTeamDashboard() {
               />
               <input
                 type="text"
-                placeholder="Product Description *"
+                placeholder="Product name *"
                 required
                 value={formData.product}
                 onChange={(e) =>
