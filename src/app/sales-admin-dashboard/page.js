@@ -1244,7 +1244,7 @@ export default function SalesAdminDashboard() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y text-sm divide-gray-100">
                     {filteredLeads.map((lead, index) => (
                       <tr
                         key={lead._id}

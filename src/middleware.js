@@ -1,3 +1,4 @@
+// src/middleware.js
 import { NextResponse } from "next/server";
 
 const GONE_HTML = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>410 Gone</title><meta name="robots" content="noindex, nofollow"></head><body><h1>410 Gone</h1><p>This page has been permanently removed.</p><p><a href="/">Go to Home</a></p></body></html>`;
@@ -14,7 +15,6 @@ const GONE_PREFIXES = [
   "/video-",          // https://www.dialexportmart.com/video-xxxxx
   "/company/video-",  // https://www.dialexportmart.com/company/video-xxxxx
   // Old product URLs with slug + id: /products/slug/ID
-  "/products/",
 ];
 
 export function middleware(req) {
@@ -69,6 +69,5 @@ export const config = {
     "/protected-route/:path*",
     "/video-:path*",          // root-level video URLs
     "/company/video-:path*",  // company/video-* URLs
-    "/products/:path*",       // product detail URLs
   ],
 };

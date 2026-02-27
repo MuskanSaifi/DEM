@@ -756,7 +756,7 @@ export default function SalesTeamDashboard() {
                   <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y text-sm divide-gray-100">
                 {filteredLeads.map((lead) => (
                   <tr key={lead._id} className="sales-table-row-hover transition">
                     <td className="px-6 py-4 whitespace-nowrap">
