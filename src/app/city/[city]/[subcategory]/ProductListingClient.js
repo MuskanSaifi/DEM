@@ -153,16 +153,16 @@ export default function ProductListingClient({
       {displaySubcategory
   .toLowerCase()
   .replace(/\b\w/g, (char) => char.toUpperCase())
-} Manufacturers, Suppliers & Wholesalers in {displayCity}
+}   Manufacturers & Suppliers in {displayCity}
       </h1>
 
-      <p className="text-gray-600 max-w-6xl  text-sm mb-3">
-  Find verified {displaySubcategory} manufacturers and suppliers in {displayCity} for your
-  bulk and wholesale sourcing needs. This page allows buyers to explore multiple
-  supplier options, review key details such as MOQ, pricing and product
-  specifications, and compare businesses in one place. Designed for resellers,
-  exporters and B2B buyers, the listings help simplify supplier selection and
-  enable direct communication with trusted manufacturers and suppliers.
+
+
+<p className="text-gray-600 max-w-6xl text-sm mb-3">
+  Find verified {displaySubcategory} manufacturers and suppliers in {displayCity} for bulk and wholesale sourcing. Explore multiple {displaySubcategory} suppliers in {displayCity}, 
+  compare pricing, review minimum order quantity (MOQ) and evaluate product 
+  specifications in one place. Ideal for retailers, resellers and B2B buyers 
+  seeking reliable supply options and direct communication with trusted manufacturers.
 </p>
 
 
@@ -180,14 +180,9 @@ export default function ProductListingClient({
       </div>
 
       <div className="flex items-center justify-between mb-6">
-        <p className="text-gray-500 text-sm">
-          {filteredProducts.length} {filteredProducts.length === 1 ? "product" : "products"} found
-          {filteredProducts.length !== initialProducts.length && (
-            <span className="text-gray-400 ml-2">
-              (from {initialProducts.length} total)
-            </span>
-          )}
-        </p>
+      <p className="text-gray-500 text-sm">
+  {filteredProducts.length > 0 ? `${filteredProducts.length}+` : "0"} Verified {displaySubcategory} Suppliers in {displayCity}
+</p>
         
         {/* Mobile Filter Button - Only on mobile */}
         <MobileFilterModal 

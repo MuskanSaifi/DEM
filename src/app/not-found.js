@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "404 - Page Not Found | Dial Export Mart",
-  description: "The page you are looking for does not exist or has been moved.",
+  title: "410 - Page Gone | Dial Export Mart",
+  description: "This page has been permanently removed or is no longer available.",
   robots: { index: false, follow: true },
 };
 
@@ -12,10 +12,10 @@ export default function NotFound() {
       <div className="container">
         <div className="row justify-content-center">
           <div className="col-12 col-md-8 col-lg-6 text-center">
-            <h1 className="display-1 fw-bold text-primary">404</h1>
-            <h2 className="h4 text-dark mb-3">Page Not Found</h2>
+            <h1 className="display-1 fw-bold text-primary">410</h1>
+            <h2 className="h4 text-dark mb-3">Page Gone</h2>
             <p className="text-muted mb-4">
-              The page you are looking for does not exist or has been moved.
+              The page you are looking for has been permanently removed or its URL has changed.
             </p>
             <Link
               href="/"

@@ -13,6 +13,8 @@ const GONE_PATHS = new Set([
 const GONE_PREFIXES = [
   "/video-",          // https://www.dialexportmart.com/video-xxxxx
   "/company/video-",  // https://www.dialexportmart.com/company/video-xxxxx
+  // Old product URLs with slug + id: /products/slug/ID
+  "/products/",
 ];
 
 export function middleware(req) {
@@ -30,10 +32,16 @@ export function middleware(req) {
   }
 
   // 2) Old patterns we know should be permanently gone
+  // - /india and children
+  // - /video-*, /company/video-*
+  // - Old product URLs: /products/slug/ID (2+ segments under /products)
+  const isOldProductsUrl = pathname.startsWith("/products/") && pathname.split("/").length >= 4;
+
   if (
     pathname === "/india" ||
     pathname.startsWith("/india/") ||
-    GONE_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+    GONE_PREFIXES.some((prefix) => pathname.startsWith(prefix)) ||
+    isOldProductsUrl
   ) {
     return new NextResponse(GONE_HTML, {
       status: 410,
@@ -61,5 +69,6 @@ export const config = {
     "/protected-route/:path*",
     "/video-:path*",          // root-level video URLs
     "/company/video-:path*",  // company/video-* URLs
+    "/products/:path*",       // product detail URLs
   ],
 };

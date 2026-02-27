@@ -38,8 +38,8 @@ export async function generateMetadata({ params: rawParams }) {
       subcat?.name || subcategory.replace(/-/g, " ");
 
     return {
-      title: `${displaySubcategory}  Manufacturers, Suppliers & Wholesalers in ${displayCity}`,
-      description: `Find verified  ${displaySubcategory} manufacturers, suppliers & wholesalers in ${displayCity}. Compare bulk pricing, MOQ & supplier details to connect with truster sellers.`,
+      title: `${displaySubcategory}  Manufacturers & Suppliers  in  ${displayCity}`,
+description: `Find trusted ${displaySubcategory} manufacturers in ${displayCity}. Compare bulk prices, check MOQ details and connect directly with verified suppliers.`,
       alternates: {
         canonical: `https://www.dialexportmart.com/city/${normalizedCity}/${normalizedSubcategory}`,
       },
@@ -77,7 +77,6 @@ export default async function SubcategoryPage({
     const page = Math.max(parseInt(searchParams?.page) || 1, 1);
     const limit = 20;
     const skip = (page - 1) * limit;
-
 
     await connectdb();
 
@@ -117,7 +116,6 @@ export default async function SubcategoryPage({
       typeof subcat._id === "string"
         ? new mongoose.Types.ObjectId(subcat._id)
         : subcat._id;
-
     /* ---------- Sellers in this city (BusinessProfile.city) ---------- */
     const cityRegex = new RegExp(`^${normalizedCity.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
     const sellersInCity = await BusinessProfile.find({
