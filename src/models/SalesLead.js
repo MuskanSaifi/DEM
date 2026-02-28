@@ -101,6 +101,12 @@ salesLeadSchema.index({ assignedTo: 1, assignedAt: 1 });
 salesLeadSchema.index({ createdBy: 1 });
 salesLeadSchema.index({ status: 1 });
 salesLeadSchema.index({ paymentStatus: 1 });
+salesLeadSchema.index({
+  gst: 1,
+  mobile: 1,
+  companyName: 1,
+  email: 1,
+});
 
 // Avoid using cached model with stale schema (e.g. after adding new enum values)
 if (mongoose.models.SalesLead) delete mongoose.models.SalesLead;
