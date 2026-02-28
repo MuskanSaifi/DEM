@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import BulkImportLeads from "@/components/sales/BulkImportLeads";
 import ClientFilterModal from "@/components/ClientFilterModal";
 import { useSalesChatSocket } from "@/lib/salesChatSocket";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+
 import "@/components/styles/sales-dashboards.css";
 
 export default function SalesAdminDashboard() {
@@ -25,6 +27,7 @@ export default function SalesAdminDashboard() {
   const [newMessage, setNewMessage] = useState("");
   const [selectedLeads, setSelectedLeads] = useState([]);
   const [assignTo, setAssignTo] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [filters, setFilters] = useState({
     status: "",
     assignedTo: "",
@@ -977,19 +980,29 @@ export default function SalesAdminDashboard() {
                 }
                 className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
               />
-              <input
-                type="password"
-                placeholder="Password *"
-                required
-                value={employeeForm.password}
-                onChange={(e) =>
-                  setEmployeeForm({
-                    ...employeeForm,
-                    password: e.target.value,
-                  })
-                }
-                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
-              />
+        <div className="relative">
+  <input
+    type={showPassword ? "text" : "password"}
+    placeholder="Password *"
+    required
+    value={employeeForm.password}
+    onChange={(e) =>
+      setEmployeeForm({
+        ...employeeForm,
+        password: e.target.value,
+      })
+    }
+    className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm w-full pr-10"
+  />
+
+  <button
+    type="button"
+    onClick={() => setShowPassword(!showPassword)}
+    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+  >
+    {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+  </button>
+</div>
               <input
                 type="tel"
                 placeholder="Mobile"
@@ -1020,7 +1033,7 @@ export default function SalesAdminDashboard() {
                 </div>
           </form>
             </div>
-          </div>
+          </div>  
         )}
 
         {/* Bulk Assign - Sticky Bar */}
@@ -1169,7 +1182,7 @@ export default function SalesAdminDashboard() {
               </div>
             </div>
           </div>
-    <div className="relative h-[70vh] max-h-[350px] border border-gray-200 rounded-xl overflow-hidden">
+    <div className="relative h-[70vh] max-h-[650px] border border-gray-200 rounded-xl overflow-hidden">
   <div className="h-full overflow-auto">
             {filteredLeads.length === 0 ? (
               <div className="sales-empty-state">
