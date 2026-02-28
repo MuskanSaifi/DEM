@@ -191,7 +191,7 @@ export async function POST(req) {
     });
 
 
-    // const imageUrls = await Promise.all(validImages.map(uploadToCloudinary));
+// const imageUrls = await Promise.all(validImages.map(uploadToCloudinary));
 const imageUrls = [];
 for (const img of validImages) {
   const uploaded = await uploadToCloudinary(img);

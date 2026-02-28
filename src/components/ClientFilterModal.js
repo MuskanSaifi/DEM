@@ -135,10 +135,17 @@ const ClientFilterModal = ({ isOpen, onClose, onApply }) => {
         aria-hidden="true"
       />
       <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-8 py-5 rounded-t-xl flex items-center justify-between z-10">
-          <h3 className="text-xl font-bold text-gray-800">
-            Filter Client Details
-          </h3>
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl flex items-start justify-between z-10">
+        <div>
+  <h3 className="text-xl font-bold text-gray-800">
+    Check Client Payment Status
+  </h3>
+
+  <p className="mt-1 text-sm text-gray-500 leading-snug">
+    Use this form to search clients by name, email, phone number, or business name 
+    and quickly determine whether the client is paid or unpaid.
+  </p>
+</div>
           <button
             type="button"
             onClick={onClose}

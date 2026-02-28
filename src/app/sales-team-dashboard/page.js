@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import ClientFilterModal from "@/components/ClientFilterModal";
 import { useSalesChatSocket } from "@/lib/salesChatSocket";
 import "@/components/styles/sales-dashboards.css";
-
+import { FiSearch, FiMessageCircle, FiLogOut} from "react-icons/fi";
 export default function SalesTeamDashboard() {
   const [employee, setEmployee] = useState(null);
   const [leads, setLeads] = useState([]);
@@ -440,6 +440,41 @@ const handleClearSearch = () => {
   setSearchResults([]);
   setHasSearched(false);   // ✅ reset search state
 };
+useEffect(() => {
+  const token = localStorage.getItem("salesEmployeeToken");
+
+  if (globalSearch.trim().length < 5) {
+    setSearchResults([]);
+    setHasSearched(false);
+    return;
+  }
+
+  setSearchLoading(true);
+
+  const debounce = setTimeout(async () => {
+    try {
+      const res = await fetch(
+        `/api/sales/leads/search?q=${globalSearch}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        setSearchResults(data.leads);
+        setHasSearched(true);
+      }
+    } catch (err) {
+      console.error("Live search error:", err);
+    } finally {
+      setSearchLoading(false);
+    }
+  }, 400);
+
+  return () => clearTimeout(debounce);
+}, [globalSearch]);
 
   if (loading) {
     return (
@@ -506,40 +541,53 @@ const handleClearSearch = () => {
 
 </div>
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setShowClientFilterModal(true)}
-              className="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white rounded-xl font-medium transition border border-white/20 flex items-center gap-2"
-            >
-              🔍 Filter Paid Clients
-            </button>
-<div className="flex items-center bg-white rounded-xl overflow-hidden shadow-md border border-gray-200">
-
+          <button
+  type="button"
+  onClick={() => setShowClientFilterModal(true)}
+  className="group px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white rounded-xl font-medium transition border border-white/20 flex items-center gap-2"
+>
+  <FiSearch className="text-white text-lg transition-transform duration-200 group-hover:scale-110" />
+  <span>Filter Paid Clients</span>
+</button>
+<div className="relative w-80">
   <input
     type="text"
     placeholder="Search by GST, Mobile, Company..."
     value={globalSearch}
     onChange={(e) => setGlobalSearch(e.target.value)}
-    className="px-4 py-2 w-64 outline-none text-sm"
-    onKeyDown={(e) => e.key === "Enter" && handleGlobalSearch()}
+    className="w-full px-4 py-2 rounded-xl border text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
   />
 
-  {/* Search Button */}
-  <button
-    onClick={handleGlobalSearch}
-    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition"
-  >
-    {searchLoading ? "Searching..." : "Search"}
-  </button>
+  {searchLoading && (
+    <div className="absolute right-3 top-2.5">
+      <div className="animate-spin h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full"></div>
+    </div>
+  )}
 
-  {/* Clear Button */}
-  {globalSearch && (
-    <button
-      onClick={handleClearSearch}
-      className="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium transition"
-    >
-      Clear
-    </button>
+  {globalSearch.length >= 5 && searchResults.length > 0 && (
+    <div className="absolute top-full mt-2 w-full bg-white border rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto">
+      {searchResults.map((lead) => (
+        <div
+          key={lead._id}
+          onClick={() => {
+            setGlobalSearch(lead.mobile);
+          }}
+          className="px-4 py-3 hover:bg-indigo-50 cursor-pointer border-b last:border-none"
+        >
+          <div className="font-semibold text-gray-800">
+            {lead.clientName}
+          </div>
+
+          <div className="text-sm text-gray-600">
+            {lead.mobile}
+          </div>
+
+          <div className="text-xs text-gray-500">
+            {lead.companyName}
+          </div>
+        </div>
+      ))}
+    </div>
   )}
 </div>
             <ClientFilterModal
@@ -555,27 +603,31 @@ const handleClearSearch = () => {
                 // Modal stays open so user can see search result
               }}
             />
-            <button
-              onClick={() => setShowChat(!showChat)}
-              className="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white rounded-xl font-medium transition relative border border-white/20 flex items-center gap-2"
-            >
-              💬 Chat
-              {socketConnected && (
-                <span className="h-2 w-2 rounded-full bg-green-400" title="Connected" />
-              )}
-              {chatList.some((c) => c.unreadCount > 0) && (
-                <span className="absolute -top-1 -right-1 bg-red-400 text-white rounded-full min-w-[1.25rem] h-5 px-1.5 text-xs flex items-center justify-center font-bold">
-                  {chatList.reduce((sum, c) => sum + c.unreadCount, 0)}
-                </span>
-              )}
-            </button>
+    <button
+  onClick={() => setShowChat(!showChat)}
+  className="group px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white rounded-xl font-medium transition relative border border-white/20 flex items-center gap-2"
+>
+  <FiMessageCircle className="text-lg transition-transform duration-200 group-hover:scale-110" />
+  <span>Chat</span>
+
+  {socketConnected && (
+    <span className="h-2 w-2 rounded-full bg-green-400" title="Connected" />
+  )}
+
+  {chatList.some((c) => c.unreadCount > 0) && (
+    <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full min-w-[1.25rem] h-5 px-1.5 text-xs flex items-center justify-center font-bold shadow">
+      {chatList.reduce((sum, c) => sum + c.unreadCount, 0)}
+    </span>
+  )}
+</button>
       
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition shadow"
-            >
-              Logout
-            </button>
+ <button
+  onClick={handleLogout}
+  className="group px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition shadow flex items-center gap-2"
+>
+  <FiLogOut className="text-lg transition-transform duration-200 group-hover:translate-x-1" />
+  <span>Logout</span>
+</button>
           </div>
         </div>
       </header>

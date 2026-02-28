@@ -16,18 +16,18 @@ export async function GET(req) {
     }
 
     const searchRegex = new RegExp(query, "i");
-
-    const leads = await SalesLead.find({
-      $or: [
-        { gst: searchRegex },
-        { mobile: searchRegex },
-        { companyName: searchRegex },
-        { email: searchRegex },
-      ],
-    })
-      .populate("assignedTo", "fullname email")
-      .populate("createdBy", "fullname email")   // ✅ ADD THIS
-      .select("clientName companyName mobile email gst status paymentStatus assignedTo");
+const leads = await SalesLead.find({
+  $or: [
+    { gst: searchRegex },
+    { mobile: searchRegex },
+    { companyName: searchRegex },
+    { email: searchRegex },
+  ],
+})
+.limit(8) // 👈 ADD THIS
+.populate("assignedTo", "fullname email")
+.populate("createdBy", "fullname email")
+.select("clientName companyName mobile email gst status paymentStatus assignedTo");
 
     return NextResponse.json({ success: true, leads });
   } catch (error) {
