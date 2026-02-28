@@ -671,9 +671,31 @@ export default function SalesAdminDashboard() {
       )}
       <header className="bg-gradient-to-r from-indigo-600 to-indigo-800 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap justify-between items-center gap-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-            Sales Admin Dashboard
-          </h1>
+     <div className="flex items-center gap-3">
+
+<div className="flex items-center gap-4">
+
+  {/* Leader Avatar */}
+  <div className="relative">
+    <div className="h-11 w-11 flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-indigo-700 text-white font-bold text-sm shadow-lg">
+      {admin?.fullname?.charAt(0)?.toUpperCase()}
+    </div>
+    <span className="absolute bottom-0 right-0 h-3 w-3 bg-green-400 border-2 border-white rounded-full"></span>
+  </div>
+
+  {/* Leader Info */}
+  <div className="flex flex-col leading-tight">
+    <span className="text-xs text-indigo-200 tracking-wide uppercase">
+      Sales Team Leader
+    </span>
+    <span className="text-xl font-semibold text-white">
+      Welcome, {admin?.fullname}
+    </span>
+  </div>
+
+</div>
+
+</div>
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -709,9 +731,7 @@ export default function SalesAdminDashboard() {
                 </span>
               )}
             </button>
-            <span className="hidden sm:inline px-3 py-1.5 bg-white/10 rounded-lg text-white text-sm font-medium">
-              {admin?.fullname}
-            </span>
+        
             <button
               onClick={handleLogout}
               className="px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition shadow"
@@ -770,50 +790,77 @@ export default function SalesAdminDashboard() {
         )}
 
         {/* Buttons: Best Performer & Daily Report (open modals) */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          <button
-            type="button"
-            onClick={() => setShowBestPerformerModal(true)}
-            className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-xl shadow-sm transition"
-          >
-            🏆 Best Performer
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowDailyReportModal(true)}
-            className="px-5 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-medium rounded-xl shadow-sm transition"
-          >
-            📅 Daily Report
-          </button>
-              <button
-            onClick={() => {
-              setShowBulkImport(!showBulkImport);
-              setShowAddEmployee(false);
-            }}
-            className="sales-btn-primary px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl shadow-sm transition flex items-center gap-2"
-          >
-            {showBulkImport ? "Cancel Import" : "📥 Bulk Import Leads"}
-          </button>
+ <div className="flex flex-wrap items-center gap-4 mb-8">
 
- <button
-                  onClick={() => {
-                    setShowAddEmployee(true);
-                    setShowBulkImport(false);
-                  }}
-            className="px-5 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-medium rounded-xl shadow-sm transition"
-                >
-                  ➕ Add Employee - {employees.length} 
-                </button>
-          
-              <button
-                onClick={() => setShowEmployeeSidebar(true)}
-                className="ml-auto px-4 py-2.5 text-sm font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-100 transition"
-              >
-                View All Sales Team -
-              </button>
-           
+  {/* Best Performer */}
+  <button
+    onClick={() => setShowBestPerformerModal(true)}
+    className="flex items-center gap-2 px-6 py-3 rounded-2xl 
+    bg-gradient-to-r from-amber-400 to-orange-500 
+    text-white font-semibold shadow-md hover:shadow-xl 
+    hover:-translate-y-0.5 transition-all duration-200"
+  >
+    🏆 <span>Best Performer</span>
+  </button>
 
-        </div>
+  {/* Daily Report */}
+  <button
+    onClick={() => setShowDailyReportModal(true)}
+    className="flex items-center gap-2 px-6 py-3 rounded-2xl 
+    bg-gradient-to-r from-sky-400 to-blue-600 
+    text-white font-semibold shadow-md hover:shadow-xl 
+    hover:-translate-y-0.5 transition-all duration-200"
+  >
+    📊 <span>Daily Report</span>
+  </button>
+
+  {/* Bulk Import */}
+  <button
+    onClick={() => {
+      setShowBulkImport(!showBulkImport);
+      setShowAddEmployee(false);
+    }}
+    className="flex items-center gap-2 px-6 py-3 rounded-2xl 
+    bg-gradient-to-r from-emerald-500 to-green-700 
+    text-white font-semibold shadow-md hover:shadow-xl 
+    hover:-translate-y-0.5 transition-all duration-200"
+  >
+    📥 {showBulkImport ? "Cancel Import" : "Bulk Import Leads"}
+  </button>
+
+  {/* Add Employee */}
+  <button
+    onClick={() => {
+      setShowAddEmployee(true);
+      setShowBulkImport(false);
+    }}
+    className="flex items-center gap-2 px-6 py-3 rounded-2xl 
+    bg-gradient-to-r from-indigo-500 to-purple-600 
+    text-white font-semibold shadow-md hover:shadow-xl 
+    hover:-translate-y-0.5 transition-all duration-200"
+  >
+    ➕ Add Employee 
+    <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">
+      {employees.length}
+    </span>
+  </button>
+
+  {/* Spacer */}
+  <div className="flex-1" />
+
+  {/* View All Sales Team */}
+  <button
+    onClick={() => setShowEmployeeSidebar(true)}
+    className="px-5 py-3 rounded-2xl 
+    bg-white text-indigo-600 font-semibold 
+    border border-indigo-200 
+    shadow-sm hover:bg-indigo-50 
+    hover:shadow-md transition-all duration-200"
+  >
+    👥 View All Sales Team
+  </button>
+
+</div>
 
         {/* Main layout: left sidebar (filters) + content */}
         <div className="flex flex-col lg:flex-row gap-6">
@@ -2070,106 +2117,137 @@ export default function SalesAdminDashboard() {
       )}
 
       {/* Employees Sidebar – full sales team list */}
-      {showEmployeeSidebar && (
-        <div className="fixed inset-0 z-40">
-          <div
-            className="absolute inset-0 bg-black/40"
+  {showEmployeeSidebar && (
+  <div className="fixed inset-0 z-50 flex">
+
+    {/* Overlay */}
+    <div
+      className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+      onClick={() => setShowEmployeeSidebar(false)}
+    />
+
+    {/* Drawer */}
+    <aside
+      className="
+        relative ml-auto
+        w-full sm:max-w-md
+        h-full
+        bg-white
+        shadow-2xl
+        flex flex-col
+        animate-slideIn
+      "
+    >
+
+      {/* HEADER */}
+      <div className="px-5 py-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg sm:text-xl font-semibold">
+              Sales Team
+            </h2>
+            <p className="text-xs text-indigo-200">
+              Total members: {employees.length}
+            </p>
+          </div>
+
+          <button
             onClick={() => setShowEmployeeSidebar(false)}
-          />
-          <aside className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col">
-            <div className="px-5 py-4 border-b flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">Sales Team</h2>
-                <p className="text-xs text-gray-500">
-                  Total members: {employees.length}
-                </p>
-              </div>
-              <button
-                onClick={() => setShowEmployeeSidebar(false)}
-                className="text-gray-400 hover:text-gray-600 rounded-full p-1"
-                aria-label="Close sales team"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {employees.length === 0 ? (
-                <div className="sales-empty-state">
-                  <div className="sales-empty-state-icon">👥</div>
-                  <p className="font-medium text-gray-600">No employees yet</p>
-                  <p className="text-sm mt-1 text-gray-500">
-                    Add your first sales team member to get started.
-                  </p>
-                </div>
-              ) : (
-                employees.map((emp) => (
-                  <div
-                    key={emp._id}
-                    className={`border rounded-xl px-4 py-3 flex items-start justify-between gap-3 ${
-                      emp.isActive ? "bg-white" : "bg-gray-50 opacity-90"
-                    }`}
-                  >
-                    <div className="space-y-1">
-                      <p className="font-semibold text-gray-900">{emp.fullname}</p>
-                      <p className="text-xs text-gray-500">{emp.email}</p>
-                      {emp.mobileNumber && (
-                        <p className="text-xs text-gray-500">{emp.mobileNumber}</p>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
-                          emp.isActive
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {emp.isActive ? "Active" : "Inactive"}
-                      </span>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() =>
-                            handleToggleEmployeeStatus(
-                              emp._id,
-                              emp.isActive,
-                              emp.fullname
-                            )
-                          }
-                          className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition ${
-                            emp.isActive
-                              ? "bg-amber-100 text-amber-800 hover:bg-amber-200"
-                              : "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
-                          }`}
-                        >
-                          {emp.isActive ? "Deactivate" : "Activate"}
-                        </button>
-                        <button
-                          onClick={() => handleDeleteEmployee(emp._id, emp.fullname)}
-                          className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-[11px] font-medium hover:bg-red-200 transition"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-            <div className="px-5 py-3 border-t bg-gray-50 flex justify-end">
-              <button
-                onClick={() => {
-                  setShowEmployeeSidebar(false);
-                  setShowAddEmployee(true);
-                  setShowBulkImport(false);
-                }}
-                className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl shadow-sm transition"
-              >
-                ➕ Add Employee
-              </button>
-            </div>
-          </aside>
+            className="h-9 w-9 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition"
+          >
+            ✕
+          </button>
         </div>
-      )}
+      </div>
+
+      {/* BODY */}
+<div className="flex-1 overflow-y-auto px-4 sm:px-5 py-3 space-y-2">
+        {employees.map((emp) => (
+      <div
+  key={emp._id}
+  className="bg-white border rounded-xl px-3 py-2 shadow-sm hover:shadow transition"
+>
+  <div className="flex items-center gap-2">
+
+    {/* Smaller Avatar */}
+    <div className="h-8 w-8 flex-shrink-0 flex items-center justify-center 
+        rounded-full bg-gradient-to-br from-indigo-400 to-indigo-700 
+        text-white text-xs font-semibold">
+      {emp.fullname?.charAt(0)?.toUpperCase()}
+    </div>
+
+    <div className="flex-1 min-w-0">
+      <p className="font-medium text-sm text-gray-900 truncate">
+        {emp.fullname}
+      </p>
+      <p className="text-[11px] text-gray-500 truncate">
+        {emp.email}
+      </p>
+    </div>
+
+    <span
+      className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+        emp.isActive
+          ? "bg-emerald-100 text-emerald-700"
+          : "bg-red-100 text-red-700"
+      }`}
+    >
+      {emp.isActive ? "Active" : "Inactive"}
+    </span>
+  </div>
+
+  {/* Compact Buttons */}
+  <div className="mt-2 flex gap-2">
+    <button
+      onClick={() =>
+        handleToggleEmployeeStatus(
+          emp._id,
+          emp.isActive,
+          emp.fullname
+        )
+      }
+      className={`flex-1 px-2 py-1 rounded-md text-[11px] font-medium transition ${
+        emp.isActive
+          ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
+          : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+      }`}
+    >
+      {emp.isActive ? "Deactivate" : "Activate"}
+    </button>
+
+    <button
+      onClick={() =>
+        handleDeleteEmployee(emp._id, emp.fullname)
+      }
+      className="flex-1 px-2 py-1 bg-red-100 text-red-600 rounded-md text-[11px] font-medium hover:bg-red-200 transition"
+    >
+      Delete
+    </button>
+  </div>
+</div>
+        ))}
+
+      </div>
+
+      {/* FOOTER */}
+      <div className="p-4 border-t bg-white sticky bottom-0">
+        <button
+          onClick={() => {
+            setShowEmployeeSidebar(false);
+            setShowAddEmployee(true);
+          }}
+          className="w-full py-2.5 rounded-xl text-sm
+            bg-gradient-to-r from-indigo-600 to-purple-600 
+            text-white font-semibold shadow-md 
+            hover:shadow-xl transition"
+        >
+          ➕ Add Employee
+        </button>
+      </div>
+
+    </aside>
+  </div>
+)}
     </div>
   );
 }

@@ -474,11 +474,37 @@ const handleClearSearch = () => {
       )}
       <header className="bg-gradient-to-r from-indigo-600 to-indigo-800 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap justify-between items-center gap-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-               <span className="hidden sm:inline px-3 py-1.5 bg-white/10 rounded-lg text-white text-sm font-medium">
-            Welcome  {employee?.fullname}
-            </span>
-          </h1>
+      <div className="flex items-center gap-3">
+
+<div className="flex items-center gap-4">
+
+  {/* Avatar with Active Dot */}
+  <div className="relative">
+    <div className="h-11 w-11 flex items-center justify-center rounded-full 
+        bg-gradient-to-br from-indigo-400 to-indigo-700 
+        text-white font-bold text-sm shadow-lg">
+      {employee?.fullname?.charAt(0)?.toUpperCase()}
+    </div>
+
+    {/* Active Indicator */}
+    <span className="absolute bottom-0 right-0 h-3 w-3 
+        bg-green-400 border-2 border-white rounded-full">
+    </span>
+  </div>
+
+  {/* Employee Info */}
+  <div className="flex flex-col leading-tight">
+    <span className="text-xs text-indigo-200 tracking-wide uppercase">
+      Sales Executive
+    </span>
+    <span className="text-xl font-semibold text-white">
+      Welcome back, {employee?.fullname}
+    </span>
+  </div>
+
+</div>
+
+</div>
           <div className="flex items-center gap-3">
             <button
               type="button"
