@@ -191,7 +191,12 @@ export async function POST(req) {
     });
 
 
-    const imageUrls = await Promise.all(validImages.map(uploadToCloudinary));
+    // const imageUrls = await Promise.all(validImages.map(uploadToCloudinary));
+const imageUrls = [];
+for (const img of validImages) {
+  const uploaded = await uploadToCloudinary(img);
+  imageUrls.push(uploaded);
+}
 
     // ✅ Normalize country to lowercase (ISO codes should be lowercase)
     // ✅ Keep state and city in original case (full names should be preserved)
