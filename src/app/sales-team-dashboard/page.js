@@ -21,7 +21,7 @@ export default function SalesTeamDashboard() {
   const [newMessage, setNewMessage] = useState("");
   const [toast, setToast] = useState(null);
 
-  const [globalSearch, setGlobalSearch] = useState("");
+const [globalSearch, setGlobalSearch] = useState("");
 const [searchResults, setSearchResults] = useState([]);
 const [searchLoading, setSearchLoading] = useState(false);
 const [hasSearched, setHasSearched] = useState(false);

@@ -217,7 +217,7 @@ const ClientFilterModal = ({ isOpen, onClose, onApply }) => {
           )}
 
           <div className="flex gap-4 pt-2">
-            <button
+            <button 
               type="submit"
               disabled={lookupLoading}
               className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-medium py-3 px-5 rounded-lg transition"
