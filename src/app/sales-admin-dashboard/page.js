@@ -2192,7 +2192,7 @@ export default function SalesAdminDashboard() {
           : "bg-red-100 text-red-700"
       }`}
     >
-      {emp.isActive ? "Active" : "Inactive"}
+      {emp.isActive ? "Active" : "Deactivated"}
     </span>
   </div>
 

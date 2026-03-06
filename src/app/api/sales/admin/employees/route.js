@@ -30,7 +30,8 @@ export async function GET(req) {
       );
     }
 
-    const employees = await SalesEmployee.find({ isActive: true })
+    // Show both active + deactivated employees to the admin
+    const employees = await SalesEmployee.find({ createdBy: admin.id })
       .select("-password")
       .populate("createdBy", "fullname email")
       .sort({ createdAt: -1 });

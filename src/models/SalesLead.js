@@ -10,11 +10,11 @@ const salesLeadSchema = new mongoose.Schema(
     companyName: {
       type: String,
     },
-mobile: {
-  type: String,
-  required: true,
-  set: (v) => v.replace(/\s+/g, "")
-},
+    mobile: {
+      type: String,
+      required: true,
+      set: (v) => v.replace(/\s+/g, "")
+    },
     email: {
       type: String,
     },
