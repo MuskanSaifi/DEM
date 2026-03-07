@@ -46,6 +46,12 @@ export default function SalesAdminDashboard() {
   const [leaderboard, setLeaderboard] = useState(null);
   const [expandedReportEmployeeId, setExpandedReportEmployeeId] = useState(null);
   const [showEmployeeSidebar, setShowEmployeeSidebar] = useState(false);
+  const [changePasswordFor, setChangePasswordFor] = useState(null);
+  const [changePasswordForm, setChangePasswordForm] = useState({
+    password: "",
+    confirm: "",
+  });
+  const [showChangePasswordInput, setShowChangePasswordInput] = useState(false);
   const [employeeSearch, setEmployeeSearch] = useState("");
   const [employeeForm, setEmployeeForm] = useState({
     fullname: "",
@@ -438,6 +444,51 @@ export default function SalesAdminDashboard() {
       }
     } catch (err) {
       setToast({ type: "error", message: "Failed to update employee" });
+      setTimeout(() => setToast(null), 3000);
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    const emp = changePasswordFor;
+    if (!emp || !changePasswordForm.password.trim() || !changePasswordForm.confirm.trim()) {
+      setToast({ type: "error", message: "Enter new password and confirm" });
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+    if (changePasswordForm.password !== changePasswordForm.confirm) {
+      setToast({ type: "error", message: "Passwords do not match" });
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+    if (changePasswordForm.password.length < 6) {
+      setToast({ type: "error", message: "Password must be at least 6 characters" });
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+    const token = localStorage.getItem("salesAdminToken");
+    try {
+      const res = await fetch(`/api/sales/admin/employees/${emp._id || emp.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ password: changePasswordForm.password }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setToast({ type: "success", message: data.message || "Password changed. Employee must login with new password." });
+        setChangePasswordFor(null);
+        setChangePasswordForm({ password: "", confirm: "" });
+        setShowChangePasswordInput(false);
+        setTimeout(() => setToast(null), 4000);
+      } else {
+        setToast({ type: "error", message: data.message || "Failed to change password" });
+        setTimeout(() => setToast(null), 3000);
+      }
+    } catch (err) {
+      setToast({ type: "error", message: "Failed to change password" });
       setTimeout(() => setToast(null), 3000);
     }
   };
@@ -1081,6 +1132,87 @@ export default function SalesAdminDashboard() {
           </form>
             </div>
           </div>  
+        )}
+
+        {/* Change Password modal */}
+        {changePasswordFor && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+              <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b">
+                <h2 className="text-lg font-bold text-gray-900">Change Password</h2>
+                <button
+                  onClick={() => {
+                    setChangePasswordFor(null);
+                    setChangePasswordForm({ password: "", confirm: "" });
+                  }}
+                  className="text-gray-400 hover:text-gray-600 rounded-full p-1"
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="px-6 pt-3 text-sm text-gray-600">
+                Set new password for <strong>{changePasswordFor.fullname}</strong> ({changePasswordFor.email}). They will need to login with the new password.
+              </p>
+              <form onSubmit={handleChangePassword} className="px-6 pb-6 pt-4 space-y-4">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">New Password *</label>
+                  <div className="relative">
+                    <input
+                      type={showChangePasswordInput ? "text" : "password"}
+                      placeholder="Min 6 characters"
+                      required
+                      minLength={6}
+                      value={changePasswordForm.password}
+                      onChange={(e) =>
+                        setChangePasswordForm({ ...changePasswordForm, password: e.target.value })
+                      }
+                      className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm w-full pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowChangePasswordInput(!showChangePasswordInput)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                    >
+                      {showChangePasswordInput ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Confirm Password *</label>
+                  <input
+                    type={showChangePasswordInput ? "text" : "password"}
+                    placeholder="Re-enter new password"
+                    required
+                    minLength={6}
+                    value={changePasswordForm.confirm}
+                    onChange={(e) =>
+                      setChangePasswordForm({ ...changePasswordForm, confirm: e.target.value })
+                    }
+                    className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm w-full"
+                  />
+                </div>
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setChangePasswordFor(null);
+                      setChangePasswordForm({ password: "", confirm: "" });
+                    }}
+                    className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition text-sm"
+                  >
+                    Update Password
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
 
         {/* Bulk Assign - Sticky Bar */}
@@ -2197,7 +2329,7 @@ export default function SalesAdminDashboard() {
   </div>
 
   {/* Compact Buttons */}
-  <div className="mt-2 flex gap-2">
+  <div className="mt-2 flex flex-wrap gap-2">
     <button
       onClick={() =>
         handleToggleEmployeeStatus(
@@ -2206,7 +2338,7 @@ export default function SalesAdminDashboard() {
           emp.fullname
         )
       }
-      className={`flex-1 px-2 py-1 rounded-md text-[11px] font-medium transition ${
+      className={`flex-1 min-w-[70px] px-2 py-1 rounded-md text-[11px] font-medium transition ${
         emp.isActive
           ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
           : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
@@ -2214,12 +2346,21 @@ export default function SalesAdminDashboard() {
     >
       {emp.isActive ? "Deactivate" : "Activate"}
     </button>
-
+    <button
+      onClick={() => {
+        setChangePasswordFor(emp);
+        setChangePasswordForm({ password: "", confirm: "" });
+        setShowChangePasswordInput(false);
+      }}
+      className="flex-1 min-w-[70px] px-2 py-1 rounded-md text-[11px] font-medium bg-sky-100 text-sky-700 hover:bg-sky-200 transition"
+    >
+      Change Password
+    </button>
     <button
       onClick={() =>
         handleDeleteEmployee(emp._id, emp.fullname)
       }
-      className="flex-1 px-2 py-1 bg-red-100 text-red-600 rounded-md text-[11px] font-medium hover:bg-red-200 transition"
+      className="flex-1 min-w-[70px] px-2 py-1 bg-red-100 text-red-600 rounded-md text-[11px] font-medium hover:bg-red-200 transition"
     >
       Delete
     </button>

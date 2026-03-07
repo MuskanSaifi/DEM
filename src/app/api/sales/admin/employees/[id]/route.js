@@ -3,6 +3,7 @@ import SalesLead from "@/models/SalesLead";
 import connectdb from "@/lib/dbConnect";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 async function verifyAdmin(req) {
   try {
@@ -68,7 +69,7 @@ export async function DELETE(req, { params }) {
   }
 }
 
-// PATCH - Update employee (deactivate/activate)
+// PATCH - Update employee (deactivate/activate, or change password)
 export async function PATCH(req, { params }) {
   try {
     await connectdb();
@@ -82,11 +83,36 @@ export async function PATCH(req, { params }) {
     }
 
     const { id } = await params;
-    const { isActive } = await req.json();
+    const body = await req.json();
+    const { isActive, password } = body;
+
+    const update = {};
+
+    if (typeof isActive === "boolean") {
+      update.isActive = isActive;
+    }
+
+    if (password && typeof password === "string") {
+      const trimmed = password.trim();
+      if (trimmed.length < 6) {
+        return NextResponse.json(
+          { success: false, message: "Password must be at least 6 characters" },
+          { status: 400 }
+        );
+      }
+      update.password = await bcrypt.hash(trimmed, 10);
+    }
+
+    if (Object.keys(update).length === 0) {
+      return NextResponse.json(
+        { success: false, message: "No valid update fields provided" },
+        { status: 400 }
+      );
+    }
 
     const employee = await SalesEmployee.findByIdAndUpdate(
       id,
-      { isActive },
+      update,
       { new: true }
     ).select("-password");
 
@@ -97,11 +123,16 @@ export async function PATCH(req, { params }) {
       );
     }
 
+    const messages = [];
+    if (typeof isActive === "boolean")
+      messages.push(`Employee ${isActive ? "activated" : "deactivated"} successfully`);
+    if (password) messages.push("Password changed. Employee must use new password to login.");
+
     return NextResponse.json(
       {
         success: true,
         employee,
-        message: `Employee ${isActive ? "activated" : "deactivated"} successfully`,
+        message: messages.join(" "),
       },
       { status: 200 }
     );
