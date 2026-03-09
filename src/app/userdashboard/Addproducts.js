@@ -20,7 +20,7 @@ const generateSlug = (text) => {
   };
 
 const AddProduct = () => {
-  const router = useRouter();
+const router = useRouter();
 
 const [selectedCountry, setSelectedCountry] = useState("");
 const [availableStates, setAvailableStates] = useState([]);
@@ -283,7 +283,6 @@ const handleSubmit = async (e) => {
     toast.error("Please select a category.");
     return;
   }
-
   if (!product.subCategory) {
     toast.error("Please select a subcategory.");
     return;
@@ -294,7 +293,6 @@ const handleSubmit = async (e) => {
     toast.error("Please select MOQ Unit (e.g., Kilogram, Piece, etc.).");
     return;
   }
-
     setLoading(true);
 
     try {
@@ -496,7 +494,6 @@ const handleSubmit = async (e) => {
                     {/* Basic Details */}
                     <Tab.Pane eventKey="basicDetails">
                         <div className="bg-white p-4 rounded-lg max-w-[100%]">
-
                             <div className="mb-3">
                                 <label className="text-gray-600 text-sm">Product Name</label>
                                 <div className="relative mt-2 text-gray-500">

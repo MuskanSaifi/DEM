@@ -77,6 +77,15 @@ const createOptions = (arr) => arr.map(item => ({ value: item, label: item }));
 const stateOptions = createOptions(allStates);
 const cityOptions = createOptions(allCities);
 
+// Sanitize preview HTML so users cannot inject head-level tags here
+const sanitizeCompanyDescriptionPreview = (html) => {
+  if (!html || typeof html !== "string") return "";
+  return html
+    .replace(/<\/?(html|head|body)[^>]*>/gi, "")
+    .replace(/<title[^>]*>[\s\S]*?<\/title>/gi, "")
+    .replace(/<meta[^>]*>/gi, "")
+    .replace(/<link[^>]*rel=["']?canonical["']?[^>]*>/gi, "");
+};
 
 const BusinessProfile = () => {
   const [formData, setFormData] = useState({
@@ -111,34 +120,6 @@ const BusinessProfile = () => {
   });
 
   
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Heading.configure({ levels: [1, 2, 3] }),
-      Bold,
-      Italic,
-      Underline,
-      BulletList,
-      OrderedList,
-      ListItem,
-      Blockquote,
-      CodeBlock,
-      Link,
-    ],
-    content: "", // Set empty initially
-    onUpdate: ({ editor }) => {
-      setFormData((prev) => ({
-        ...prev,
-        companyDescription: editor.getHTML(),
-      }));
-    },
-  });
-  
-  useEffect(() => {
-    if (editor && formData.companyDescription) {
-      editor.commands.setContent(formData.companyDescription);
-    }
-  }, [editor, formData.companyDescription]);
 
   
   const businessTypeOptions = [
@@ -153,6 +134,37 @@ const BusinessProfile = () => {
   const [loading, setLoading] = useState(true);
   const [openSection, setOpenSection] = useState("companyDetails");
   const [isEditing, setIsEditing] = useState(false); // Toggle for edit/view mode
+
+
+
+  const editor = useEditor({
+  extensions: [
+    StarterKit,
+    Heading.configure({ levels: [1, 2, 3] }),
+    Bold,
+    Italic,
+    Underline,
+    BulletList,
+    OrderedList,
+    ListItem,
+    Blockquote,
+    CodeBlock,
+    Link,
+  ],
+  content: "",
+  onUpdate: ({ editor }) => {
+    setFormData((prev) => ({
+      ...prev,
+      companyDescription: editor.getHTML(),
+    }));
+  },
+});
+
+useEffect(() => {
+  if (editor && isEditing) {
+    editor.commands.setContent(formData.companyDescription || "", false);
+  }
+}, [editor, isEditing]);
 
 
   useEffect(() => {
@@ -225,9 +237,12 @@ const BusinessProfile = () => {
   const toggleSection = (section) => {
     setOpenSection(openSection === section ? null : section);
   };
-  const toggleEditMode = () => {
-    setIsEditing((prev) => !prev); // Toggle between edit and view mode
-  };
+const toggleEditMode = () => {
+  if (!isEditing && editor) {
+    editor.commands.setContent(formData.companyDescription || "", false);
+  }
+  setIsEditing((prev) => !prev);
+};
   const renderSection = (key, label, Icon, content) => (
     <div className="mb-3">
       <button
@@ -263,7 +278,6 @@ const BusinessProfile = () => {
     });
   };
 
-  
   return (
     <div className="container mt-5 mb-5">
       <div className="shadow-lg p-4 rounded-4 border-0">
@@ -369,7 +383,6 @@ const BusinessProfile = () => {
     ))}
   </>
 ))}
-
 
  {/* Timing & Visuals */}
 {renderSection("extraDetails", "Additional Details", FiClock, (
@@ -535,7 +548,13 @@ const BusinessProfile = () => {
                     </div>
                   ) : (
                     <div>
-                      <div dangerouslySetInnerHTML={{ __html: formData.companyDescription }} />
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: sanitizeCompanyDescriptionPreview(
+                            formData.companyDescription
+                          ),
+                        }}
+                      />
                       <button
                         type="button"
                         className="btn btn-sm btn-outline-primary mt-2"

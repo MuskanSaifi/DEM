@@ -14,6 +14,16 @@ import 'react-loading-skeleton/dist/skeleton.css'; // Import skeleton CSS
 
 import "./blogs.css";
 
+// Ensure blog HTML content cannot inject head-level tags into the body
+const sanitizeBlogContent = (html) => {
+  if (!html || typeof html !== "string") return "";
+  return html
+    .replace(/<\/?(html|head|body)[^>]*>/gi, "")
+    .replace(/<title[^>]*>[\s\S]*?<\/title>/gi, "")
+    .replace(/<meta[^>]*>/gi, "")
+    .replace(/<link[^>]*rel=["']?canonical["']?[^>]*>/gi, "");
+};
+
 const BlogDetail = ({ blog }) => {
   const formattedDate = blog?.createdAt
     ? format(new Date(blog.createdAt), "MMMM dd, yyyy") // Corrected 'MMMM dd, yyyy' for full year
@@ -27,8 +37,8 @@ const BlogDetail = ({ blog }) => {
   // ✅ Process content - preserve existing alt attributes (set in editor)
   useEffect(() => {
     if (blog?.content) {
-      // Just use the content as-is, preserving alt attributes set in editor
-      setProcessedContent(blog.content);
+      // Use the content as-is for body elements, but strip any head-level tags
+      setProcessedContent(sanitizeBlogContent(blog.content));
     }
   }, [blog]);
 
@@ -106,7 +116,7 @@ const handleSubscribe = async (e) => {
           </p>
           <div
             className="blog-content"
-            dangerouslySetInnerHTML={{ __html: processedContent || blog.content }}
+            dangerouslySetInnerHTML={{ __html: processedContent || sanitizeBlogContent(blog.content) }}
           />
         </Col>
 

@@ -8,7 +8,7 @@ import CompanySidebar from './CompanySidebar';
 // ✅ ISR: Revalidate every hour (3600 seconds)
 export const revalidate = 3600;
 
-// Outputs: <meta name="robots" content="noindex, follow"> and <meta name="googlebot" content="noindex, follow">
+// Outputs standard robots tags from the head
 export const metadata = {
   robots: {
     index: true,
@@ -19,19 +19,29 @@ export const metadata = {
     },
   },
   alternates: {
-    canonical: undefined, // 👈 THIS removes canonical
+    canonical: undefined,
   },
 };
 
 // 🔑 Helper function for masking sensitive data
 const maskData = (data) => {
   if (!data || typeof data !== 'string' || data.length < 5) {
-    return '—'; // Return default for invalid or short data
+    return '—';
   }
   const visibleLength = 4;
   const maskedPart = '*'.repeat(data.length - visibleLength);
   const visiblePart = data.slice(-visibleLength);
-  return `${maskedPart}${visiblePart}`; // Example: *****1234
+  return `${maskedPart}${visiblePart}`;
+};
+
+// Clean companyDescription so no head-level tags render inside the body
+const sanitizeCompanyDescription = (html) => {
+  if (!html || typeof html !== 'string') return '';
+  return html
+    .replace(/<\/?(html|head|body)[^>]*>/gi, '')
+    .replace(/<title[^>]*>[\s\S]*?<\/title>/gi, '')
+    .replace(/<meta[^>]*>/gi, '')
+    .replace(/<link[^>]*rel=["']?canonical["']?[^>]*>/gi, '');
 };
 
 export default async function CompanyProfile({ params }) {
@@ -119,7 +129,11 @@ return (
 
 <section className="py-5">
     <div className="max-w-4xl space-y-6">
-    <div dangerouslySetInnerHTML={{ __html: businessProfile.companyDescription }} />
+    <div
+      dangerouslySetInnerHTML={{
+        __html: sanitizeCompanyDescription(businessProfile.companyDescription),
+      }}
+    />
     </div>
     </section>
 

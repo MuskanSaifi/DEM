@@ -8,6 +8,20 @@ import "react-loading-skeleton/dist/skeleton.css";
 import Buyfrom from "./Buyfrom";
 import Link from "next/link";
 
+// Sanitize any rich text HTML so head-level tags can't appear in body content
+const sanitizeRichTextHtml = (html) => {
+  if (!html || typeof html !== "string") return "";
+  return html
+    // strip whole-document wrappers
+    .replace(/<\/?(html|head|body)[^>]*>/gi, "")
+    // strip titles
+    .replace(/<title[^>]*>[\s\S]*?<\/title>/gi, "")
+    // strip all meta tags (robots, description, etc.)
+    .replace(/<meta[^>]*>/gi, "")
+    // strip canonical links
+    .replace(/<link[^>]*rel=["']?canonical["']?[^>]*>/gi, "");
+};
+
 // Redux Imports
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -594,7 +608,11 @@ const ProductDetailPage = () => {
                       {product.businessProfile.companyDescription && (
                         <div
                           className="mb-6 text-sm text-gray-600"
-                          dangerouslySetInnerHTML={{ __html: product.businessProfile.companyDescription }}
+                          dangerouslySetInnerHTML={{
+                            __html: sanitizeRichTextHtml(
+                              product.businessProfile.companyDescription
+                            ),
+                          }}
                         />
                       )}
 

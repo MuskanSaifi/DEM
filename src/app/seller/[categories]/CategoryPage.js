@@ -8,6 +8,16 @@ import Buyfrom from "./Buyfrom";
 import { FaCheckCircle, FaFilter, FaMapMarkerAlt, FaUserClock } from "react-icons/fa";
 import { FaHeart, FaRegHeart } from 'react-icons/fa'; // Import heart icons
 
+// Strip any head-level tags from category HTML content before rendering
+const sanitizeCategoryContent = (html) => {
+  if (!html || typeof html !== "string") return "";
+  return html
+    .replace(/<\/?(html|head|body)[^>]*>/gi, "")
+    .replace(/<title[^>]*>[\s\S]*?<\/title>/gi, "")
+    .replace(/<meta[^>]*>/gi, "")
+    .replace(/<link[^>]*rel=["']?canonical["']?[^>]*>/gi, "");
+};
+
 // Import Slider component and styles from rc-slider
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css'; // Don't forget to import the styles!
@@ -912,7 +922,7 @@ className="rounded-md object-contain mx-auto h-100 w-100"
         {categoryContent && (
           <div
             className="mb-4" // Added common-shad for consistent styling
-            dangerouslySetInnerHTML={{ __html: categoryContent }}
+            dangerouslySetInnerHTML={{ __html: sanitizeCategoryContent(categoryContent) }}
           />
         )}
       </div>
