@@ -203,9 +203,9 @@ const AllContacts = ({ supportMember }) => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-indigo-600 text-white">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Name</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Email</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Phone</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+Contact Details
+</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Message</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Created At</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Remarks</th>
@@ -221,9 +221,13 @@ const AllContacts = ({ supportMember }) => {
               ) : (
                 filteredContacts.map((contact) => (
                   <tr key={contact._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 whitespace-nowrap font-medium text-gray-900">{contact.name}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{contact.email}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{contact.phone || "—"}</td>
+<td className="px-4 py-3">
+  <div className="flex flex-col">
+    <span className="font-semibold text-gray-900">{contact.name}</span>
+    <span className="text-sm text-gray-600">{contact.email}</span>
+    <span className="text-sm text-gray-600">{contact.phone || "—"}</span>
+  </div>
+</td>
                     <td className="px-4 py-3 text-sm text-gray-700 max-w-[280px] break-words">{contact.description || "—"}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-500">{formatDate(contact.createdAt)}</td>
                     <td className="px-4 py-3" style={{ minWidth: 200 }}>
