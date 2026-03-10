@@ -181,7 +181,7 @@ className="border border-gray-300 rounded-lg px-2 py-2 text-sm"
 
 <div className="bg-white rounded-xl shadow border border-gray-200">
 
-<div className="overflow-x-auto h-[400px] overflow-y-auto">
+<div className="overflow-x-auto h-[600px] overflow-y-auto">
 
 <table className="min-w-full">
 
@@ -399,222 +399,91 @@ View Details
 
 {totalPages > 1 && (
 
-<div className="flex justify-center gap-2 mt-6">
+<div className="flex justify-center mt-6">
+
+<nav className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
 
 <button
-onClick={()=>setCurrentPage((p)=>Math.max(p-1,1))}
-className="px-3 py-1 border rounded"
+onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+className="px-3 py-1 text-sm rounded hover:bg-gray-200"
 >
-
-Prev
-
+‹
 </button>
 
-{Array.from({length:totalPages},(_,i)=>(
+{(() => {
 
+const pages = [];
+
+const start = Math.max(currentPage - 2, 1);
+const end = Math.min(currentPage + 2, totalPages);
+
+if (start > 1) {
+
+pages.push(
+<button
+key={1}
+onClick={() => setCurrentPage(1)}
+className="px-3 py-1 text-sm rounded hover:bg-gray-200"
+>
+1
+</button>
+);
+
+if (start > 2) {
+pages.push(<span key="dots-start" className="px-2">...</span>);
+}
+
+}
+
+for (let i = start; i <= end; i++) {
+
+pages.push(
 <button
 key={i}
-onClick={()=>changePage(i+1)}
-className={`px-3 py-1 border rounded ${
-currentPage===i+1 ? "bg-indigo-600 text-white":""
+onClick={() => setCurrentPage(i)}
+className={`px-3 py-1 text-sm rounded ${
+currentPage === i
+? "bg-indigo-600 text-white"
+: "hover:bg-gray-200"
 }`}
 >
-
-{i+1}
-
+{i}
 </button>
+);
 
-))}
+}
+
+if (end < totalPages) {
+
+if (end < totalPages - 1) {
+pages.push(<span key="dots-end" className="px-2">...</span>);
+}
+
+pages.push(
+<button
+key={totalPages}
+onClick={() => setCurrentPage(totalPages)}
+className="px-3 py-1 text-sm rounded hover:bg-gray-200"
+>
+{totalPages}
+</button>
+);
+
+}
+
+return pages;
+
+})()}
 
 <button
-onClick={()=>setCurrentPage((p)=>Math.min(p+1,totalPages))}
-className="px-3 py-1 border rounded"
+onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+className="px-3 py-1 text-sm rounded hover:bg-gray-200"
 >
-
-Next
-
-</button>
-{/* View Lead Modal */}
-
-{modalOpen && selectedLead && (
-
-<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-
-<div className="bg-white rounded-xl shadow-xl p-6 w-[95%] max-w-2xl relative max-h-[90vh] overflow-y-auto">
-
-<button
-onClick={()=>setModalOpen(false)}
-className="absolute top-2 right-3 text-gray-400 hover:text-red-500 text-2xl"
->
-×
+›
 </button>
 
-<h3 className="text-xl font-bold text-indigo-700 mb-4 text-center">
-Lead Details
-</h3>
-<td className="px-4 py-3 text-xs text-gray-500">
+</nav>
 
-{new Date(selectedLead.createdAt).toLocaleString()}
-
-</td>
-
-<div className="space-y-4">
-
-{/* Buyer */}
-
-<div className="bg-indigo-50 p-3 rounded-lg">
-
-<p className="font-semibold text-indigo-700 mb-1">
-Buyer Details
-</p>
-
-<p>{selectedLead.buyer?.fullname}</p>
-<p>{selectedLead.buyer?.mobileNumber}</p>
-<p>{selectedLead.buyer?.email || "N/A"}</p>
-
-</div>
-
-
-{/* Seller */}
-
-<div className="bg-pink-50 p-3 rounded-lg">
-
-<p className="font-semibold text-pink-700 mb-1">
-Seller Details
-</p>
-
-<p>{selectedLead.seller?.fullname}</p>
-<p>{selectedLead.seller?.mobileNumber}</p>
-<p>{selectedLead.seller?.email || "N/A"}</p>
-
-</div>
-
-
-{/* Product */}
-
-<div className="bg-blue-50 p-3 rounded-lg">
-
-<p className="font-semibold text-blue-700 mb-2">
-Product Details
-</p>
-
-{selectedLead.product?.images?.[0]?.url && (
-
-<Image
-src={selectedLead.product.images[0].url}
-alt=""
-width={120}
-height={120}
-className="rounded border mb-2"
-/>
-
-)}
-
-<p>
-<strong>Name :</strong> {selectedLead.product?.name}
-</p>
-
-<p>
-<strong>Price :</strong> ₹{selectedLead.product?.price || "N/A"}
-</p>
-
-<p>
-<strong>Description :</strong> {selectedLead.product?.description || "No description"}
-</p>
-
-</div>
-
-
-{/* Quantity */}
-
-<div className="bg-gray-50 p-3 rounded-lg">
-
-<p>
-<strong>Quantity :</strong> {selectedLead.quantity} {selectedLead.unit}
-</p>
-
-<p>
-<strong>Frequency :</strong> {selectedLead.requirementFrequency}
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-)}
-
-
-{/* Add Remark Modal */}
-
-{remarkModal.open && (
-<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-
-<div className="bg-white rounded-xl shadow-xl p-6 w-[95%] max-w-md">
-
-<h4 className="text-lg font-bold text-indigo-700 mb-4">
-Add Remark
-</h4>
-
-<p className="text-sm text-gray-600 mb-2">
-Preset remarks
-</p>
-
-<div className="flex flex-wrap gap-2 mb-4">
-
-{PRESET_REMARKS.map((preset)=>(
-<button
-key={preset}
-onClick={()=>addRemark(remarkModal.leadId,preset)}
-className="px-3 py-1.5 rounded-lg border text-sm hover:bg-indigo-50"
->
-{preset}
-</button>
-))}
-
-</div>
-
-<hr className="my-4"/>
-
-<p className="text-sm text-gray-600 mb-2">
-Custom Remark
-</p>
-
-<div className="flex gap-2">
-
-<input
-ref={customRemarkInputRef}
-type="text"
-placeholder="Type remark..."
-value={customRemark}
-onChange={(e)=>setCustomRemark(e.target.value)}
-className="flex-1 border rounded-lg px-3 py-2 text-sm"
-/>
-
-<button
-onClick={()=>addRemark(remarkModal.leadId,customRemark)}
-disabled={addingRemark}
-className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm"
->
-{addingRemark ? "..." : "Add"}
-</button>
-
-</div>
-
-<button
-onClick={()=>setRemarkModal({open:false,leadId:null})}
-className="mt-4 w-full border py-2 rounded-lg text-sm"
->
-Close
-</button>
-
-</div>
-
-</div>
-)}
 </div>
 
 )}

@@ -267,7 +267,7 @@ const Buyers = ({ appliedClientFilter }) => {
 
         {/* TABLE */}
 
-        <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+        <div style={{ maxHeight: "500px", overflowY: "auto" }}>
 
           <Table className="table-striped table-bordered table-hover common-shad">
 

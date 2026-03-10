@@ -190,7 +190,7 @@ const Buyers = ({ supportMember, appliedClientFilter }) => {
         {!loading && !error && filteredBuyers.length === 0 && <p>No buyers found.</p>}
 
         {/* Scrollable Table */}
-        <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+        <div style={{ maxHeight: "500px", overflowY: "auto" }}>
 
           <Table className="table-striped table-bordered table-hover common-shad">
 
