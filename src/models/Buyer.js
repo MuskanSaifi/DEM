@@ -20,7 +20,16 @@ const BuyerSchema = new mongoose.Schema({
   buyer: String,
   otp: Number,
   otpExpires: Date,
-  remark: { type: String, default: "" },
+  remark: { type: String, default: "" }, // legacy, kept for backward compat
+  remarks: {
+    type: [
+      {
+        text: { type: String, required: true },
+        addedAt: { type: Date, default: Date.now },
+      },
+    ],
+    default: [],
+  },
   companyName: { type: String, default: "" },
   paymentStatus: { type: String, enum: ["paid", "unpaid"], default: "unpaid" },
   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],

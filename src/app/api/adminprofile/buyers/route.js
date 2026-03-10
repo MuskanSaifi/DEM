@@ -29,12 +29,22 @@ export async function GET(req) {
 
     const buyers = await Buyer.find(query).sort({ createdAt: -1 }).lean();
 
+    // Normalize: merge legacy remark into remarks array for display
+    const normalizedBuyers = buyers.map((b) => {
+      const remarks = b.remarks && b.remarks.length > 0
+        ? b.remarks
+        : b.remark
+          ? [{ text: b.remark, addedAt: b.updatedAt || b.createdAt }]
+          : [];
+      return { ...b, remarks };
+    });
+
     return NextResponse.json(
       {
         success: true,
         message: "Buyers retrieved successfully",
         totalBuyers: buyers.length,
-        buyers,
+        buyers: normalizedBuyers,
       },
       { status: 200 }
     );
@@ -88,15 +98,25 @@ export async function PATCH(req) {
       return NextResponse.json({ success: false, message: "Missing ID" }, { status: 400 });
     }
 
-    const update = {};
-    if (typeof remark === "string") update.remark = remark;
-    if (paymentStatus && ["paid", "unpaid"].includes(paymentStatus)) update.paymentStatus = paymentStatus;
+    const updateOps = {};
+    if (typeof remark === "string" && remark.trim()) {
+      const remarkText = remark.trim();
+      updateOps.$push = {
+        remarks: { text: remarkText, addedAt: new Date() },
+      };
+      updateOps.$set = updateOps.$set || {};
+      updateOps.$set.remark = remarkText; // keep legacy field in sync
+    }
+    if (paymentStatus && ["paid", "unpaid"].includes(paymentStatus)) {
+      updateOps.$set = updateOps.$set || {};
+      updateOps.$set.paymentStatus = paymentStatus;
+    }
 
-    if (Object.keys(update).length === 0) {
+    if (Object.keys(updateOps).length === 0) {
       return NextResponse.json({ success: false, message: "Missing remark or paymentStatus" }, { status: 400 });
     }
 
-    const updated = await Buyer.findByIdAndUpdate(id, update, { new: true });
+    const updated = await Buyer.findByIdAndUpdate(id, updateOps, { new: true }).lean();
 
     if (!updated) {
       return NextResponse.json({ success: false, message: "Buyer not found" }, { status: 404 });
