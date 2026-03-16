@@ -357,7 +357,7 @@ const ProductDetailPage = () => {
                   >
                     <Image
                       src={hoveredImage || product.images?.[0] || "/placeholder.png"}
-                      alt={product.name || "Product Image"}
+                      alt={`${product.name} wholesale suppliers` || "Product Image"}
                       width={500}
                       height={500}
                       className="object-cover w-full h-auto"
@@ -676,18 +676,19 @@ const ProductDetailPage = () => {
                           </div>
                         </div>
 
-                        {/* Working Days */}
-                        <div className="flex items-start space-x-4">
-                          <div className="bg-orange-100 p-3 rounded-full">
-                            📅
-                          </div>
-                          <div>
-                            <p className="text-gray-700 font-semibold mb-0">Working Days</p>
-                            <p className="text-gray-500 text-sm">
-                              {product.businessProfile.workingDays?.join(" To ") || "N/A"}
-                            </p>
-                          </div>
-                        </div>
+{/* Working Days */}
+<div className="flex items-start space-x-4">
+  <div className="bg-orange-100 p-3 rounded-full">
+    📅
+  </div>
+  <div>
+    <p className="text-gray-700 font-semibold mb-0">Working Days</p>
+    <p className="text-gray-500 text-sm">
+      {product.businessProfile.workingDays?.join(", ") || "N/A"}
+    </p>
+  </div>
+</div>
+
                       </div>
 
                       {/* Logo */}

@@ -317,8 +317,7 @@ const Buyers = ({ supportMember, appliedClientFilter }) => {
           </Table>
         </div>
 
-      {/* Pagination */}
-
+{/* Pagination */}
 {totalPages > 1 && (
   <div className="d-flex justify-content-center mt-3">
 

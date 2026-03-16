@@ -20,7 +20,7 @@ export async function generateMetadata({ params }) {
     const safeDesc = getSafeMetaContent(product?.description) || "Explore high-quality products on Dial Export Mart.";
 
     return {
-      title: `${safeName} | Dial Export Mart`,
+      title: `${safeName}`,
       description: (typeof safeDesc === 'string' ? safeDesc.slice(0, 160) : safeDesc) || "Explore high-quality products on Dial Export Mart.",
       keywords: [
         safeName,
@@ -33,10 +33,10 @@ export async function generateMetadata({ params }) {
         canonical: `https://www.dialexportmart.com/products/${id}`,
       },
       openGraph: {
-        title: `${safeName} | Dial Export Mart`,
+        title: `${safeName}`,
         description: (typeof safeDesc === 'string' ? safeDesc.slice(0, 160) : safeDesc) || "Explore products on Dial Export Mart.",
         url: `https://www.dialexportmart.com/products/${id}`,
-        siteName: "Dial Export Mart",
+        siteName: "Dial Export Mart", 
         images: [
           {
             url: product?.images?.[0] || "https://www.dialexportmart.com/assets/product-default.png",

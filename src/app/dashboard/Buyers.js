@@ -262,7 +262,6 @@ const Buyers = ({ appliedClientFilter }) => {
           >
             Reset
           </Button>
-
         </Form>
 
         {/* TABLE */}
@@ -272,7 +271,6 @@ const Buyers = ({ appliedClientFilter }) => {
           <Table className="table-striped table-bordered table-hover common-shad">
 
             <thead className="table-dark" style={{ position: "sticky", top: 0 }}>
-
               <tr>
                 <th>#</th>
                 <th>Full Name</th>

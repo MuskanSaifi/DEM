@@ -143,5 +143,4 @@ productSchema.index({ country: 1 }); // Country queries
 productSchema.index({ state: 1 }); // State queries
 productSchema.index({ city: 1, subCategory: 1 });
 
-
 export default mongoose.models.Product || mongoose.model("Product", productSchema);
