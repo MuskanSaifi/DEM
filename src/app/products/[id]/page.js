@@ -32,6 +32,7 @@ export async function generateMetadata({ params }) {
       alternates: {
         canonical: `https://www.dialexportmart.com/products/${id}`,
       },
+      
       openGraph: {
         title: `${safeName}`,
         description: (typeof safeDesc === 'string' ? safeDesc.slice(0, 160) : safeDesc) || "Explore products on Dial Export Mart.",
@@ -47,6 +48,7 @@ export async function generateMetadata({ params }) {
         ],
       },
     };
+    
   } catch (error) {
     return {
       title: "Product | Dial Export Mart",

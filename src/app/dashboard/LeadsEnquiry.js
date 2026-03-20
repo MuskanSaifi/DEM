@@ -488,6 +488,78 @@ className="px-3 py-1 text-sm rounded hover:bg-gray-200"
 
 )}
 
+
+{modalOpen && selectedLead && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="bg-white rounded-xl p-6 w-[400px]">
+
+      <h3 className="text-lg font-bold mb-3">Lead Details</h3>
+
+      <p><b>Buyer:</b> {selectedLead?.buyer?.fullname}</p>
+      <p><b>Seller:</b> {selectedLead?.seller?.fullname}</p>
+      <p><b>Product:</b> {selectedLead?.product?.name}</p>
+      <p><b>Quantity:</b> {selectedLead?.quantity}</p>
+
+      <button
+        onClick={()=>setModalOpen(false)}
+        className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
+      >
+        Close
+      </button>
+
+    </div>
+  </div>
+)}
+
+{remarkModal.open && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    
+    <div className="bg-white rounded-xl p-6 w-[400px]">
+
+      <h3 className="text-lg font-bold mb-3">Add Remark</h3>
+
+      {/* Preset buttons */}
+      <div className="flex flex-wrap gap-2 mb-3">
+        {PRESET_REMARKS.map((r,i)=>(
+          <button
+            key={i}
+            onClick={()=>addRemark(remarkModal.leadId,r)}
+            className="px-3 py-1 bg-gray-200 rounded text-sm hover:bg-gray-300"
+          >
+            {r}
+          </button>
+        ))}
+      </div>
+
+      {/* Custom remark */}
+      <input
+        type="text"
+        placeholder="Custom remark..."
+        value={customRemark}
+        onChange={(e)=>setCustomRemark(e.target.value)}
+        className="w-full border px-3 py-2 rounded mb-3"
+      />
+
+      <button
+        onClick={()=>addRemark(remarkModal.leadId,customRemark)}
+        disabled={addingRemark}
+        className="w-full bg-indigo-600 text-white py-2 rounded"
+      >
+        {addingRemark ? "Adding..." : "Submit"}
+      </button>
+
+      <button
+        onClick={()=>setRemarkModal({open:false,leadId:null})}
+        className="mt-2 w-full bg-gray-300 py-2 rounded"
+      >
+        Cancel
+      </button>
+
+    </div>
+
+  </div>
+)}
+
 </div>
 
 );
