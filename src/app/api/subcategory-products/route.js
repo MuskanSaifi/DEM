@@ -5,6 +5,7 @@ import SubCategory from "@/models/SubCategory";
 import Product from "@/models/Product";
 import BusinessProfile from "@/models/BusinessProfile";
 import User from "@/models/User"; // ✅ Required for populate("userId")
+import Certificate from "@/models/Certificate";
 
 export async function GET(req) {
   try {
@@ -77,7 +78,7 @@ export async function GET(req) {
       .select(
         "name description price images tradeShopping userId minimumOrderQuantity currency tags city state"
       )
-      .populate("userId", "fullname mobileNumber companyName")
+      .populate("userId", "fullname mobileNumber companyName userProfileSlug")
       .skip(skip)
       .limit(limit)
       .lean();
@@ -97,6 +98,19 @@ export async function GET(req) {
     products.forEach((p) => {
       const uid = p.userId?._id?.toString();
       p.businessProfile = profileMap[uid] || null;
+    });
+
+    // 5) Certified badge info for sellers in this list
+    const activeCerts = await Certificate.find({
+      userId: { $in: userIds },
+      status: "active",
+    })
+      .select("userId")
+      .lean();
+    const certifiedUserIds = new Set(activeCerts.map((c) => String(c.userId)));
+    products.forEach((p) => {
+      const uid = p.userId?._id?.toString();
+      p.isCertified = !!(uid && certifiedUserIds.has(uid));
     });
 
     return Response.json({

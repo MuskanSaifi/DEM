@@ -5,6 +5,7 @@ import SubCategory from "@/models/SubCategory";
 import Product from "@/models/Product";
 import BusinessProfile from "@/models/BusinessProfile";
 import User from "@/models/User"; // ✅ Required for populate("userId")
+import Certificate from "@/models/Certificate";
 
 export async function GET(req) {
   try {
@@ -41,7 +42,7 @@ const products = await Product.find({
   subCategory: { $in: subCatIds },
 })
   .select("name description price images tradeShopping minimumOrderQuantity currency userId tags")
-  .populate("userId", "fullname mobileNumber")
+  .populate("userId", "fullname mobileNumber userProfileSlug")
   .skip(skip)
   .limit(limit)
   .lean();
@@ -59,6 +60,19 @@ const products = await Product.find({
 
     products.forEach((p) => {
       p.businessProfile = bpMap[p.userId?._id] || null;
+    });
+
+    // Certified flag for sellers in this list
+    const activeCerts = await Certificate.find({
+      userId: { $in: userIds },
+      status: "active",
+    })
+      .select("userId")
+      .lean();
+    const certifiedUserIds = new Set(activeCerts.map((c) => String(c.userId)));
+    products.forEach((p) => {
+      const uid = p.userId?._id?.toString();
+      p.isCertified = !!(uid && certifiedUserIds.has(uid));
     });
 
     return Response.json({

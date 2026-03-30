@@ -65,6 +65,7 @@ const ProductDetailPage = () => {
   const [hoveredImage, setHoveredImage] = useState(null);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const [showZoomModal, setShowZoomModal] = useState(false);
+  const [sellerCertified, setSellerCertified] = useState(false);
   const modalRef = useRef();
 
   // Redux Hooks
@@ -133,6 +134,7 @@ const ProductDetailPage = () => {
           setProduct(data);
           setRelatedProducts(data.relatedProducts || []);
           setRelatedCategories(data.relatedCategories || []);
+          setSellerCertified(!!data.isCertified);
           setError(null);
         }
       } catch (err) {
@@ -462,6 +464,11 @@ const ProductDetailPage = () => {
     className="text-blue-600 hover:underline flex items-center gap-1"
   >
                       👤 {product.userId.fullname}
+                      {sellerCertified && (
+                        <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">
+                          ✓ Certified
+                        </span>
+                      )}
                         </Link>
                       </span>}
 

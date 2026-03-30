@@ -789,6 +789,12 @@ className="rounded-md object-contain mx-auto h-100 w-100"
 <div className="mb-2 pb-1 border-bottom small">
                         {/* <h3 className="fw-bold text-dark text-sm mb-2">{product.businessProfile.companyName}</h3> */}
                         <div className="d-flex flex-wrap align-items-center text-sm">
+                          {/* Certified badge */}
+                          {product.isCertified && (
+                            <span className="me-3 text-success d-flex align-items-center mb-1">
+                              <FaCheckCircle className="me-1" /> Certified
+                            </span>
+                          )}
                           {/* Location */}
                           {(shouldDisplay(product.businessProfile.city) || shouldDisplay(product.businessProfile.state)) && (
                             <div className="d-flex align-items-center text-muted me-3 mb-1">

@@ -15,6 +15,7 @@ import Enquiry from "./Enquiry";
 import Supportperson from "./Supportperson";
 import { useSelector } from 'react-redux';
 import UserAggrement from "./UserAggrement";
+import Certificates from "./Certificates";
 
 function DashboardPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -61,6 +62,7 @@ function DashboardPage() {
           {activeContent === "My Product" && <AllProducts />}
           {activeContent === "Recieved Enquiry" && <Enquiry />}
           {activeContent === "Support Person" && <Supportperson />}
+          {activeContent === "Certificates" && <Certificates />}
          {activeContent === "Aggrement" && <UserAggrement user={user} />}
         </div>
       </div>

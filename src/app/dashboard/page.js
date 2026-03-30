@@ -35,6 +35,7 @@ import Banner from "./Banner";
 import Plans from "./Plans";
 import AddTemplate from "./ManageTemplates";
 import ProductsDiagnostic from "./ProductsDiagnostic";
+import Certificates from "./Certificates";
 import ClientFilterModal from "@/components/ClientFilterModal";
 
 function ResponsiveDashboard() {
@@ -149,6 +150,7 @@ function ResponsiveDashboard() {
           {activeContent === "Report" && <Report />}
           {activeContent === "Block" && <Block />}
           {activeContent === "Products Diagnostic" && <ProductsDiagnostic />}
+          {activeContent === "Certificates" && <Certificates />}
         </div>
       </div>
     </div>

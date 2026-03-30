@@ -730,6 +730,12 @@ const fetchData = useCallback(async () => {
                               {product.businessProfile.companyName}
                             </h3> */}
                             <div className="d-flex flex-wrap align-items-center text-sm">
+                              {/* Certified badge */}
+                              {product.isCertified && (
+                                <span className="me-3 text-success d-flex align-items-center mb-1">
+                                  <FaCheckCircle className="me-1" /> Certified
+                                </span>
+                              )}
                               {/* Location - H3 */}
                               {(shouldDisplay(product.businessProfile.city) ||
                                 shouldDisplay(

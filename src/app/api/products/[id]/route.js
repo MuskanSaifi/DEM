@@ -7,6 +7,7 @@ import SubCategory from "@/models/SubCategory";
 import User from "@/models/User";
 import BusinessProfile from "@/models/BusinessProfile";
 import BlockedUser from "@/models/BlockedUser";
+import Certificate from "@/models/Certificate";
 
 export async function GET(req, context) {
   try {
@@ -78,6 +79,15 @@ if (!mongoose.Types.ObjectId.isValid(id)) {
       images: product.images?.filter(img => img?.url).map(img => img.url),
     };  
 
+    // Certified flag for main seller
+    const activeMain = await Certificate.findOne({
+      userId: product.userId._id,
+      status: "active",
+    })
+      .select("_id")
+      .lean();
+    formattedProduct.isCertified = !!activeMain;
+
     // --- Related Products ---
     let relatedProducts = [];
     const maxRelatedProducts = 12;
@@ -142,10 +152,17 @@ if (!mongoose.Types.ObjectId.isValid(id)) {
               .lean()
           : null;
 
+        const rpCert = rp.userId?._id
+          ? await Certificate.findOne({ userId: rp.userId._id, status: "active" })
+              .select("_id")
+              .lean()
+          : null;
+
         return {
           ...rp.toObject(),
           businessProfile: rpBusinessProfile,
           images: rp.images?.filter(img => img?.url).map(img => img.url),
+          isCertified: !!rpCert,
         };
       })
     );

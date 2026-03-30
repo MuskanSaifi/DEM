@@ -30,6 +30,7 @@ const Sidebar = ({ isSidebarOpen, setActiveContent, activeContent }) => {
       subItems: ["Recieved Enquiry"],
     },
     { icon: "/assets/dashboardicons/Payments.png", label: "Payments" },
+    { icon: "/assets/dashboardicons/Report.png", label: "Certificates" },
     { icon: "/assets/dashboardicons/support-person.png", label: "Support Person" },
     // { icon: "/assets/dashboardicons/aggrement.png", label: "Aggrement" },
 

@@ -70,6 +70,19 @@ export default async function CompanyProfile({ params }) {
 
   const { user, businessProfile } = data;
 
+  // Public certificate lookup (buyer can see)
+  let certificateInfo = null;
+  try {
+    const certRes = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/certificates/by-slug/${slug}`,
+      { next: { revalidate: 3600 } }
+    );
+    const certData = await certRes.json();
+    if (certData?.success && certData?.certified) certificateInfo = certData.certificate;
+  } catch {
+    certificateInfo = null;
+  }
+
   // Mask the sensitive fields once here
   const maskedOfficeContact = maskData(businessProfile.officeContact);
   const maskedGstNumber = maskData(businessProfile.gstNumber);
@@ -102,6 +115,25 @@ return (
   <div className="text-gray-600">📄 Ownership Type</div>
   <p className="text-gray-800">{businessProfile.ownershipType || '—'}</p>
 </div>
+
+{certificateInfo && (
+  <div className="bg-emerald-50 p-4 rounded-xl shadow-sm flex flex-col justify-between">
+    <div className="text-emerald-700 font-semibold flex items-center gap-2">
+      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-600 text-white text-sm">
+        ✓
+      </span>
+      Certified
+    </div>
+    <a
+      href={`/api/certificates/pdf/${slug}`}
+      target="_blank"
+      rel="noreferrer"
+      className="mt-2 inline-flex items-center justify-center px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition"
+    >
+      View Certificate (PDF)
+    </a>
+  </div>
+)}
 
 {/* MASKED FIELD */}
 <div className="bg-green-50 p-4 rounded-xl shadow-sm">
