@@ -6,6 +6,14 @@ import ClientFilterModal from "@/components/ClientFilterModal";
 import { useSalesChatSocket } from "@/lib/salesChatSocket";
 import "@/components/styles/sales-dashboards.css";
 import { FiSearch, FiMessageCircle, FiLogOut} from "react-icons/fi";
+
+function formatLocalYMD(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export default function SalesTeamDashboard() {
   const [employee, setEmployee] = useState(null);
   const [leads, setLeads] = useState([]);
@@ -40,6 +48,8 @@ const [hasSearched, setHasSearched] = useState(false);
     search: "",
     paymentStatus: "",
     gst: "",
+    dateFrom: "",
+    dateTo: "",
   });
   const [showClientFilterModal, setShowClientFilterModal] = useState(false);
   const [remarkData, setRemarkData] = useState({
@@ -175,6 +185,30 @@ const [hasSearched, setHasSearched] = useState(false);
       filtered = filtered.filter(
         (lead) => (lead.gst || "").toLowerCase().includes(gstLower)
       );
+    }
+    if (filters.dateFrom || filters.dateTo) {
+      const parseLocal = (ymd) => {
+        if (!ymd) return null;
+        const parts = ymd.split("-").map(Number);
+        const [y, m, d] = parts;
+        if (!y || !m || !d) return null;
+        return new Date(y, m - 1, d);
+      };
+      const from = parseLocal(filters.dateFrom);
+      const to = parseLocal(filters.dateTo);
+      const start = from
+        ? new Date(from.getFullYear(), from.getMonth(), from.getDate(), 0, 0, 0, 0)
+        : null;
+      const end = to
+        ? new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23, 59, 59, 999)
+        : null;
+      filtered = filtered.filter((lead) => {
+        if (!lead.createdAt) return false;
+        const t = new Date(lead.createdAt).getTime();
+        if (start && t < start.getTime()) return false;
+        if (end && t > end.getTime()) return false;
+        return true;
+      });
     }
     setFilteredLeads(filtered);
   }, [leads, filters]);
@@ -345,6 +379,32 @@ const [hasSearched, setHasSearched] = useState(false);
       }
     } catch (err) {
       console.error("Edit remark error:", err);
+    }
+  };
+
+  const handleUpdateLeadContact = async (leadId, payload) => {
+    const token = localStorage.getItem("salesEmployeeToken");
+    try {
+      const res = await fetch(`/api/sales/leads/${leadId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchLeads(token);
+        setToast({ type: "success", message: "Saved" });
+        setTimeout(() => setToast(null), 2000);
+      } else {
+        setToast({ type: "error", message: data.message || "Could not save" });
+        setTimeout(() => setToast(null), 4000);
+        fetchLeads(token);
+      }
+    } catch (err) {
+      console.error("Update lead contact error:", err);
     }
   };
 
@@ -787,10 +847,64 @@ useEffect(() => {
             </div>
             <div className="flex items-end">
               <button
-                onClick={() => setFilters({ status: "", paymentStatus: "", search: "", gst: "" })}
+                onClick={() =>
+                  setFilters({
+                    status: "",
+                    paymentStatus: "",
+                    search: "",
+                    gst: "",
+                    dateFrom: "",
+                    dateTo: "",
+                  })
+                }
                 className="sales-btn-primary px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg border border-gray-200 transition"
               >
                 Clear Filters
+              </button>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-100">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">From date</label>
+              <input
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) =>
+                  setFilters({ ...filters, dateFrom: e.target.value })
+                }
+                className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-gray-50/50 focus:bg-white transition"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">To date</label>
+              <input
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) =>
+                  setFilters({ ...filters, dateTo: e.target.value })
+                }
+                className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-gray-50/50 focus:bg-white transition"
+              />
+            </div>
+            <div className="flex flex-wrap items-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const t = formatLocalYMD();
+                  setFilters((f) => ({ ...f, dateFrom: t, dateTo: t }));
+                }}
+                className="sales-btn-primary px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition text-sm"
+              >
+                Today
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setFilters((f) => ({ ...f, dateFrom: "", dateTo: "" }))
+                }
+                className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg border border-gray-200 transition text-sm"
+              >
+                All dates
               </button>
             </div>
           </div>
@@ -952,7 +1066,10 @@ useEffect(() => {
           <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
             <h2 className="text-lg font-bold text-gray-900">My Leads ({filteredLeads.length})</h2>
           </div>
-          <div className="overflow-x-auto">
+          <div
+            className="overflow-x-auto overflow-y-auto border-t border-gray-100"
+            style={{ height: "500px" }}
+          >
             {filteredLeads.length === 0 ? (
               <div className="sales-empty-state">
                 <div className="sales-empty-state-icon">📋</div>
@@ -994,11 +1111,47 @@ useEffect(() => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       {lead.clientName}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {lead.companyName || "-"}
+                    <td className="px-6 py-4 whitespace-nowrap align-top">
+                      <input
+                        type="text"
+                        aria-label="Company name"
+                        className="sales-input-focus w-full min-w-[7rem] max-w-[14rem] border border-gray-200 rounded-lg px-2 py-1.5 text-sm"
+                        defaultValue={lead.companyName || ""}
+                        key={`c-${lead._id}-${lead.companyName ?? ""}`}
+                        onBlur={(e) => {
+                          const v = e.target.value.trim();
+                          const prev = (lead.companyName || "").trim();
+                          if (v !== prev) {
+                            handleUpdateLeadContact(lead._id, {
+                              companyName: v,
+                            });
+                          }
+                        }}
+                      />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {lead.mobile}
+                    <td className="px-6 py-4 whitespace-nowrap align-top">
+                      <input
+                        type="tel"
+                        aria-label="Mobile number"
+                        className="sales-input-focus w-full min-w-[7rem] max-w-[10rem] border border-gray-200 rounded-lg px-2 py-1.5 text-sm"
+                        defaultValue={lead.mobile}
+                        key={`m-${lead._id}-${lead.mobile}`}
+                        onBlur={(e) => {
+                          const v = e.target.value.trim().replace(/\s+/g, "");
+                          if (!v) {
+                            setToast({
+                              type: "error",
+                              message: "Mobile cannot be empty",
+                            });
+                            setTimeout(() => setToast(null), 3000);
+                            e.target.value = lead.mobile;
+                            return;
+                          }
+                          if (v !== lead.mobile) {
+                            handleUpdateLeadContact(lead._id, { mobile: v });
+                          }
+                        }}
+                      />
                     </td>
                     <td className="px-6 py-4">{lead.product}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{lead.gst || "-"}</td>

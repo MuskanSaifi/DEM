@@ -3,6 +3,11 @@ import connectdb from "@/lib/dbConnect";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
+function normalizeMobile(m) {
+  if (!m || typeof m !== "string") return "";
+  return m.replace(/\D/g, "").trim();
+}
+
 async function verifyToken(req) {
   try {
     const token = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -31,7 +36,16 @@ export async function PATCH(req, { params }) {
     }
 
     const { id } = await params;
-    const { assignedTo, status, remark, selfAssign, paymentStatus, gst } = await req.json();
+    const {
+      assignedTo,
+      status,
+      remark,
+      selfAssign,
+      paymentStatus,
+      gst,
+      mobile,
+      companyName,
+    } = await req.json();
 
     const lead = await SalesLead.findById(id);
     if (!lead) {
@@ -66,6 +80,35 @@ export async function PATCH(req, { params }) {
 
     if (gst !== undefined) {
       lead.gst = gst != null && String(gst).trim() ? String(gst).trim() : "";
+    }
+
+    if (companyName !== undefined) {
+      lead.companyName = companyName != null ? String(companyName).trim() : "";
+    }
+
+    if (mobile !== undefined) {
+      const trimmed = String(mobile).trim().replace(/\s+/g, "");
+      if (!trimmed) {
+        return NextResponse.json(
+          { success: false, message: "Mobile is required" },
+          { status: 400 }
+        );
+      }
+      const mobileNorm = normalizeMobile(trimmed);
+      const others = await SalesLead.find({ _id: { $ne: id } }, { mobile: 1 }).lean();
+      const duplicate = others.some(
+        (l) => normalizeMobile(l.mobile) === mobileNorm
+      );
+      if (duplicate) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Another lead already uses this mobile number.",
+          },
+          { status: 400 }
+        );
+      }
+      lead.mobile = trimmed;
     }
 
     // Add remark

@@ -15,7 +15,7 @@ export default function SalesAdminDashboard() {
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [leadsLoading, setLeadsLoading] = useState(true);
   const [showAddEmployee, setShowAddEmployee] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [showRemarkModal, setShowRemarkModal] = useState(null);
@@ -256,6 +256,7 @@ export default function SalesAdminDashboard() {
   }, [chatMessages]);
 
   const fetchData = async (token) => {
+    setLeadsLoading(true);
     try {
       const [leadsRes, employeesRes, statsRes] = await Promise.all([
         fetch("/api/sales/leads", {
@@ -281,7 +282,7 @@ export default function SalesAdminDashboard() {
     } catch (err) {
       console.error("Fetch data error:", err);
     } finally {
-      setLoading(false);
+      setLeadsLoading(false);
     }
   };
 
@@ -688,15 +689,6 @@ export default function SalesAdminDashboard() {
     localStorage.removeItem("salesAdmin");
     router.push("/sales-admin-login");
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4">
-        <div className="sales-spinner" />
-        <p className="text-gray-500 font-medium">Loading dashboard…</p>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -1316,7 +1308,7 @@ export default function SalesAdminDashboard() {
           <div className="px-3 py-2 border-b border-gray-100 bg-gray-50/50">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <h2 className="text-sm font-bold text-gray-900">
-                All Leads ({filteredLeads.length})
+                All Leads ({leadsLoading ? "…" : filteredLeads.length})
               </h2>
               <div className="flex flex-wrap items-center gap-3">
                 <input
@@ -1342,7 +1334,7 @@ export default function SalesAdminDashboard() {
                   <option value="pending">Pending</option>
                   <option value="partial">Partial</option>
                 </select>
-                {filteredLeads.length > 0 && (
+                {!leadsLoading && filteredLeads.length > 0 && (
                   <button
                     onClick={() => {
                       if (selectedLeads.length === filteredLeads.length) {
@@ -1363,7 +1355,16 @@ export default function SalesAdminDashboard() {
           </div>
     <div className="relative h-[70vh] max-h-[650px] border border-gray-200 rounded-xl overflow-hidden">
   <div className="h-full overflow-auto">
-            {filteredLeads.length === 0 ? (
+            {leadsLoading ? (
+              <div
+                className="flex flex-col items-center justify-center gap-3 min-h-[280px] py-16"
+                aria-busy="true"
+                aria-live="polite"
+              >
+                <div className="sales-spinner" />
+                <p className="text-gray-500 text-sm font-medium">Loading leads…</p>
+              </div>
+            ) : filteredLeads.length === 0 ? (
               <div className="sales-empty-state">
                 <div className="sales-empty-state-icon">📋</div>
                 <p className="font-medium text-gray-600">
