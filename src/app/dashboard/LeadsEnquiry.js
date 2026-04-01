@@ -13,8 +13,6 @@ const LeadsEnquiry = () => {
 const [leads,setLeads] = useState([]);
 const [searchTerm,setSearchTerm] = useState("");
 const [loading,setLoading] = useState(true);
-const [modalOpen,setModalOpen] = useState(false);
-const [selectedLead,setSelectedLead] = useState(null);
 const [startDate,setStartDate] = useState("");
 const [endDate,setEndDate] = useState("");
 
@@ -104,8 +102,6 @@ lead?.product?.name?.toLowerCase().includes(term);
 return matchesSearch && isWithinDateRange;
 
 });
-
-
 /* Pagination Logic */
 
 const indexOfLastLead = currentPage * leadsPerPage;
@@ -195,8 +191,8 @@ className="border border-gray-300 rounded-lg px-2 py-2 text-sm"
 <th className="px-4 py-3 text-left text-xs">Qty</th>
 {/* <th className="px-4 py-3 text-left text-xs">Frequency</th> */}
 {/* <th className="px-4 py-3 text-left text-xs">Created</th> */}
-<th className="px-4 py-3 text-left text-xs">Remarks</th>
-<th className="px-4 py-3 text-center text-xs">Action</th>
+<th className="px-4 py-3 text-center text-xs">Remarks</th>
+<th className="px-4 py-3 text-center text-xs">Date & Time</th>
 
 </tr>
 
@@ -209,7 +205,6 @@ className="border border-gray-300 rounded-lg px-2 py-2 text-sm"
 Array(6).fill().map((_,i)=>(
 
 <tr key={i}>
-<td className="px-4 py-3"><Skeleton/></td>
 <td className="px-4 py-3"><Skeleton/></td>
 <td className="px-4 py-3"><Skeleton/></td>
 <td className="px-4 py-3"><Skeleton/></td>
@@ -330,7 +325,7 @@ className="bg-gray-100 rounded px-2 py-1 text-center"
 
 {r.addedAt && (
 <span className="text-gray-500 ml-1">
-{new Date(r.addedAt).toLocaleDateString()}
+{new Date(r.addedAt).toLocaleDateString("en-GB")}
 </span>
 )}
 
@@ -361,25 +356,9 @@ className="text-indigo-600 hover:text-indigo-800 text-xs font-medium mt-1"
 
 </td>
 
-<td className="px-4 py-3 text-center">
-
-<button
-onClick={()=>{
-setSelectedLead(lead);
-setModalOpen(true);
-}}
-className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-sm"
->
-
-View Details
-
-</button>
-
+<td className="px-4 py-3 text-center text-xs">
+{new Date(lead.createdAt).toLocaleString("en-GB")}
 </td>
-
-
-
-
 </tr>
 
 ))
@@ -486,29 +465,6 @@ className="px-3 py-1 text-sm rounded hover:bg-gray-200"
 
 </div>
 
-)}
-
-
-{modalOpen && selectedLead && (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-    <div className="bg-white rounded-xl p-6 w-[400px]">
-
-      <h3 className="text-lg font-bold mb-3">Lead Details</h3>
-
-      <p><b>Buyer:</b> {selectedLead?.buyer?.fullname}</p>
-      <p><b>Seller:</b> {selectedLead?.seller?.fullname}</p>
-      <p><b>Product:</b> {selectedLead?.product?.name}</p>
-      <p><b>Quantity:</b> {selectedLead?.quantity}</p>
-
-      <button
-        onClick={()=>setModalOpen(false)}
-        className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
-      >
-        Close
-      </button>
-
-    </div>
-  </div>
 )}
 
 {remarkModal.open && (

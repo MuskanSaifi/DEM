@@ -26,9 +26,9 @@ const AppDownload = () => {
     Mobile Application
   </span>
 
-  <h2 className="text-4xl font-bold text-gray-900 leading-tight mb-3">
+  <b className="text-4xl  text-gray-900 leading-tight mb-3">
     Download Our B2B Marketplace App
-  </h2>
+  </b>
 
   <p className="text-gray-600 max-w-md mb-8">
    Download the Dial Export Mart app to connect with verified manufacturers, suppliers, exporters, and buyers in India. Get genuine B2B leads, bulk orders, and grow your business faster.
@@ -50,6 +50,7 @@ const AppDownload = () => {
       <a
         href="https://play.google.com/store/apps/details?id=com.nazim_saifi.dialexportmart"
         target="_blank"
+        rel="nofollow noopener noreferrer"
         className="hover:scale-105 transition"
       >
         <Image src="/assets/play-store.png" alt="Download Dial Export Mart App on Google Play Store" width={160} height={50} />
@@ -58,6 +59,7 @@ const AppDownload = () => {
       <a
         href="https://apps.apple.com/in/app/dialexportmart/id6751717591?platform=iphone"
         target="_blank"
+        rel="nofollow noopener noreferrer"
         className="hover:scale-105 transition"
       >
         <Image src="/assets/app-store.png" alt="Download Dial Export Mart App on Apple App Store" width={160} height={50} />

@@ -69,8 +69,6 @@ function ResponsiveDashboard() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-
-  
   const handleLogout = async () => {
     try {
       const res = await fetch("/api/admin/logout", { method: "POST" });

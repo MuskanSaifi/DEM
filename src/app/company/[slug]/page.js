@@ -11,10 +11,10 @@ export const revalidate = 3600;
 // Outputs standard robots tags from the head
 export const metadata = {
   robots: {
-    index: true,
+    index: false,
     follow: true,
     googleBot: {
-      index: true,
+      index: false,
       follow: true,
     },
   },

@@ -9,8 +9,9 @@ const countries = [
   { name: "China", flag: "/countries/Ch.png", link: "/country/cn" },
   { name: "Australia", flag: "/countries/Au.png", link: "/country/au" },
   { name: "Hong Kong", flag: "/countries/Hong Kong.png", link: "/country/hk" },
+  { name: "Singapore", flag: "/countries/Singapore.png", link: "/country/sg" },
 
-  { name: "More Countries", flag: "", link: "/all-countries" }, // ✅
+  { name: "Explore All Countries", flag: "", link: "/all-countries" }, // ✅
 ];
 
 const Countries = () => {

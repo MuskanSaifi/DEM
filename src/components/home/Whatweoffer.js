@@ -21,7 +21,7 @@ const services = [
   },
   {
     icon: <FaHeadset className="text-3xl text-purple-500" />,
-    title: "Customer Support Person",
+    title: "Dedicated Customer Support",
     description: "Dedicated account support for listings, inquiries, and lead management.",
   },
   {
@@ -46,11 +46,8 @@ const WhatWeOffer = () => {
     <section className="py-16 px-4 md:px-20 bg-white relative z-10">
       <div className="max-w-8xl mx-auto flex flex-col lg:flex-row items-center gap-12 mb-12 text-center lg:text-left">
         <div className="w-full ">
-          <p className="text-sm text-gray-400 tracking-widest uppercase">
-            Why Choose Us
-          </p>
-          <h2 className="text-4xl font-bold text-gray-800 mt-2">
-            What We Offer
+        <h2 className="text-2xl font-bold text-gray-800 mt-2">
+          Our B2B Services to Grow Your Business
           </h2>
         </div>
       </div>

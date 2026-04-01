@@ -8,7 +8,7 @@ const cities = [
   { name: "Kolkata", icon: "/countries/cities/kolkata.png", link: "/city/kolkata" },
   { name: "Mumbai", icon: "/countries/cities/gurugram.png", link: "/city/mumbai" },
   { name: "Chennai", icon: "/countries/cities/chennai.png", link: "/city/chennai" },
-  { name: "More Cities", icon: "", link: "#" },
+  { name: "View All Cities in India", icon: "", link: "/city/all-city" },
 ];
 
 const Cities = () => {
@@ -16,7 +16,7 @@ return (
     <>
     <div className="mt-5">
       <h2 className="text-xl font-semibold text-gray-800 mb-2 text-center">
-Top Cities in India to Find Verified B2B Suppliers
+      Find Verified B2B Suppliers Across Top Cities in India
       </h2>
       <p className="text-gray-500 text-sm text-center mb-6">Connect with verified manufacturers and suppliers from major industrial and
       manufacturing hubs across India.</p>

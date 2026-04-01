@@ -1,4 +1,3 @@
-// src/components/home/CategoryGridSection.js
 "use client";
 import React, { memo } from "react";
 import Link from "next/link";
@@ -13,50 +12,35 @@ const CategoryGridSection = ({ categories }) => {
     );
   }
 
-  const limitedCategories = categories.slice(0, 5); // ✅ Show only 5 categories
-
   return (
     <div className="bg-white py-10 px-4 sm:px-8 lg:px-12 space-y-12">
-      {limitedCategories.map((category) => (
+      {categories.slice(0, 5).map((category) => (
         <div
           key={category._id}
-          className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 p-6"
+          className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6"
         >
           {/* Header */}
-          <div className="flex justify-between items-center border-b border-gray-200 pb-3 mb-6">
-          <div
-  className="text-2xl font-semibold text-gray-800 capitalize flex items-center gap-2"
-  role="heading"
-  aria-level="2"
->
-  <span
-    className="inline-block w-1.5 h-6 rounded-full"
-    style={{ backgroundColor: "#6D4AAE" }}
-  ></span>
-  {category.name}
-</div>
+          <div className="flex justify-between items-center border-b pb-3 mb-6">
+            <div className="text-2xl font-semibold text-gray-800 flex items-center gap-2">
+              <span className="w-1.5 h-6 bg-[#6D4AAE] rounded-full"></span>
+              {category.name}
+            </div>
 
             <Link
               href={`/seller/${category.categoryslug}`}
-              className="text-sm font-medium hover:underline transition"
-              style={{ color: "#6D4AAE" }}
+              className="text-sm font-medium hover:underline text-[#6D4AAE]"
             >
-              View All →
+              View all {category.name} →
             </Link>
           </div>
 
-          {/* Grid Layout */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-            {/* Left Card — Category Overview */}
-            <div
-              className="col-span-1 rounded-2xl text-white shadow-md hover:scale-105 transition-transform duration-300 overflow-hidden flex flex-col"
-              style={{
-                background: "linear-gradient(180deg, #7E5ABD 0%, #6D4AAE 100%)",
-              }}
-            >
-              {/* Centered Category Image */}
-              <div className="flex-1 flex items-center justify-center bg-white">
-                <div className="relative w-28 h-28">
+            
+            {/* LEFT PURPLE CARD ✅ */}
+            <div className="col-span-1 rounded-2xl overflow-hidden shadow-md">
+              
+              <div className="bg-white flex items-center justify-center h-40">
+                <div className="relative w-24 h-24">
                   <Image
                     src={category.icon || "/placeholder.jpg"}
                     alt={category.name}
@@ -66,84 +50,71 @@ const CategoryGridSection = ({ categories }) => {
                 </div>
               </div>
 
-              {/* Category Info */}
-              <div className="p-3">
-                <div className="text-xl font-bold mb-2">{category.name}</div>
-                <div className="text-gray-200 space-y-1 text-sm">
-                  {category.subcategories?.slice(0, 5).map((sub) => (
-                   <Link
-  key={sub._id}
-  href={`/seller/${category.categoryslug}/${sub.subcategoryslug}`}
-  className="block text-white relative group"
->
-  {sub.name}
-  <span
-    className="absolute left-0 -bottom-0.5 w-0 h-[1.5px] bg-white transition-all duration-300 group-hover:w-full"
-  ></span>
-</Link>
-
-                  ))}
+              <div className="bg-gradient-to-b from-[#7E5ABD] to-[#6D4AAE] text-white p-4">
+                <div className="font-bold text-lg mb-2">
+                  {category.name}
                 </div>
+
+                {category.subcategories?.slice(0, 5).map((sub) => (
+                  <div key={sub._id} className="text-sm opacity-90">
+                    {sub.name}
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* Right — Subcategory Cards */}
+            {/* RIGHT SIDE CARDS ✅ */}
             <div className="md:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {category.subcategories?.slice(0, 6).map((sub) => (
-                <Link
+                <div
                   key={sub._id}
-                  href={`/seller/${category.categoryslug}/${sub.subcategoryslug}`}
-                  className="flex bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+                  className="flex items-center gap-4 p-4 border rounded-xl shadow-sm hover:shadow-md transition"
                 >
-                  {/* ✅ Centered Subcategory Image */}
-                  <div className="w-28 h-28 flex items-center justify-center bg-gray-50">
-                    <div className="relative w-20 h-20">
-                    <Image
-  src={sub.icon || "/placeholder.png"}
-  alt={sub.name || "subcategory"}
-  fill
-  sizes="80px"
-  className="object-contain"
-  onError={(e) => {
-    e.currentTarget.src = "/placeholder.png";
-  }}
-/>
+                  {/* IMAGE */}
+                  <div className="w-20 h-20 bg-gray-50 rounded flex items-center justify-center">
+                    <div className="relative w-14 h-14">
+                      <Image
+                        src={sub.icon || "/placeholder.png"}
+                        alt={sub.name}
+                        fill
+                        className="object-contain"
+                      />
                     </div>
                   </div>
 
-                  {/* Subcategory Details */}
-                  <div className="p-3 flex flex-col justify-center">
-                  <div
-  className="font-semibold text-gray-800 text-base capitalize mb-1"
-  role="heading"
-  aria-level="3"
->
-  {sub.name}
-</div>
+                  {/* CONTENT */}
+                  <div className="flex flex-col">
+                    
+                    {/* SUBCATEGORY LINK */}
+                    <Link
+                      href={`/seller/${category.categoryslug}/${sub.subcategoryslug}`}
+                      className="font-semibold text-gray-800 hover:underline mb-1"
+                    >
+                      {sub.name}
+                    </Link>
 
-                    <ul className="space-y-0.5 text-sm" style={{ color: "#6D4AAE" }}>
-                      {sub.products?.length > 0 ? (
-                        sub.products.slice(0, 3).map((product) => (
-                          <li key={product._id}>
-                            <Link
-                              href={`/manufacturers/${product.productslug}`}
-                              className="hover:underline hover:font-semibold transition"
-                              style={{ color: "#6D4AAE" }}
-                            >
-                              {product.name}
-                            </Link>
-                          </li>
-                        ))
-                      ) : (
-                        <li>
-                          <span className="text-gray-400 text-xs">View products →</span>
-                        </li>
-                      )}
-                    </ul>
+                    {/* PRODUCTS */}
+                    <div className="text-sm space-y-0.5">
+                      {sub.products?.slice(0, 3).map((product) => {
+                        if (!product.productslug) return null;
+
+                        return (
+                          <Link
+                            key={product._id}
+                            href={`/manufacturers/${product.productslug}`}
+                            className="block text-[#6D4AAE] hover:underline"
+                          >
+                            {product.name}
+                          </Link>
+                        );
+                      })}
+                    </div>
+
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
+
           </div>
         </div>
       ))}
@@ -151,5 +122,4 @@ const CategoryGridSection = ({ categories }) => {
   );
 };
 
-// ✅ OPTIMIZED: Memoize component to prevent unnecessary re-renders
 export default memo(CategoryGridSection);

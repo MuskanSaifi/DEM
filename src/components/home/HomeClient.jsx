@@ -37,14 +37,13 @@ const SectionLoader = () => (
 export default function HomeClient() {
   return (
     <>
-      <h1 className="hidden">Trusted B2B Marketplace in India for Manufacturers, Suppliers & Exporters</h1>
+      <h1 className="hidden">India’s Trusted B2B Marketplace for Manufacturers, Suppliers & Exporters</h1>
       
       {/* ✅ Above the fold - Load immediately */}
       <Bannerslider />
       <BuySellform />
 
       <div className="banner-container">
-        <Link href="/all-categories">
           <Image
             className="m-auto"
             src="/assets/subbanner/banner-min.png"
@@ -55,7 +54,6 @@ export default function HomeClient() {
             loading="lazy"
             priority={false}
           />
-        </Link>
       </div>
 
       <CategoryGridPage />

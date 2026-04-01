@@ -241,33 +241,39 @@ const socialLinks = [
     />
   </div>
 </Link>
-
 {/* Google Play Logo */}
-<Link href="https://play.google.com/store/apps/details?id=com.nazim_saifi.dialexportmart" className="w-[70%] md:w-auto">
+<a
+  href="https://play.google.com/store/apps/details?id=com.nazim_saifi.dialexportmart"
+  target="_blank"
+  rel="nofollow noopener noreferrer"
+  className="w-[70%] md:w-auto"
+>
   <div className="w-full md:w-[128px]">
     <Image
       src="/assets/play-store.png"
-      alt="Google Play"
-    layout="responsive"
+      alt="Download Dial Export Mart App on Google Play Store"
       width={128}
       height={40}
     />
   </div>
-</Link>
-
+</a>
 
 {/* App Store Logo */}
-<Link href="https://apps.apple.com/in/app/dialexportmart/id6751717591?platform=iphone" className="w-[70%] md:w-auto">
+<a
+  href="https://apps.apple.com/in/app/dialexportmart/id6751717591?platform=iphone"
+  target="_blank"
+  rel="nofollow noopener noreferrer"
+  className="w-[70%] md:w-auto"
+>
   <div className="w-full md:w-[128px]">
     <Image
       src="/assets/app-store.png"
-      alt="App Store"
-      layout="responsive"
+      alt="Download Dial Export Mart App on Apple App Store"
       width={128}
       height={40}
     />
   </div>
-</Link>
+</a>
 
 
 

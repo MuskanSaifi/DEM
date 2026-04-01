@@ -66,7 +66,7 @@ const Sidebar = ({ isSidebarOpen, setActiveContent, activeContent }) => {
       <div className={`resdes-sidebar ${isSidebarOpen ? "" : "resdes-closed"}`}>
       <div className="d-flex justify-content-around flex-column align-items-center p-2  sticky top-0 bg-white">
     <Link href="../">
-      <Image src="/assets/logo123.png" alt="Innodem Logo" width={100} height={50}  />
+      <Image src="/assets/logo1234.png" alt="Innodem Logo" width={100} height={50}  />
     </Link>
     <h6 className="text-center mt-2">🧑 Welcome! Admin</h6>
   </div>

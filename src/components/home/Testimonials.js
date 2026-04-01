@@ -81,9 +81,9 @@ const Testimonials = () => {
       <div className="max-w-7xl mx-auto px-4">
         {/* Heading */}
         <div className="text-center mb-14">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-800">
+        <div className="text-2xl font-bold text-gray-800 mt-2">
             What Our Clients Say
-          </h2>
+          </div>
           <p className="mt-3 text-gray-600 max-w-2xl mx-auto">
             Trusted by businesses across India for quality, reliability, and growth.
           </p>

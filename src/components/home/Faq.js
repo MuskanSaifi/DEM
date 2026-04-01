@@ -52,8 +52,8 @@ const Faq = () => {
 
         {/* SECTION TITLE */}
         <div className="text-center mb-14">
-          <h2 className="text-4xl font-bold text-gray-900">
-            Frequently Asked Questions
+        <h2 className="text-2xl font-bold text-gray-800 mt-2">
+          Frequently Asked Questions About B2B Marketplace in India
           </h2>
           <p className="text-gray-500 mt-2">
             Everything you need to know about Dial Export Mart

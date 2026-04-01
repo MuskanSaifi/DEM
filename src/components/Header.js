@@ -352,7 +352,7 @@ const itemRefs = useRef([]);
               <Link href="/">
                 <Image
                   src="/assets/logo1234.png"
-                  alt="Innodem Logo"
+                  alt="B2B Marketplace Logo - Dial Export Mart"
                   width={160}
                   height={60}
                   className="img-fluid"
