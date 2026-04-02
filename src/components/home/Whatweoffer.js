@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import {
   FaSearch,
@@ -10,61 +11,80 @@ import {
 
 const services = [
   {
-    icon: <FaHandshake className="text-3xl text-green-500" />,
+    icon: <FaHandshake className="text-green-500 text-xl md:text-3xl" />,
     title: "Buyer Connect",
     description: "Connect directly with genuine B2B buyers and bulk importers",
   },
   {
-    icon: <FaGift className="text-3xl text-pink-500" />,
+    icon: <FaGift className="text-pink-500 text-xl md:text-3xl" />,
     title: "Complimentary Deal",
     description: "Special offerings to enhance customer engagement.",
   },
   {
-    icon: <FaHeadset className="text-3xl text-purple-500" />,
-    title: "Dedicated Customer Support",
-    description: "Dedicated account support for listings, inquiries, and lead management.",
+    icon: <FaHeadset className="text-purple-500 text-xl md:text-3xl" />,
+    title: "Customer Support",
+    description: "Dedicated support for listings and inquiries.",
   },
   {
-    icon: <FaSearch className="text-3xl text-blue-500" />,
-    title: "Digital Marketing Services",
-    description: "Boost product visibility and generate high-intent B2B leads through digital marketing.",
+    icon: <FaSearch className="text-blue-500 text-xl md:text-3xl" />,
+    title: "Digital Marketing",
+    description: "Boost visibility and generate B2B leads.",
   },
   {
-    icon: <FaCode className="text-3xl text-orange-500" />,
+    icon: <FaCode className="text-orange-500 text-xl md:text-3xl" />,
     title: "Web Development",
-    description: "Professional website development solutions for manufacturers and exporters.",
+    description: "Professional website solutions.",
   },
   {
-    icon: <FaDatabase className="text-3xl text-teal-500" />,
+    icon: <FaDatabase className="text-teal-500 text-xl md:text-3xl" />,
     title: "CMS",
-    description: "Simple and powerful CMS to manage products, profiles, and content easily.",
+    description: "Manage products and content easily.",
   },
 ];
 
 const WhatWeOffer = () => {
   return (
-    <section className="py-16 px-4 md:px-20 bg-white relative z-10">
-      <div className="max-w-8xl mx-auto flex flex-col lg:flex-row items-center gap-12 mb-12 text-center lg:text-left">
-        <div className="w-full ">
-        <h2 className="text-2xl font-bold text-gray-800 mt-2">
+    <section className="py-8 md:py-16 px-3 md:px-20 bg-white">
+      
+      {/* Heading */}
+      <div className="max-w-7xl mx-auto mb-6 md:mb-12 text-center lg:text-left">
+        <h2 className="text-lg md:text-2xl font-bold text-gray-800">
           Our B2B Services to Grow Your Business
-          </h2>
-        </div>
+        </h2>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+      {/* Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8 max-w-7xl mx-auto">
+        
         {services.map((service, index) => (
           <div
             key={index}
-            className="bg-white p-6 rounded-xl shadow-md hover:shadow-indigo-100 transition-shadow text-center"
+            className="
+            bg-white 
+            p-3 md:p-6 
+            rounded-lg md:rounded-xl 
+            shadow-sm md:shadow-md 
+            hover:shadow-lg 
+            transition 
+            text-center"
           >
-            <div className="flex justify-center mb-4">{service.icon}</div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">
+            {/* Icon */}
+            <div className="flex justify-center mb-2 md:mb-4">
+              {service.icon}
+            </div>
+
+            {/* Title */}
+            <h3 className="text-xs md:text-xl font-semibold text-gray-800 mb-1 md:mb-2 leading-tight">
               {service.title}
             </h3>
-            <p className="text-gray-600 text-sm">{service.description}</p>
+
+            {/* Description */}
+            <p className="text-[10px] md:text-sm text-gray-600 leading-tight">
+              {service.description}
+            </p>
           </div>
         ))}
+
       </div>
     </section>
   );

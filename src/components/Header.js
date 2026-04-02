@@ -265,85 +265,86 @@ const itemRefs = useRef([]);
         </div>
 
         {isOpenpopup && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-6xl relative">
-              <div className="container-fluid">
-                {/* Main Branding */}
-                <div className="bg-gradient-to-r from-purple-100 to-purple-200 rounded-xl shadow-lg p-6 flex flex-col justify-center items-center text-center">
-                  <h2 className="text-2xl font-bold text-purple-700">
-                    Dial Export Mart
-                  </h2>
-                  <p className="mt-2 text-sm text-gray-600">
-                    Your trusted B2B marketplace partner
-                  </p>
-                </div>
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 
-                <div className="flex flex-col md:flex-row gap-6 mt-10">
-                  {/* Branding (Again?) */}
-                  <div className="bg-purple-100 rounded-xl shadow-lg p-1 w-full md:w-1/3 text-center">
-                    <Image
-                      src="/assets/banner-menu-pop.png" // Replace with your image path (can be from /public)
-                      alt="Dial Export Mart"
-                      width={465}
-                      height={310}
-                      className="mx-auto rounded-lg" // Optional: styling like centering and rounded corners
-                    />
-                  </div>
+    {/* ✅ Square Modal */}
+    <div className="bg-white rounded-2xl shadow-xl relative 
+                w-[90vw] max-w-[750px] max-h-[80vh] p-5 overflow-hidden">
+      {/* Close Button */}
+      <button
+        className="absolute top-3 right-3 text-xl font-bold text-gray-500 hover:text-black"
+        onClick={togglepopup}
+      >
+        &times;
+      </button>
 
-                  {/* Directory */}
-                  <div className="bg-white rounded-xl shadow-lg p-6 w-full md:w-1/3">
-                    <h3 className="text-xl font-semibold mb-4 border-b pb-2 flex items-center gap-2">
-                      📚 Directory
-                    </h3>
-                    <ul className="space-y-3 text-sm text-gray-700">
-                      {directoryLinks.map((item) => (
-                        <li key={item.href}>
-                          <button
-                            onClick={() => {
-                              setIsOpenpopup(false);
-                              router.push(item.href);
-                            }}
-                            className="hover:text-purple-600 flex items-center gap-2 w-full text-left"
-                          >
-                            🔹 {item.label}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+      <div className="h-full flex flex-col">
 
-                  {/* Help & Support */}
-                  <div className="bg-white rounded-xl shadow-lg p-6 w-full md:w-1/3">
-                    <h3 className="text-xl font-semibold mb-4 border-b pb-2 flex items-center gap-2">
-                      🛠️ Help & Support
-                    </h3>
-                    <ul className="space-y-3 text-sm text-gray-700">
-                      {helpLinks.map((item) => (
-                        <li key={item.href}>
-                          <button
-                            onClick={() => {
-                              setIsOpenpopup(false);
-                              router.push(item.href);
-                            }}
-                            className="hover:text-purple-600 flex items-center gap-2 w-full text-left"
-                          >
-                            🔹 {item.label}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-              <button
-                className="absolute top-2 right-2 text-xl font-bold text-gray-500 hover:text-gray-800"
-                onClick={togglepopup}
-              >
-                &times;
-              </button>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-purple-100 to-purple-200 
+                        rounded-xl p-4 text-center">
+          <h2 className="text-xl font-bold text-purple-700">
+            Dial Export Mart
+          </h2>
+          <p className="text-xs text-gray-600">
+            Your trusted B2B marketplace partner
+          </p>
+        </div>
+
+        {/* Cards Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 flex-1">
+
+          {/* Card 1 */}
+          <div className="group cursor-pointer rounded-xl overflow-hidden shadow-md hover:shadow-xl transition">
+            <div className="relative aspect-square">
+              <Image
+                src="/assets/location.jpg"
+                alt="Location"
+                fill
+                className="object-cover group-hover:scale-105 transition"
+              />
+            </div>
+            <div className="p-2 text-center">
+              <h3 className="text-sm font-semibold">Location Products</h3>
             </div>
           </div>
-        )}
+
+          {/* Card 2 */}
+          <div className="group cursor-pointer rounded-xl overflow-hidden shadow-md hover:shadow-xl transition">
+            <div className="relative aspect-square">
+              <Image
+                src="/assets/rfq.jpg"
+                alt="RFQ"
+                fill
+                className="object-cover group-hover:scale-105 transition"
+              />
+            </div>
+            <div className="p-2 text-center">
+              <h3 className="text-sm font-semibold">Post Requirement</h3>
+            </div>
+          </div>
+
+          {/* Card 3 */}
+          <div className="group cursor-pointer rounded-xl overflow-hidden shadow-md hover:shadow-xl transition">
+            <div className="relative aspect-square">
+              <Image
+                src="/assets/categories.jpg"
+                alt="Categories"
+                fill
+                className="object-cover group-hover:scale-105 transition"
+              />
+            </div>
+            <div className="p-2 text-center">
+              <h3 className="text-sm font-semibold">Categories</h3>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+)}
 
         <div className="container-fluid py-3">
           <div className="row align-items-center">

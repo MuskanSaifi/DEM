@@ -26,7 +26,6 @@ function ResponsiveDashboard() {
   const [loading, setLoading] = useState(true);
   const [showClientFilterModal, setShowClientFilterModal] = useState(false);
   const [appliedClientFilter, setAppliedClientFilter] = useState(null);
-
   const [supportPersonId, setSupportPersonId] = useState(null);
 const [supportPerson, setSupportPerson] = useState(null);
 
@@ -91,7 +90,6 @@ useEffect(() => {
   return (
     <div className="resdes-dashboard">
       <Sidebar isSidebarOpen={isSidebarOpen} setActiveContent={setActiveContent} activeContent={activeContent} />
-
       <div className={`resdes-content ${isSidebarOpen ? "resdes-shrink" : "resdes-expand"}`}>
         <div className="resdes-header">
           <button onClick={toggleSidebar} className="resdes-hamburger" aria-label="Toggle Sidebar">

@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import './CustomChatBot.css';
-import Image from 'next/image';
+import { FaHeadset } from 'react-icons/fa';
 
 const CustomChatBot = () => {
   const [step, setStep] = useState(1);
@@ -46,6 +46,8 @@ const CustomChatBot = () => {
 
   return (
     <div className="custom-fab-position">
+
+      {/* Chat Box */}
       {isOpen && (
         <div className="chatbot-container">
           <button className="close-btn" onClick={() => setIsOpen(false)}>×</button>
@@ -73,10 +75,10 @@ const CustomChatBot = () => {
         </div>
       )}
 
+      {/* Floating Button */}
       {!isOpen && (
         <button className="support-btn" onClick={() => setIsOpen(true)}>
-          <Image src="/assets/sp.png" alt="support" width={20} height={20} />
-          Support
+          <FaHeadset size={22} />
         </button>
       )}
     </div>
