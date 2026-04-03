@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Country, State, City } from 'country-state-city';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { IndianLocation } from "./Indianlocation";
 
 
 // Slug generator function
@@ -25,6 +26,23 @@ const router = useRouter();
 const [selectedCountry, setSelectedCountry] = useState("");
 const [availableStates, setAvailableStates] = useState([]);
 const [availableCities, setAvailableCities] = useState([]);
+
+const getMergedCitiesForState = (countryCode, stateCode, stateName) => {
+  const libraryCities = City.getCitiesOfState(countryCode, stateCode) || [];
+  const fallbackCities =
+    IndianLocation.find((s) => s.state === stateName)?.cities || [];
+
+  // Merge library + fallback list, avoid duplicates by case-insensitive name
+  const seen = new Set();
+  const merged = [...libraryCities.map((c) => c.name), ...fallbackCities].filter((name) => {
+    const key = (name || "").trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  return merged.map((name) => ({ name }));
+};
 
     // category
     const [selectedCategory, setSelectedCategory] = useState([]);
@@ -159,8 +177,14 @@ const [availableCities, setAvailableCities] = useState([]);
             }));
           
             if (stateCode) {
-              const cities = City.getCitiesOfState(product.country || selectedCountry, stateCode);
+              const cities = getMergedCitiesForState(
+                product.country || selectedCountry,
+                stateCode,
+                stateName
+              );
               setAvailableCities(cities);
+            } else {
+              setAvailableCities([]);
             }
           };
           

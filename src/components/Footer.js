@@ -111,8 +111,6 @@ const socialLinks = [
               <p className="text-sm my-2">📧 info@dialexportmart.com</p>
               <p className="text-sm my-2">🌐 www.dialexportmart.com</p>
             </div>
-
-
             {/* Directory Links */}
             <div>
               <p className="text-lg font-semibold text-white mb-3">Directory</p>
@@ -172,9 +170,6 @@ const socialLinks = [
                 </li>
               </ul>
             </div>
-
-
-
             {/* Social Media */}
             <div className="">
               <p className="text-lg font-semibold text-white mb-2">Follow Us</p>
@@ -274,12 +269,10 @@ const socialLinks = [
     />
   </div>
 </a>
-
   </div>
 </div>
         </div>
       </footer>
-
 
     </>
   );

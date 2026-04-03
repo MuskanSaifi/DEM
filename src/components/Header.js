@@ -59,9 +59,6 @@ export default function Header() {
 
   const [cities, setCities] = useState(["All City"]); // Store cities from API
 
-
-
-
 useEffect(() => {
   const cached = sessionStorage.getItem("headerCities");
 
@@ -112,8 +109,6 @@ useEffect(() => {
       }
     })();
   }, []);
-
-
 
 
 useEffect(() => {
@@ -167,7 +162,6 @@ const handleLogout = () => {
   }
   window.location.href = "/"; // redirect to home after logout
 };
-
 
  useEffect(() => {
   if (searchTerm.trim() === "") {
@@ -229,7 +223,6 @@ const handleSearchSelect = React.useCallback((product) => {
 }, [router]);
 
 const itemRefs = useRef([]);
-
 
   const directoryLinks = [
     { label: "Become a Member", href: "/become-a-member" },
