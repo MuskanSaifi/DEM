@@ -670,7 +670,7 @@ onKeyDown={(e) => {
 </div>
 
 
-                    {/* Drawer Content */}
+{/* Drawer Content */}
 <div className="p-4">
   {user ? (
     // ✅ Seller Logged In

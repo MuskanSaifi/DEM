@@ -5,6 +5,22 @@
   padding-top: 10px;
 }
 
+/* Prevent CLS: reserve sidebar & card/image sizes */
+.blog-sidebar {
+  min-height: 720px; /* keeps layout stable while recent blogs load */
+}
+
+.recent-blog-card {
+  min-height: 96px;
+}
+
+.recent-blog-thumbnail {
+  width: 100px;
+  height: 80px;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
 a.text-dark:hover {
   color: #007bff;
   text-decoration: underline;

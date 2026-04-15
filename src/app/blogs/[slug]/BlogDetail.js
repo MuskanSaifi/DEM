@@ -17,11 +17,39 @@ import "./blogs.css";
 // Ensure blog HTML content cannot inject head-level tags into the body
 const sanitizeBlogContent = (html) => {
   if (!html || typeof html !== "string") return "";
-  return html
+  const cleaned = html
     .replace(/<\/?(html|head|body)[^>]*>/gi, "")
     .replace(/<title[^>]*>[\s\S]*?<\/title>/gi, "")
     .replace(/<meta[^>]*>/gi, "")
     .replace(/<link[^>]*rel=["']?canonical["']?[^>]*>/gi, "");
+
+  // Reduce CLS from editor-inserted images: ensure stable dimensions/aspect-ratio
+  // If width/height missing, add defaults + responsive styling.
+  return cleaned.replace(/<img\b([^>]*)>/gi, (match, attrs) => {
+    const hasWidth = /\bwidth\s*=\s*["']?\d+/i.test(attrs);
+    const hasHeight = /\bheight\s*=\s*["']?\d+/i.test(attrs);
+    const hasStyle = /\bstyle\s*=/i.test(attrs);
+    const hasLoading = /\bloading\s*=/i.test(attrs);
+    const hasDecoding = /\bdecoding\s*=/i.test(attrs);
+
+    const safeStyleAdd =
+      "max-width:100%;height:auto;display:block;aspect-ratio:16/9;";
+
+    let nextAttrs = attrs;
+    if (!hasWidth) nextAttrs += ' width="1200"';
+    if (!hasHeight) nextAttrs += ' height="675"';
+    if (!hasLoading) nextAttrs += ' loading="lazy"';
+    if (!hasDecoding) nextAttrs += ' decoding="async"';
+    if (hasStyle) {
+      nextAttrs = nextAttrs.replace(
+        /\bstyle\s*=\s*["']([^"']*)["']/i,
+        (m, styleVal) => `style="${styleVal};${safeStyleAdd}"`
+      );
+    } else {
+      nextAttrs += ` style="${safeStyleAdd}"`;
+    }
+    return `<img${nextAttrs}>`;
+  });
 };
 
 const BlogDetail = ({ blog }) => {
@@ -60,7 +88,13 @@ const BlogDetail = ({ blog }) => {
       }
     };
 
-    fetchRecentBlogs();
+    // Defer sidebar work so LCP isn't delayed on mobile
+    const run = () => fetchRecentBlogs();
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      window.requestIdleCallback(run, { timeout: 1500 });
+    } else {
+      setTimeout(run, 800);
+    }
   }, [blog._id]);
 
 const handleSubscribe = async (e) => {
@@ -123,7 +157,7 @@ const handleSubscribe = async (e) => {
         {/* Sidebar: Recent Blogs, Subscribe, Social Media */}
         <Col lg={4} md={12} className="mt-5 mt-lg-0">
 <div
-  className="sticky-top"
+  className="sticky-top blog-sidebar"
   style={{ top: '20px', zIndex: 1 }}
 >
             {/* Recent Blogs Section */}

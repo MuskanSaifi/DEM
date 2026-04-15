@@ -2,7 +2,14 @@
 .top-bar {
     background-color: #6d4aae !important;
     text-align: center;
-    padding: 5px 0;
+    /* Lock height to avoid CLS (marquee/text swap + font load) */
+    min-height: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
     font-size: 14px;
 }
 
@@ -10,6 +17,8 @@
     font-size: 12px;
     margin-bottom: 0;
     color: #fff;
+    line-height: 32px;
+    height: 32px;
 
 }
 
@@ -36,6 +45,14 @@
 }
 
 @media (max-width: 700px) {
+  .top-bar {
+    min-height: 28px;
+    height: 28px;
+  }
+  .top-bar > p {
+    line-height: 28px;
+    height: 28px;
+  }
   .marq {
     display: block;
   }

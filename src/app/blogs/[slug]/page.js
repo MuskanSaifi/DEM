@@ -4,6 +4,8 @@ import connectdb from "@/lib/dbConnect";
 import Blog from "@/models/Blogs";
 import { getSafeMetaContent } from "@/middleware/contentValidation";
 
+// Cache blog HTML per slug to reduce TTFB/LCP (ISR-like on server)
+export const revalidate = 3600;
 
 export async function generateMetadata({ params }) {
   // Ensure params is fully resolved first
@@ -27,7 +29,14 @@ export async function generateMetadata({ params }) {
   }
 
   const canonicalUrl = `https://www.dialexportmart.com/blogs/${slug}`;
-  const imageUrl = blog.image ? `https://www.dialexportmart.com/${blog.image}` : null;
+  const imageUrl = (() => {
+    if (!blog.image) return null;
+    const raw = String(blog.image).trim();
+    // Fix "double URL" / mixed formats (absolute vs relative)
+    if (/^https?:\/\//i.test(raw)) return raw;
+    const cleanPath = raw.startsWith("/") ? raw.slice(1) : raw;
+    return `https://www.dialexportmart.com/${cleanPath}`;
+  })();
   const safeTitle = getSafeMetaContent(blog.metaTitle) || blog.title;
   const safeDesc = getSafeMetaContent(blog.metaDescription) || "Read detailed blog article on Dial Export Mart.";
   const safeKeywords = getSafeMetaContent(blog.metaKeywords);
