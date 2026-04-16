@@ -11,8 +11,16 @@ import AppInitializer from "./store/AppInitializer";
 
 // Organization & WebSite schemas moved to homepage + about-us only (see lib/schemas.js)
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+  display: "swap",
+});
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 export const metadata = {
   title: "Dial Export Mart | B2B Marketplace in India | B2B Portal in India",

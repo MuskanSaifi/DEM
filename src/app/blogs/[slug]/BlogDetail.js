@@ -7,12 +7,20 @@ import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
 import { format } from "date-fns";
 import Link from "next/link";
 import { FaInstagram, FaFacebookF, FaLinkedinIn, FaTwitter, FaYoutube } from 'react-icons/fa';
-import Swal from "sweetalert2";
-import axios from 'axios'; // Import axios for the subscription API call
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton'; // Import Skeleton components
 import 'react-loading-skeleton/dist/skeleton.css'; // Import skeleton CSS
 
 import "./blogs.css";
+
+const optimizeBlogImageUrl = (src) => {
+  if (!src) return src;
+  const raw = String(src).trim();
+  // Cloudinary optimization: f_auto,q_auto and cap width for LCP image
+  if (/^https?:\/\/res\.cloudinary\.com\//i.test(raw) && /\/upload\//i.test(raw)) {
+    return raw.replace("/upload/", "/upload/f_auto,q_auto,w_1200/");
+  }
+  return raw;
+};
 
 // Ensure blog HTML content cannot inject head-level tags into the body
 const sanitizeBlogContent = (html) => {
@@ -101,8 +109,14 @@ const handleSubscribe = async (e) => {
   e.preventDefault(); // ✅ Prevent page reload
 
   try {
-    const response = await axios.post("/api/subscribers", { email });
-    if (response.status === 201) {
+    const res = await fetch("/api/subscribers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+
+    if (res.status === 201) {
+      const Swal = (await import("sweetalert2")).default;
       Swal.fire({
         icon: "success",
         title: "Subscribed!",
@@ -111,13 +125,16 @@ const handleSubscribe = async (e) => {
       setEmail(""); // Optional: clear email input after success
     }
   } catch (error) {
-    if (error.response?.status === 409) {
+    const status = error?.status;
+    if (status === 409) {
+      const Swal = (await import("sweetalert2")).default;
       Swal.fire({
         icon: "info",
         title: "Already Subscribed",
         text: "This email is already subscribed to our newsletter.",
       });
     } else {
+      const Swal = (await import("sweetalert2")).default;
       Swal.fire({
         icon: "error",
         title: "Oops...",
@@ -134,13 +151,14 @@ const handleSubscribe = async (e) => {
         <Col lg={8} md={12}>
           {blog?.image && (
        <Image
-       src={blog.image || "/placeholder.png"}
+       src={optimizeBlogImageUrl(blog.image) || "/placeholder.png"}
        alt={blog.title}
        width={840}
        height={420}
        priority
        quality={70} // ✅ sweet spot
        sizes="(max-width: 768px) 100vw, 840px"
+       style={{ width: "100%", height: "auto" }}
        className="rounded shadow-sm mb-3 w-100 object-cover"
      />
      
