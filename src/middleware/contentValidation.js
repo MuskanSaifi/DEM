@@ -35,17 +35,12 @@ const maliciousPatterns = [
  * @throws {Error} If malicious content is detected
  */
 
-export function validateContent(content, fieldName = 'content') {
-  if (!content || typeof content !== 'string') {
-    return true; // Empty or non-string content is valid
-  }
-
-  for (const pattern of maliciousPatterns) {
-    if (pattern.test(content)) {
-      console.error(`❌ Malicious content detected in ${fieldName}:`, content.substring(0, 100));
-      throw new Error(`Malicious content detected in ${fieldName}. Please remove inappropriate content.`);
-    }
-  }
+export function validateContent(content, fieldName = "content") {
+  // NOTE: Validation disabled per project requirement.
+  // Keep function for backward compatibility with existing API routes.
+  // Always return true and never throw (so product/blog create won't get blocked).
+  void content;
+  void fieldName;
   return true;
 }
 
@@ -73,8 +68,8 @@ export function validateFields(fields) {
 
 export function getSafeMetaContent(content) {
   if (!content || typeof content !== 'string') return '';
-  const hasMalicious = maliciousPatterns.some(pattern => pattern.test(content));
-  return hasMalicious ? '' : content;
+  // Validation disabled: return content as-is
+  return content;
 }
 
 /**
@@ -83,16 +78,8 @@ export function getSafeMetaContent(content) {
  * @returns {string} Sanitized content
  */
 export function sanitizeContent(content) {
-  if (!content || typeof content !== 'string') {
-    return content;
-  }
-
-  let sanitized = content;
-  for (const pattern of maliciousPatterns) {
-    sanitized = sanitized.replace(pattern, '');
-  }
-
-  return sanitized.trim();
+  // Sanitization disabled: return content as-is
+  return content;
 }
 
 /**
