@@ -267,6 +267,7 @@ const Buyers = ({ supportMember, appliedClientFilter }) => {
                             <option value="">Add remark...</option>
                             <option value="Follow Up">Follow Up</option>
                             <option value="Interested">Interested</option>
+                            <option value="Not Interested">Not Interested</option>
                             <option value="Hot Lead">Hot Lead</option>
                             <option value="Call Back">Call Back</option>
                             <option value="Negotiating">Negotiating</option>
