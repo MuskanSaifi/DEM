@@ -81,19 +81,12 @@ export async function POST(req) {
     const certificateNumberIn = (body.certificateNumber || "").trim();
     const companyNameIn = (body.companyName || "").trim();
 
-    if (!userSlug || !issuedAtRaw || !validUntilRaw) {
+    if (!issuedAtRaw || !validUntilRaw) {
       return NextResponse.json(
-        { success: false, message: "userSlug, issuedAt and validUntil are required" },
+        { success: false, message: "issuedAt and validUntil are required" },
         { status: 400 }
       );
     }
-
-    const user = await User.findOne({ userProfileSlug: userSlug }).lean();
-    if (!user) {
-      return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
-    }
-
-    const businessProfile = await BusinessProfile.findOne({ userId: user._id }).lean();
 
     const issuedAt = new Date(issuedAtRaw);
     const validUntil = new Date(validUntilRaw);
@@ -101,18 +94,42 @@ export async function POST(req) {
       return NextResponse.json({ success: false, message: "Invalid dates" }, { status: 400 });
     }
 
-    const existingActive = await Certificate.findOne({ userId: user._id, status: "active" }).lean();
-    if (existingActive) {
-      return NextResponse.json(
-        { success: false, message: "Active certificate already exists for this user" },
-        { status: 409 }
-      );
+    let user = null;
+    let businessProfile = null;
+    if (userSlug) {
+      user = await User.findOne({ userProfileSlug: userSlug }).lean();
+      if (!user) {
+        if (!companyNameIn) {
+          return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
+        }
+        user = null;
+      }
+      if (user) {
+        businessProfile = await BusinessProfile.findOne({ userId: user._id }).lean();
+
+        const existingActive = await Certificate.findOne({ userId: user._id, status: "active" }).lean();
+        if (existingActive) {
+          return NextResponse.json(
+            { success: false, message: "Active certificate already exists for this user" },
+            { status: 409 }
+          );
+        }
+      }
+    } else {
+      if (!companyNameIn) {
+        return NextResponse.json(
+          { success: false, message: "companyName is required when userSlug is not provided" },
+          { status: 400 }
+        );
+      }
     }
 
     const cert = await Certificate.create({
-      userId: user._id,
+      userId: user?._id || null,
       businessProfileId: businessProfile?._id || null,
-      companyName: companyNameIn || businessProfile?.companyName || user.companyName || user.fullname || "—",
+      companyName: user
+        ? companyNameIn || businessProfile?.companyName || user.companyName || user.fullname || "—"
+        : companyNameIn,
       certificateNumber: certificateNumberIn || makeCertificateNumber(),
       issuedAt,
       validUntil,

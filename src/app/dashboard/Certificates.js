@@ -67,11 +67,17 @@ export default function Certificates() {
     setActionLoading(true);
     setError("");
     try {
+      const trimmedUserSlug = issueForm.userSlug.trim();
+      const trimmedCompanyName = issueForm.companyName.trim();
+      if (!trimmedUserSlug && !trimmedCompanyName) {
+        throw new Error("Company name is required when user profile slug is empty");
+      }
+
       const payload = {
-        userSlug: issueForm.userSlug.trim(),
+        userSlug: trimmedUserSlug || undefined,
         issuedAt: issueForm.issuedAt,
         validUntil: issueForm.validUntil,
-        companyName: issueForm.companyName.trim() || undefined,
+        companyName: trimmedCompanyName || undefined,
         certificateNumber: issueForm.certificateNumber.trim() || undefined,
       };
       const res = await fetch("/api/admin/certificates", {
@@ -136,21 +142,23 @@ export default function Certificates() {
       <div className="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
         <form onSubmit={handleIssue} className="lg:col-span-1 border rounded-xl p-4 bg-gray-50/50">
           <h3 className="text-sm font-bold text-gray-900 mb-3">Issue Certificate</h3>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">User profile slug *</label>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">User profile slug (optional)</label>
           <input
             value={issueForm.userSlug}
             onChange={(e) => setIssueForm((f) => ({ ...f, userSlug: e.target.value }))}
             placeholder="gadget-galaxy-5802f3"
             className="w-full border rounded-lg px-3 py-2 text-sm bg-white"
-            required
           />
 
-          <label className="block text-xs font-semibold text-gray-600 mt-3 mb-1">Company name (optional)</label>
+          <label className="block text-xs font-semibold text-gray-600 mt-3 mb-1">
+            Company name {!issueForm.userSlug.trim() ? "*" : "(optional)"}
+          </label>
           <input
             value={issueForm.companyName}
             onChange={(e) => setIssueForm((f) => ({ ...f, companyName: e.target.value }))}
             placeholder="BHARATAM HOME SOLUTIONS PRIVATE LIMITED"
             className="w-full border rounded-lg px-3 py-2 text-sm bg-white"
+            required={!issueForm.userSlug.trim()}
           />
 
           <label className="block text-xs font-semibold text-gray-600 mt-3 mb-1">Certificate number (optional)</label>
@@ -254,7 +262,11 @@ export default function Certificates() {
                 ) : (
                   filtered.map((c) => {
                     const slug = c?.userId?.userProfileSlug;
-                    const pdfUrl = slug ? `/api/certificates/pdf/${slug}` : null;
+                    const pdfUrl = slug
+                      ? `/api/certificates/pdf/${slug}`
+                      : c?.certificateNumber
+                      ? `/api/certificates/pdf/${c.certificateNumber}`
+                      : null;
                     return (
                       <tr key={c._id} className="hover:bg-gray-50">
                         <td className="px-4 py-3 font-semibold text-gray-900">{c.companyName}</td>

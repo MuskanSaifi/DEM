@@ -5,7 +5,7 @@ const certificateSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      default: null,
       index: true,
     },
     businessProfileId: {
@@ -35,8 +35,16 @@ const certificateSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-certificateSchema.index({ userId: 1, status: 1 });
+certificateSchema.index(
+  { userId: 1, status: 1 },
+  { partialFilterExpression: { userId: { $type: "objectId" } } }
+);
 
-export default mongoose.models.Certificate ||
-  mongoose.model("Certificate", certificateSchema);
+// In Next.js dev (HMR), Mongoose may keep an old compiled model in memory.
+// If schema changes, force recompile so validations match the current code.
+if (mongoose.models.Certificate) {
+  delete mongoose.models.Certificate;
+}
+
+export default mongoose.model("Certificate", certificateSchema);
 

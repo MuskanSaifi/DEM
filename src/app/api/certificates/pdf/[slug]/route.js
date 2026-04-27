@@ -5,7 +5,9 @@ import connectdb from "@/lib/dbConnect";
 import User from "@/models/User";
 import BusinessProfile from "@/models/BusinessProfile";
 import Certificate from "@/models/Certificate";
-import { Document, Page, Text, View, Image, StyleSheet, pdf } from "@react-pdf/renderer";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+
+export const runtime = "nodejs";
 
 function formatMonthYear(d) {
   const date = new Date(d);
@@ -20,88 +22,124 @@ function formatFullDate(d) {
   return `${date.getDate()} ${month} ${date.getFullYear()}`;
 }
 
-const styles = StyleSheet.create({
-  page: { position: "relative", width: "100%", height: "100%" },
-  bg: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
-  overlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
-  companyName: {
-    position: "absolute",
-    top: 295, // below "THIS IS TO CERTIFY THAT"
-    left: 60,
-    right: 60,
-    textAlign: "center",
-    fontSize: 20,
-    fontWeight: 700,
-    textTransform: "uppercase",
-  },
-  datesLine: {
-    position: "absolute",
-    top: 370, // below the blue line
-    left: 80,
-    right: 80,
-    textAlign: "center",
-    fontSize: 12,
-    fontWeight: 600,
-  },
-  certNo: {
-    position: "absolute",
-    bottom: 120,
-    right: 70,
-    fontSize: 10,
-    fontWeight: 700,
-  },
-});
+const PAGE_W = 610;
+const PAGE_H = 842;
 
-function CertificatePdf({ bgDataUri, companyName, issueDate, validUpto, certificateNumber }) {
-  return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        <Image src={bgDataUri} style={styles.bg} />
-        <View style={styles.overlay}>
-          <Text style={styles.companyName}>{companyName}</Text>
-          <Text style={styles.datesLine}>
-            {`issue Date ${formatMonthYear(issueDate)} / Valid Upto ${formatMonthYear(validUpto)}`}
-          </Text>
-          <Text style={styles.certNo}>{certificateNumber}</Text>
-        </View>
-      </Page>
-    </Document>
-  );
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
+}
+
+function getCompanyNameFontSize(companyName) {
+  const len = (companyName || "").trim().length;
+  if (len <= 18) return 22;
+  if (len <= 26) return 20;
+  if (len <= 34) return 18;
+  return clamp(480 / Math.max(1, len), 14, 18);
+}
+
+let cachedTemplateBytes;
+async function getCertificateTemplateBytes() {
+  if (cachedTemplateBytes) return cachedTemplateBytes;
+  const templatePath = path.join(process.cwd(), "public", "assets", "certificate-template.pdf");
+  cachedTemplateBytes = await fs.readFile(templatePath);
+  return cachedTemplateBytes;
+}
+
+function topToY(topPxFromTop, fontSize) {
+  return PAGE_H - topPxFromTop - fontSize;
+}
+
+function centerXForText(text, font, size) {
+  const w = font.widthOfTextAtSize(text, size);
+  return (PAGE_W - w) / 2;
 }
 
 export async function GET(_req, { params }) {
   try {
     await connectdb();
     const { slug } = await params;
+    const { searchParams } = new URL(_req.url);
+    const certNoParam = (searchParams.get("certNo") || "").trim();
+
+    let cert = null;
+    let companyName = "";
 
     const user = await User.findOne({ userProfileSlug: slug }).lean();
-    if (!user) {
-      return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
+    if (user) {
+      const businessProfile = await BusinessProfile.findOne({ userId: user._id }).lean();
+      cert = await Certificate.findOne({ userId: user._id, status: "active" }).lean();
+      if (!cert) {
+        return NextResponse.json({ success: false, message: "Certificate not found" }, { status: 404 });
+      }
+      companyName = (cert.companyName || businessProfile?.companyName || user.companyName || user.fullname || "—")
+        .toString()
+        .trim();
+    } else {
+      const certNo = certNoParam || slug;
+      cert = await Certificate.findOne({ certificateNumber: certNo }).lean();
+      if (!cert) {
+        return NextResponse.json(
+          { success: false, message: "User not found and no certificate matched" },
+          { status: 404 }
+        );
+      }
+      companyName = (cert.companyName || "—").toString().trim();
     }
 
-    const businessProfile = await BusinessProfile.findOne({ userId: user._id }).lean();
-    const cert = await Certificate.findOne({ userId: user._id, status: "active" }).lean();
-    if (!cert) {
-      return NextResponse.json({ success: false, message: "Certificate not found" }, { status: 404 });
+    const templateBytes = await getCertificateTemplateBytes();
+    const pdfDoc = await PDFDocument.load(templateBytes);
+    const page = pdfDoc.getPages()[0];
+
+    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const semiBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    const companyText = companyName.toUpperCase();
+    const companyFontSize = getCompanyNameFontSize(companyText);
+    const companyTop = 328;
+    const companyY = topToY(companyTop, companyFontSize);
+    const companyX = centerXForText(companyText, boldFont, companyFontSize);
+
+    page.drawText(companyText, {
+      x: companyX,
+      y: companyY,
+      size: companyFontSize,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+
+    const datesText = `issue Date ${formatMonthYear(cert.issuedAt)} / Valid Upto ${formatMonthYear(cert.validUntil)}`;
+    const datesSize = 12;
+    const datesTop = 355;
+    const datesY = topToY(datesTop, datesSize);
+    const datesX = centerXForText(datesText, semiBoldFont, datesSize);
+
+    page.drawText(datesText, {
+      x: datesX,
+      y: datesY,
+      size: datesSize,
+      font: semiBoldFont,
+      color: rgb(0, 0, 0),
+    });
+
+    const certNoText = (cert.certificateNumber || "").toString();
+    const certNoSize = 10;
+    const certNoBottom = 120;
+    const certNoRight =   170;
+    const certNoW = boldFont.widthOfTextAtSize(certNoText, certNoSize);
+    const certNoX = PAGE_W - certNoRight - certNoW;
+    const certNoY = certNoBottom;
+
+    if (certNoText) {
+      page.drawText(certNoText, {
+        x: certNoX,
+        y: certNoY,
+        size: certNoSize,
+        font: boldFont,
+        color: rgb(0, 0, 0),
+      });
     }
 
-    const bgPath = path.join(process.cwd(), "public", "assets", "certificate-bg.png");
-    const bgBytes = await fs.readFile(bgPath);
-    const bgDataUri = `data:image/png;base64,${bgBytes.toString("base64")}`;
-
-    const companyName = (cert.companyName || businessProfile?.companyName || user.companyName || user.fullname || "—")
-      .toString()
-      .trim();
-
-    const buffer = await pdf(
-      <CertificatePdf
-        bgDataUri={bgDataUri}
-        companyName={companyName}
-        issueDate={cert.issuedAt}
-        validUpto={cert.validUntil}
-        certificateNumber={cert.certificateNumber}
-      />
-    ).toBuffer();
+    const buffer = Buffer.from(await pdfDoc.save());
 
     const filenameSafe = (companyName || "certificate").replace(/[^\w\-]+/g, "_").slice(0, 60);
     const issue = formatFullDate(cert.issuedAt);
@@ -122,3 +160,4 @@ export async function GET(_req, { params }) {
   }
 }
 
+  
