@@ -13,7 +13,7 @@ export const metadata = {
     "user data",
     "business data security"
   ],
-  openGraph: {
+  openGraph: {  
     title: "Privacy Policy - Dial Export Mart",
     description:
       "Read the privacy policy of Dial Export Mart to understand how we collect, use, and protect your personal information in compliance with data regulations.",
@@ -54,7 +54,7 @@ const page = () => {
     <>
           <div>
            <Image
-  src={"/assets/pagesbanner/Privacy Policy.png" || "/placeholder.png"}
+  src={"/assets/pagesbanner/Privacy-Policy.png" || "/placeholder.png"}
   alt="Blog Banner"
   layout="responsive"
   width={1000}

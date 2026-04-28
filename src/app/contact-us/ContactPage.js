@@ -51,7 +51,7 @@ const ContactPage = () => {
     <>
       <div>
  <Image
-  src="/assets/pagesbanner/Contact Us.png"
+  src="/assets/pagesbanner/contact-us.png"
   alt="Blog Banner"
   layout="responsive"
   width={1000}

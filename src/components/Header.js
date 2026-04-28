@@ -287,50 +287,56 @@ const itemRefs = useRef([]);
         {/* Cards Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 flex-1">
 
-          {/* Card 1 */}
-          <div className="group cursor-pointer rounded-xl overflow-hidden shadow-md hover:shadow-xl transition">
-            <div className="relative aspect-square">
-              <Image
-                src="/assets/location.jpg"
-                alt="Location"
-                fill
-                className="object-cover group-hover:scale-105 transition"
-              />
-            </div>
-            <div className="p-2 text-center">
-              <h3 className="text-sm font-semibold">Location Products</h3>
-            </div>
-          </div>
+{/* Card 1 */}
+<Link href="/city/all-city">
+  <div className="group cursor-pointer rounded-xl overflow-hidden shadow-md hover:shadow-xl transition">
+    <div className="relative aspect-square">
+      <Image
+        src="/assets/location-products.jpg"
+        alt="Location"
+        fill
+        className="object-cover group-hover:scale-105 transition"
+      />
+    </div>
+    <div className="p-2 text-center">
+      <h3 className="text-sm font-semibold">Find Suppliers in Your City</h3>
+    </div>
+  </div>
+</Link>
 
-          {/* Card 2 */}
-          <div className="group cursor-pointer rounded-xl overflow-hidden shadow-md hover:shadow-xl transition">
-            <div className="relative aspect-square">
-              <Image
-                src="/assets/rfq.jpg"
-                alt="RFQ"
-                fill
-                className="object-cover group-hover:scale-105 transition"
-              />
-            </div>
-            <div className="p-2 text-center">
-              <h3 className="text-sm font-semibold">Post Requirement</h3>
-            </div>
-          </div>
+{/* Card 2 */}
+<Link href="/grc-certificate">
+  <div className="group cursor-pointer rounded-xl overflow-hidden shadow-md hover:shadow-xl transition">
+    <div className="relative aspect-square">
+      <Image
+        src="/assets/certificate.png"
+        alt="certificate"
+        fill
+        className="object-cover group-hover:scale-105 transition"
+      />
+    </div>
+    <div className="p-2 text-center">
+      <h3 className="text-sm font-semibold">Find Your Certificate</h3>
+    </div>
+  </div>
+</Link>
 
-          {/* Card 3 */}
-          <div className="group cursor-pointer rounded-xl overflow-hidden shadow-md hover:shadow-xl transition">
-            <div className="relative aspect-square">
-              <Image
-                src="/assets/categories.jpg"
-                alt="Categories"
-                fill
-                className="object-cover group-hover:scale-105 transition"
-              />
-            </div>
-            <div className="p-2 text-center">
-              <h3 className="text-sm font-semibold">Categories</h3>
-            </div>
-          </div>
+{/* Card 3 */}
+<Link href="/all-categories">
+  <div className="group cursor-pointer rounded-xl overflow-hidden shadow-md hover:shadow-xl transition">
+    <div className="relative aspect-square">
+      <Image
+        src="/assets/categories.jpeg"
+        alt="categories"
+        fill
+        className="object-cover group-hover:scale-105 transition"
+      />
+    </div>
+    <div className="p-2 text-center">
+      <h3 className="text-sm font-semibold">View All Categories</h3>
+    </div>
+  </div>
+</Link>
 
         </div>
 

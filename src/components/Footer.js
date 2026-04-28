@@ -140,6 +140,11 @@ const socialLinks = [
                     Blogs
                   </Link>
                 </li>
+                <li>
+                  <Link href="/grc-certificate" className="hover:text-gray-200 transition text-gray-300 text-decoration-none">
+                    Find Your Certificate
+                  </Link>
+                </li>
               </ul>
             </div>
 

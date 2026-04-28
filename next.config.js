@@ -32,6 +32,16 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Allow embedding certificate PDF in same-origin iframes (verification page)
+        source: "/api/certificates/pdf/:path*",
+        headers: [
+          {
+            key: "X-Frame-Options",
+            value: "SAMEORIGIN",
+          },
+        ],
+      },
+      {
         source: '/:path*',
         headers: [
           {

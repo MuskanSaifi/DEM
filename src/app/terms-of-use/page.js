@@ -19,7 +19,7 @@ export const metadata = {
     siteName: 'Dial Export Mart',
     images: [
       {
-        url: 'https://www.dialexportmart.com/assets/pagesbanner/tou.png',
+        url: 'https://www.dialexportmart.com/assets/pagesbanner/touu.png',
         width: 1000,
         height: 450,
         alt: 'Terms of Use Banner',
@@ -52,7 +52,7 @@ const page = () => {
     <>
         <div className="text-center">
        <Image
-  src={"/assets/pagesbanner/tou.png" || "/placeholder.png"}
+  src={"/assets/pagesbanner/touu.png" || "/placeholder.png"}
   alt="Blog Banner"
   layout="responsive"
   width={1000}
