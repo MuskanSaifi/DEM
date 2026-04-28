@@ -288,7 +288,7 @@ const itemRefs = useRef([]);
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 flex-1">
 
 {/* Card 1 */}
-<Link href="/city/all-city">
+<Link href="/city/all-city" onClick={() => setIsOpenpopup(false)}>
   <div className="group cursor-pointer rounded-xl overflow-hidden shadow-md hover:shadow-xl transition">
     <div className="relative aspect-square">
       <Image
@@ -305,7 +305,7 @@ const itemRefs = useRef([]);
 </Link>
 
 {/* Card 2 */}
-<Link href="/grc-certificate">
+<Link href="/grc-certificate" onClick={() => setIsOpenpopup(false)}>
   <div className="group cursor-pointer rounded-xl overflow-hidden shadow-md hover:shadow-xl transition">
     <div className="relative aspect-square">
       <Image
@@ -322,7 +322,7 @@ const itemRefs = useRef([]);
 </Link>
 
 {/* Card 3 */}
-<Link href="/all-categories">
+<Link href="/all-categories" onClick={() => setIsOpenpopup(false)}>
   <div className="group cursor-pointer rounded-xl overflow-hidden shadow-md hover:shadow-xl transition">
     <div className="relative aspect-square">
       <Image
