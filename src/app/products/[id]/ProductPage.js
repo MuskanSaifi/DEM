@@ -610,7 +610,7 @@ const ProductDetailPage = () => {
 
                   {product.businessProfile && (
                     <div className="mt-6 border-t pt-4">
-                      <h2 className="font-semibold text-lg mb-4 text-gray-900 text-xl">Business Profile</h2>
+                      {/* <h2 className="font-semibold text-lg mb-4 text-gray-900 text-xl">Business Profile</h2>
 
                       {product.businessProfile.companyDescription && (
                         <div
@@ -621,7 +621,7 @@ const ProductDetailPage = () => {
                             ),
                           }}
                         />
-                      )}
+                      )} */}
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Business Type */}
