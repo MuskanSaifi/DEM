@@ -272,7 +272,7 @@ const JoinUs = () => {
       fullname,
       email,
       mobileNumber: fullMobileNumber,
-      countryCode: countryCode.value,
+      countryCode: countryCode, // send the object
       productname: Array.isArray(productname) ? productname[0] : productname, // ✅ Ensure string
     };
 
@@ -494,27 +494,6 @@ const JoinUs = () => {
       )}
     </div>
 
-    {/* Image/Swiper Section */}
-    <div className="w-full md:w-1/2 flex justify-center items-center overflow-hidden p-4">
-      <div className="w-full">
-        <Swiper
-          modules={[Pagination, Autoplay]}
-          slidesPerView={1}
-          spaceBetween={20}
-          pagination={{ clickable: true }}
-          autoplay={{ delay: 3000, disableOnInteraction: false }}
-          loop={true}
-        >
-          {images.map((src, index) => (
-            <SwiperSlide key={index}>
-              <div className="flex justify-center items-center">
-                <Image src={src} alt={`Slide ${index}`} width={500} height={500} className="rounded-md" />
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
-    </div>
   </div>
 </div>
 

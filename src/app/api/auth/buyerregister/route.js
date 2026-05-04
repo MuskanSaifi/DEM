@@ -28,19 +28,22 @@ export async function POST(req) {
                 mobileNumber: formattedMobile,
                 countryCode,
                 companyName,
-                productname: productname // ✅ Pass string as string
+                productname: productname, // current product
+                inquiredProducts: [productname] // list of products
             });
         } else {
             // If buyer exists, update product list if not already included
-            if (!existingBuyer.productname.includes(productname)) {
-                existingBuyer.productname.push(productname);
+            if (!existingBuyer.inquiredProducts.includes(productname)) {
+                existingBuyer.inquiredProducts.push(productname);
             }
+            // Update current productname
+            existingBuyer.productname = productname;
             // Optionally, update other fields (e.g., fullname, email, etc.) if needed
         }
 
         await existingBuyer.save();
 
-        return new Response(JSON.stringify({ success: true, buyer: existingBuyer }), {
+        return new Response(JSON.stringify({ success: true, message: "Registration successful!", buyer: existingBuyer }), {
             status: 200,
             headers: { "Content-Type": "application/json" }
         });
