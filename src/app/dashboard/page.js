@@ -36,6 +36,7 @@ import Plans from "./Plans";
 import AddTemplate from "./ManageTemplates";
 import ProductsDiagnostic from "./ProductsDiagnostic";
 import Certificates from "./Certificates";
+import MetaLeads from "./MetaLeads";
 import ClientFilterModal from "@/components/ClientFilterModal";
 
 function ResponsiveDashboard() {
@@ -139,6 +140,7 @@ function ResponsiveDashboard() {
           {activeContent === "Manage Support Members" && <CreateSupportPerson />}
           {activeContent === "All Recordings" && <AllRecordings />}
           {activeContent === "All Clients Website Leads" && <AllClientWebsiteLeads />}
+          {activeContent === "Meta Leads" && <MetaLeads />}
           {activeContent === "Aggrement" && <AdminAggrement/>}
           {activeContent === "Add Employee" && <AddEmployeeForm />}
           {activeContent === "Salary Report" && <SalaryReport />}
