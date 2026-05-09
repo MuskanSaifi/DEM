@@ -4,7 +4,20 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { FaChevronDown, FaSearch, FaMapMarkerAlt, FaTh } from "react-icons/fa"; // Keep FaTh
+import {
+  FaChevronDown,
+  FaSearch,
+  FaMapMarkerAlt,
+  FaTh,
+  FaHome,
+  FaHeart,
+  FaUser,
+  FaEnvelope,
+  FaIdCard,
+  FaSignOutAlt,
+  FaBan,
+  FaHeadset,
+} from "react-icons/fa";
 
 import { useSelector, useDispatch } from "react-redux";
 import { logoutBuyer } from "@/app/store/buyerSlice";
@@ -155,6 +168,8 @@ useEffect(() => {
   };
 
 const handleLogout = () => {
+  setDropdownOpen(false);
+  setIsOpen(false);
   if (user) {
     dispatch(logout());
   } else if (buyer) {
@@ -567,13 +582,13 @@ onKeyDown={(e) => {
     </button>
     {dropdownOpen && (
       <ul className="dropdown-menu show">
-        <li className="dropdown-header text-center fw-bold">👋 Welcome Seller!</li>
-        <li><Link className="dropdown-item" href="/userdashboard">🏠 Dashboard</Link></li>
-        <li><Link className="dropdown-item" href="/wish-list">🧡 WishList</Link></li>
-        <li><Link className="dropdown-item" href="/userdashboard?activeTab=User%20Profile">🧑 Profile</Link></li>
-        <li><Link className="dropdown-item" href="/userdashboard?activeTab=Recieved%20Enquiry">📩 Inquiries</Link></li>
-        <li><Link className="dropdown-item" href="/userdashboard?activeTab=Payments">🎟️ My Membership</Link></li>
-        <li><button className="dropdown-item text-danger" onClick={handleLogout}>🚪 Logout</button></li>
+        <li className="dropdown-header text-center fw-bold">Welcome Seller!</li>
+        <li><Link className="dropdown-item d-flex align-items-center gap-2" href="/userdashboard" onClick={() => setDropdownOpen(false)}><FaHome /> Dashboard</Link></li>
+        <li><Link className="dropdown-item d-flex align-items-center gap-2" href="/wish-list" onClick={() => setDropdownOpen(false)}><FaHeart /> WishList</Link></li>
+        <li><Link className="dropdown-item d-flex align-items-center gap-2" href="/userdashboard?activeTab=User%20Profile" onClick={() => setDropdownOpen(false)}><FaUser /> Profile</Link></li>
+        <li><Link className="dropdown-item d-flex align-items-center gap-2" href="/userdashboard?activeTab=Recieved%20Enquiry" onClick={() => setDropdownOpen(false)}><FaEnvelope /> Inquiries</Link></li>
+        <li><Link className="dropdown-item d-flex align-items-center gap-2" href="/userdashboard?activeTab=Payments" onClick={() => setDropdownOpen(false)}><FaIdCard /> My Membership</Link></li>
+        <li><button className="dropdown-item text-danger d-flex align-items-center gap-2" onClick={handleLogout}><FaSignOutAlt /> Logout</button></li>
       </ul>
     )}
   </div>
@@ -596,13 +611,13 @@ onKeyDown={(e) => {
     </button>
     {dropdownOpen && (
       <ul className="dropdown-menu show">
-        <li className="dropdown-header text-center fw-bold">👋 Welcome Buyer!</li>
-        <li><Link className="dropdown-item" href="/buyerdashboard">🏠 Dashboard</Link></li>
-        <li><Link className="dropdown-item" href="/buyerdashboard?activeTab=Buyer%20Profile">🧾 Profile</Link></li>
-        <li><Link className="dropdown-item" href="/buyerdashboard?activeTab=Wishlist%20Items">🧡 WishList</Link></li>
-        <li><Link className="dropdown-item" href="/buyerdashboard?activeTab=Blocked%20Seller">🚫 Blocked Sellers</Link></li>
-        <li><Link className="dropdown-item" href="/buyerdashboard?activeTab=Help%20Desk">🎧 Help & Support</Link></li>
-        <li><button className="dropdown-item text-danger" onClick={handleLogout}>🚪 Logout</button></li>
+        <li className="dropdown-header text-center fw-bold">Welcome Buyer!</li>
+        <li><Link className="dropdown-item d-flex align-items-center gap-2" href="/buyerdashboard" onClick={() => setDropdownOpen(false)}><FaHome /> Dashboard</Link></li>
+        <li><Link className="dropdown-item d-flex align-items-center gap-2" href="/buyerdashboard?activeTab=Buyer%20Profile" onClick={() => setDropdownOpen(false)}><FaUser /> Profile</Link></li>
+        <li><Link className="dropdown-item d-flex align-items-center gap-2" href="/buyerdashboard?activeTab=Wishlist%20Items" onClick={() => setDropdownOpen(false)}><FaHeart /> WishList</Link></li>
+        <li><Link className="dropdown-item d-flex align-items-center gap-2" href="/buyerdashboard?activeTab=Blocked%20Seller" onClick={() => setDropdownOpen(false)}><FaBan /> Blocked Sellers</Link></li>
+        <li><Link className="dropdown-item d-flex align-items-center gap-2" href="/buyerdashboard?activeTab=Help%20Desk" onClick={() => setDropdownOpen(false)}><FaHeadset /> Help & Support</Link></li>
+        <li><button className="dropdown-item text-danger d-flex align-items-center gap-2" onClick={handleLogout}><FaSignOutAlt /> Logout</button></li>
       </ul>
     )}
   </div>
@@ -660,11 +675,11 @@ onKeyDown={(e) => {
   <div className="text-lg font-semibold mb-0">
     {user ? (
       <span className="text-purple-700">
-        👤 Hi! {user.fullname || "Seller"}
+        <FaUser className="inline me-1" /> Hi! {user.fullname || "Seller"}
       </span>
     ) : buyer ? (
       <span className="text-green-700">
-        👋 Hi! {buyer.fullname || "Buyer"}
+        <FaUser className="inline me-1" /> Hi! {buyer.fullname || "Buyer"}
       </span>
     ) : (
       <span className="text-gray-700">Welcome Guest</span>
@@ -681,16 +696,18 @@ onKeyDown={(e) => {
   {user ? (
     // ✅ Seller Logged In
     <>
-      👋 Welcome Seller!
+      <div className="d-flex align-items-center gap-2 fw-semibold">
+        <FaUser /> Welcome Seller!
+      </div>
       <ul className="mt-4 space-y-2">
         <li>
-          <Link className="dropdown-item" href="/userdashboard">
-            🏠 Dashboard
+          <Link className="dropdown-item d-flex align-items-center gap-2" href="/userdashboard" onClick={() => setIsOpen(false)}>
+            <FaHome /> Dashboard
           </Link>
         </li>
         <li>
-          <Link className="dropdown-item" href="/wish-list">
-            🧡 WishList{" "}
+          <Link className="dropdown-item d-flex align-items-center gap-2" href="/wish-list" onClick={() => setIsOpen(false)}>
+            <FaHeart /> WishList{" "}
             {wishlistItems.length > 0 && (
               <span className="badge bg-primary rounded-pill ms-1">
                 {wishlistItems.length}
@@ -700,31 +717,34 @@ onKeyDown={(e) => {
         </li>
         <li>
           <Link
-            className="dropdown-item"
+            className="dropdown-item d-flex align-items-center gap-2"
             href="/userdashboard?activeTab=User%20Profile"
+            onClick={() => setIsOpen(false)}
           >
-            🧑 Profile
+            <FaUser /> Profile
           </Link>
         </li>
         <li>
           <Link
-            className="dropdown-item"
+            className="dropdown-item d-flex align-items-center gap-2"
             href="/userdashboard?activeTab=Recieved%20Enquiry"
+            onClick={() => setIsOpen(false)}
           >
-            📩 Inquiries
+            <FaEnvelope /> Inquiries
           </Link>
         </li>
         <li>
           <Link
-            className="dropdown-item"
+            className="dropdown-item d-flex align-items-center gap-2"
             href="/userdashboard?activeTab=Payments"
+            onClick={() => setIsOpen(false)}
           >
-            🎟️ My Membership
+            <FaIdCard /> My Membership
           </Link>
         </li>
         <li>
-          <button className="dropdown-item text-danger" onClick={handleLogout}>
-            🚪 Sign Out
+          <button className="dropdown-item text-danger d-flex align-items-center gap-2" onClick={handleLogout}>
+            <FaSignOutAlt /> Sign Out
           </button>
         </li>
       </ul>
@@ -732,48 +752,54 @@ onKeyDown={(e) => {
   ) : buyer ? (
     // ✅ Buyer Logged In
     <>
-      👋 Welcome Buyer!
+      <div className="d-flex align-items-center gap-2 fw-semibold">
+        <FaUser /> Welcome Buyer!
+      </div>
       <ul className="mt-4 space-y-2">
         <li>
-          <Link className="dropdown-item" href="/buyerdashboard">
-            🏠 Dashboard
+          <Link className="dropdown-item d-flex align-items-center gap-2" href="/buyerdashboard" onClick={() => setIsOpen(false)}>
+            <FaHome /> Dashboard
           </Link>
         </li>
         <li>
           <Link
-            className="dropdown-item"
+            className="dropdown-item d-flex align-items-center gap-2"
             href="/buyerdashboard?activeTab=Buyer%20Profile"
+            onClick={() => setIsOpen(false)}
           >
-            🧾 Profile
+            <FaUser /> Profile
           </Link>
         </li>
         <li>
           <Link
-            className="dropdown-item"
+            className="dropdown-item d-flex align-items-center gap-2"
             href="/buyerdashboard?activeTab=Wishlist%20Items"
+            onClick={() => setIsOpen(false)}
           >
-          🧡 WishList
+            <FaHeart /> WishList
           </Link>
         </li>
         <li>
           <Link
-            className="dropdown-item"
+            className="dropdown-item d-flex align-items-center gap-2"
             href="/buyerdashboard?activeTab=Blocked%20Seller"
+            onClick={() => setIsOpen(false)}
           >
-         🚫 Blocked Sellers
+            <FaBan /> Blocked Sellers
           </Link>
         </li>
         <li>
           <Link
-            className="dropdown-item"
+            className="dropdown-item d-flex align-items-center gap-2"
             href="/buyerdashboard?activeTab=Help%20Desk"
+            onClick={() => setIsOpen(false)}
           >
-        🎧 Help & Support
+            <FaHeadset /> Help & Support
           </Link>
         </li>
         <li>
-          <button className="dropdown-item text-danger" onClick={handleLogout}>
-            🚪 Sign Out
+          <button className="dropdown-item text-danger d-flex align-items-center gap-2" onClick={handleLogout}>
+            <FaSignOutAlt /> Sign Out
           </button>
         </li>
       </ul>

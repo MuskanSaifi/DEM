@@ -791,8 +791,11 @@ className="rounded-md object-contain mx-auto h-100 w-100"
                         <div className="d-flex flex-wrap align-items-center text-sm">
                           {/* Certified badge */}
                           {product.isCertified && (
-                            <span className="me-3 text-success d-flex align-items-center mb-1">
-                              <FaCheckCircle className="me-1" /> Certified
+                            <span
+                              className="me-3 d-flex align-items-center mb-1 rounded-pill px-2 py-0 text-white small fw-bold"
+                              style={{ backgroundColor: "#059669" }}
+                            >
+                              <FaCheckCircle className="me-1" /> GRC Verified
                             </span>
                           )}
                           {/* Location */}

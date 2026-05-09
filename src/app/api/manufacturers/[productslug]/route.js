@@ -1,4 +1,5 @@
 // api/manufacturers/[productslug]/route.js
+import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";
@@ -7,6 +8,39 @@ import BusinessProfile from "@/models/BusinessProfile";
 import BlockedUser from "@/models/BlockedUser";
 import User from "@/models/User"; // ✅ Required for populate("userId")
 import Category from "@/models/Category"; // ✅ Required for populate("category")
+import Certificate from "@/models/Certificate";
+
+async function attachGrcCertified(docs) {
+  if (!docs?.length) return [];
+  const uidStrs = [
+    ...new Set(
+      docs
+        .map((p) => {
+          const u = p.userId;
+          return u?._id?.toString() || u?.toString();
+        })
+        .filter(Boolean)
+    ),
+  ];
+  if (!uidStrs.length) {
+    return docs.map((p) => ({ ...(p.toObject ? p.toObject() : p), isCertified: false }));
+  }
+  const oids = uidStrs.map((id) => new mongoose.Types.ObjectId(id));
+  const active = await Certificate.find({
+    userId: { $in: oids },
+    status: "active",
+  })
+    .select("userId")
+    .lean();
+  const certified = new Set(active.map((c) => String(c.userId)));
+
+  return docs.map((p) => {
+    const o = p.toObject ? p.toObject() : { ...p };
+    const uid =
+      o.userId?._id?.toString() || o.userId?.toString?.() || String(o.userId || "");
+    return { ...o, isCertified: !!(uid && certified.has(uid)) };
+  });
+}
 
 // ✅ Route segment config - API routes use cache headers for caching
 
@@ -68,7 +102,14 @@ export async function GET(request) {
       subCategory: baseProduct.subCategory,
       _id: { $nin: products.map((p) => p._id) },
       userId: { $nin: blockedSellerIds }, // 👈 filter yahan bhi
-    }).limit(5);
+    })
+      .populate("userId")
+      .limit(5);
+
+    const [productsPayload, relatedPayload] = await Promise.all([
+      attachGrcCertified(products),
+      attachGrcCertified(relatedProducts),
+    ]);
 
     const businessProfile =
       !blockedSellerIds.includes(baseProduct.userId.toString()) // 👈 seller blocked h to businessProfile na do
@@ -78,9 +119,9 @@ export async function GET(request) {
     return NextResponse.json(
       {
         success: true,
-        products,
+        products: productsPayload,
         subcategories,
-        relatedProducts,
+        relatedProducts: relatedPayload,
         businessProfile,
       },
       { 

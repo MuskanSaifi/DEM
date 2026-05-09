@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Skeleton from "react-loading-skeleton";
+import GrcVerifiedBadge from "@/components/GrcVerifiedBadge";
 import "react-loading-skeleton/dist/skeleton.css";
 import Buyfrom from "./Buyfrom";
 import Link from "next/link";
@@ -357,6 +358,11 @@ const ProductDetailPage = () => {
                     className="relative overflow-hidden border rounded-2xl w-full cursor-zoom-in"
                     onClick={handleZoomOpen}
                   >
+                    {sellerCertified && (
+                      <div className="pointer-events-none absolute left-3 top-3 z-10">
+                        <GrcVerifiedBadge />
+                      </div>
+                    )}
                     <Image
                       src={hoveredImage || product.images?.[0] || "/placeholder.png"}
                       alt={`${product.name} wholesale suppliers` || "Product Image"}
@@ -465,8 +471,8 @@ const ProductDetailPage = () => {
   >
                       👤 {product.userId.fullname}
                       {sellerCertified && (
-                        <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">
-                          ✓ Certified
+                        <span className="ml-2 align-middle inline-flex">
+                          <GrcVerifiedBadge size="sm" />
                         </span>
                       )}
                         </Link>
@@ -787,6 +793,11 @@ const ProductDetailPage = () => {
                 <span className="absolute top-1.5 left-1.5 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded">
                   +{relatedProduct.images?.length || 0}
                 </span>
+                {relatedProduct.isCertified && (
+                  <span className="absolute bottom-1.5 left-1.5 z-[1]">
+                    <GrcVerifiedBadge size="sm" />
+                  </span>
+                )}
 
                 {/* Wishlist Heart */}
                 <button

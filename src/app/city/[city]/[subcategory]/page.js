@@ -3,8 +3,8 @@ import mongoose from "mongoose";
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";
 import SubCategory from "@/models/SubCategory";
-import User from "@/models/User";
 import BusinessProfile from "@/models/BusinessProfile";
+import Certificate from "@/models/Certificate";
 import Link from "next/link";
 import ProductListingClient from "./ProductListingClient";
 
@@ -183,14 +183,33 @@ export default async function SubcategoryPage({
       }
     });
 
+    /* ---------- Active GRC certificates for listed sellers ---------- */
+    const sellerObjectIds = Array.from(userIds).filter(Boolean).map(
+      (id) => new mongoose.Types.ObjectId(id)
+    );
+    const activeCerts =
+      sellerObjectIds.length > 0
+        ? await Certificate.find({
+            userId: { $in: sellerObjectIds },
+            status: "active",
+          })
+            .select("userId")
+            .lean()
+        : [];
+    const certifiedUserIds = new Set(
+      activeCerts.map((c) => String(c.userId))
+    );
+
     /* ---------- Serialize ---------- */
     const serializedProducts = allProducts.map((product) => {
       const userId = product.userId?._id?.toString() || product.userId?.toString();
       const businessProfile = userId ? businessProfileMap[userId] : null;
+      const isCertified = !!(userId && certifiedUserIds.has(userId));
 
       return {
         ...product,
         _id: product._id.toString(),
+        isCertified,
         userId: product.userId
           ? {
               _id: product.userId._id.toString(),

@@ -7,6 +7,7 @@ import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { useParams } from "next/navigation";
 import Buyfrom from "./Buyfrom";
+import GrcVerifiedBadge from "@/components/GrcVerifiedBadge";
 
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -318,6 +319,11 @@ const [minMOQ, setMinMOQ] = useState("");
 
               {/* IMAGE */}
               <div className="position-relative bg-light p-3 text-center">
+                {product.isCertified && (
+                  <span className="position-absolute start-0 top-0 m-2" style={{ zIndex: 1 }}>
+                    <GrcVerifiedBadge size="sm" />
+                  </span>
+                )}
                 <Image
                   src={product?.images?.[0]?.url || "/placeholder.png"}
                   alt={product?.name || "Product"}

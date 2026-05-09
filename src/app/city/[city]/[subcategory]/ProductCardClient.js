@@ -5,6 +5,7 @@ import Image from "next/image";
 import Buyfrom from "./Buyfrom";
 import { MapPin, CheckCircle2 } from "lucide-react";
 import { memo } from "react";
+import GrcVerifiedBadge from "@/components/GrcVerifiedBadge";
 
 function ProductCardClient({ product }) {
   const images = product.images?.length
@@ -51,10 +52,11 @@ function ProductCardClient({ product }) {
           className="object-contain transition-transform duration-500 group-hover:scale-110 p-2"
           unoptimized
         />
-        <span className="absolute top-3 left-3 bg-green-600 text-white text-xs px-2 py-1 rounded-full font-medium shadow-md flex items-center gap-1">
-          <CheckCircle2 size={12} />
-          Verified
-        </span>
+        {product.isCertified && (
+          <span className="absolute top-3 left-3">
+            <GrcVerifiedBadge size="sm" />
+          </span>
+        )}
       </Link>
 
       {/* CONTENT */}

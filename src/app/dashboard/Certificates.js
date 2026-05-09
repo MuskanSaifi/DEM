@@ -33,6 +33,11 @@ export default function Certificates() {
       validUntil: formatYMD(valid),
     };
   });
+  const [phoneSearch, setPhoneSearch] = useState("");
+  const [slugSuggestions, setSlugSuggestions] = useState([]);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupMessage, setLookupMessage] = useState("");
+  const [lookupMessageType, setLookupMessageType] = useState("");
 
   const filtered = useMemo(() => certificates, [certificates]);
 
@@ -61,6 +66,50 @@ export default function Certificates() {
     fetchList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const normalized = (phoneSearch || "").replace(/[^\d]/g, "");
+    if (!normalized) {
+      setSlugSuggestions([]);
+      setLookupMessage("");
+      setLookupMessageType("");
+      setLookupLoading(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setLookupLoading(true);
+      try {
+        const res = await fetch(
+          `/api/admin/certificates/user-lookup?phone=${encodeURIComponent(normalized)}`
+        );
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || "Lookup failed");
+        }
+        const suggestions = data.suggestions || [];
+        setSlugSuggestions(suggestions);
+        if (!data.registered) {
+          setLookupMessage(data.message || "This number is not registered.");
+          setLookupMessageType("error");
+        } else if (suggestions.length && suggestions.every((s) => !s.profileComplete)) {
+          setLookupMessage("This customer profile is incomplete.");
+          setLookupMessageType("warning");
+        } else {
+          setLookupMessage("");
+          setLookupMessageType("");
+        }
+      } catch (e) {
+        setSlugSuggestions([]);
+        setLookupMessage(e?.message || "Could not search phone number.");
+        setLookupMessageType("error");
+      } finally {
+        setLookupLoading(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [phoneSearch]);
 
   const handleIssue = async (e) => {
     e.preventDefault();
@@ -142,7 +191,67 @@ export default function Certificates() {
       <div className="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
         <form onSubmit={handleIssue} className="lg:col-span-1 border rounded-xl p-4 bg-gray-50/50">
           <h3 className="text-sm font-bold text-gray-900 mb-3">Issue Certificate</h3>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">User profile slug (optional)</label>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Phone number lookup (optional)</label>
+          <input
+            value={phoneSearch}
+            onChange={(e) => setPhoneSearch(e.target.value)}
+            placeholder="9876543210"
+            className="w-full border rounded-lg px-3 py-2 text-sm bg-white"
+          />
+          {lookupLoading && (
+            <div className="mt-2 text-xs text-gray-500">Searching profiles…</div>
+          )}
+          {!!lookupMessage && (
+            <div
+              className={`mt-2 text-xs px-2.5 py-2 rounded-md border ${
+                lookupMessageType === "warning"
+                  ? "bg-amber-50 border-amber-200 text-amber-800"
+                  : "bg-red-50 border-red-200 text-red-700"
+              }`}
+            >
+              {lookupMessage}
+            </div>
+          )}
+          {slugSuggestions.length > 0 && (
+            <div className="mt-2 max-h-44 overflow-auto rounded-lg border bg-white">
+              {slugSuggestions.map((s) => {
+                const labelName = s.fullname || s.companyName || "Unnamed user";
+                return (
+                  <div key={s.userId} className="px-3 py-2 border-b last:border-b-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-xs font-semibold text-gray-900 truncate">
+                          {labelName}
+                        </div>
+                        <div className="text-[11px] text-gray-600 truncate">
+                          {s.userProfileSlug || "No profile slug"}
+                        </div>
+                        {!s.profileComplete && (
+                          <div className="text-[11px] text-amber-700">This customer profile is incomplete.</div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        disabled={!s.userProfileSlug}
+                        onClick={() =>
+                          setIssueForm((f) => ({
+                            ...f,
+                            userSlug: s.userProfileSlug || "",
+                            companyName: s.companyName || f.companyName,
+                          }))
+                        }
+                        className="shrink-0 px-2 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-semibold disabled:opacity-50"
+                      >
+                        Use slug
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <label className="block text-xs font-semibold text-gray-600 mt-3 mb-1">User profile slug (optional)</label>
           <input
             value={issueForm.userSlug}
             onChange={(e) => setIssueForm((f) => ({ ...f, userSlug: e.target.value }))}
