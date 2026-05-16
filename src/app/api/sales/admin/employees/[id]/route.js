@@ -34,6 +34,28 @@ export async function DELETE(req, { params }) {
     }
 
     const { id } = await params;
+    const body = await req.json().catch(() => ({}));
+    const { reassignTo } = body;
+
+    if (!reassignTo) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Select a team member to reassign all leads before deleting.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (String(reassignTo) === String(id)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Cannot reassign leads to the same employee being deleted.",
+        },
+        { status: 400 }
+      );
+    }
 
     // Check if employee exists
     const employee = await SalesEmployee.findById(id);
@@ -44,10 +66,32 @@ export async function DELETE(req, { params }) {
       );
     }
 
-    // Unassign all leads assigned to this employee
-    await SalesLead.updateMany(
-      { assignedTo: id },
-      { $set: { assignedTo: null } }
+    const targetEmployee = await SalesEmployee.findById(reassignTo);
+    if (!targetEmployee) {
+      return NextResponse.json(
+        { success: false, message: "Selected team member not found" },
+        { status: 404 }
+      );
+    }
+
+    const now = new Date();
+    const reassignResult = await SalesLead.updateMany(
+      {
+        $or: [
+          { assignedTo: id },
+          {
+            createdBy: id,
+            $or: [{ assignedTo: null }, { assignedTo: { $exists: false } }],
+          },
+        ],
+      },
+      {
+        $set: {
+          assignedTo: reassignTo,
+          assignedAt: now,
+          assignedBy: admin.id,
+        },
+      }
     );
 
     // Delete employee
@@ -56,7 +100,8 @@ export async function DELETE(req, { params }) {
     return NextResponse.json(
       {
         success: true,
-        message: "Employee deleted successfully. All assigned leads are now unassigned.",
+        message: `Employee deleted. ${reassignResult.modifiedCount} lead(s) reassigned to ${targetEmployee.fullname}.`,
+        reassignedCount: reassignResult.modifiedCount,
       },
       { status: 200 }
     );

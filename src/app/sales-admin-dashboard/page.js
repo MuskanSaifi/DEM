@@ -47,12 +47,16 @@ export default function SalesAdminDashboard() {
   const [expandedReportEmployeeId, setExpandedReportEmployeeId] = useState(null);
   const [showEmployeeSidebar, setShowEmployeeSidebar] = useState(false);
   const [changePasswordFor, setChangePasswordFor] = useState(null);
+  const [deleteEmployeeTarget, setDeleteEmployeeTarget] = useState(null);
+  const [reassignLeadsTo, setReassignLeadsTo] = useState("");
+  const [deleteEmployeeLoading, setDeleteEmployeeLoading] = useState(false);
   const [changePasswordForm, setChangePasswordForm] = useState({
     password: "",
     confirm: "",
   });
   const [showChangePasswordInput, setShowChangePasswordInput] = useState(false);
   const [employeeSearch, setEmployeeSearch] = useState("");
+  const [teamMemberSearch, setTeamMemberSearch] = useState("");
   const [employeeForm, setEmployeeForm] = useState({
     fullname: "",
     email: "",
@@ -85,6 +89,17 @@ export default function SalesAdminDashboard() {
       (emp.fullname || "").toLowerCase().includes(query)
     );
   }, [employees, employeeSearch]);
+
+  const filteredTeamMembers = useMemo(() => {
+    const query = teamMemberSearch.trim().toLowerCase();
+    if (!query) return employees;
+    return employees.filter(
+      (emp) =>
+        (emp.fullname || "").toLowerCase().includes(query) ||
+        (emp.email || "").toLowerCase().includes(query) ||
+        (emp.mobileNumber || "").includes(query)
+    );
+  }, [employees, teamMemberSearch]);
 
   const selectedAssignEmployee = useMemo(
     () => employees.find((emp) => emp._id === assignTo),
@@ -121,6 +136,18 @@ export default function SalesAdminDashboard() {
     { value: "followup", label: "Follow-up" },
     { value: "other", label: "Other" },
   ];
+
+  const formatLeadDateTime = (date) => {
+    if (!date) return "-";
+    return new Date(date).toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
 
   const currentUserId = admin?.id;
 
@@ -178,7 +205,9 @@ export default function SalesAdminDashboard() {
     if (filters.status) {
       filtered = filtered.filter((lead) => lead.status === filters.status);
     }
-    if (filters.assignedTo) {
+    if (filters.assignedTo === "unassigned") {
+      filtered = filtered.filter((lead) => !lead.assignedTo);
+    } else if (filters.assignedTo) {
       const aid = String(filters.assignedTo);
       filtered = filtered.filter(
         (lead) =>
@@ -390,24 +419,72 @@ export default function SalesAdminDashboard() {
     }
   };
 
-  const handleDeleteEmployee = async (employeeId, employeeName) => {
-    if (!confirm(`Are you sure you want to delete ${employeeName}? All assigned leads will be unassigned.`)) {
+  const openDeleteEmployeeModal = (emp) => {
+    setDeleteEmployeeTarget(emp);
+    setReassignLeadsTo("");
+  };
+
+  const closeDeleteEmployeeModal = () => {
+    setDeleteEmployeeTarget(null);
+    setReassignLeadsTo("");
+    setDeleteEmployeeLoading(false);
+  };
+
+  const getEmployeeLeadCount = (employeeId) => {
+    const id = String(employeeId);
+    return leads.filter(
+      (lead) =>
+        String(lead.assignedTo?._id || lead.assignedTo) === id ||
+        (String(lead.createdBy?._id || lead.createdBy) === id && !lead.assignedTo)
+    ).length;
+  };
+
+  const handleConfirmDeleteEmployee = async (e) => {
+    e?.preventDefault();
+    if (!deleteEmployeeTarget) return;
+
+    const otherEmployees = employees.filter(
+      (emp) => String(emp._id) !== String(deleteEmployeeTarget._id)
+    );
+    if (otherEmployees.length === 0) {
+      setToast({
+        type: "error",
+        message: "Add another team member before deleting this employee.",
+      });
+      setTimeout(() => setToast(null), 5000);
       return;
     }
-    const token = localStorage.getItem("salesAdminToken");
-    try {
-      const res = await fetch(`/api/sales/admin/employees/${employeeId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+
+    if (!reassignLeadsTo) {
+      setToast({
+        type: "error",
+        message: "Select a team member to reassign all leads.",
       });
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+
+    const token = localStorage.getItem("salesAdminToken");
+    setDeleteEmployeeLoading(true);
+    try {
+      const res = await fetch(
+        `/api/sales/admin/employees/${deleteEmployeeTarget._id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ reassignTo: reassignLeadsTo }),
+        }
+      );
       const data = await res.json();
       if (data.success) {
         setToast({
           type: "success",
           message: data.message || "Employee deleted successfully",
         });
+        closeDeleteEmployeeModal();
         fetchData(token);
         setTimeout(() => setToast(null), 5000);
       } else {
@@ -417,6 +494,8 @@ export default function SalesAdminDashboard() {
     } catch (err) {
       setToast({ type: "error", message: "Failed to delete employee" });
       setTimeout(() => setToast(null), 5000);
+    } finally {
+      setDeleteEmployeeLoading(false);
     }
   };
 
@@ -829,6 +908,10 @@ export default function SalesAdminDashboard() {
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Hot follow-up</div>
               <div className="mt-1 text-xl font-bold text-gray-900">{stats.hotfollowupLeads ?? 0}</div>
             </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, assignedTo: "unassigned", status: f.status, paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-slate-500 text-left">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Unassigned Lead</div>
+              <div className="mt-1 text-xl font-bold text-gray-900">{stats.unassignedLeads ?? 0}</div>
+            </button>
           </div>
         )}
 
@@ -893,7 +976,10 @@ export default function SalesAdminDashboard() {
 
   {/* View All Sales Team */}
   <button
-    onClick={() => setShowEmployeeSidebar(true)}
+    onClick={() => {
+      setTeamMemberSearch("");
+      setShowEmployeeSidebar(true);
+    }}
     className="px-5 py-3 rounded-2xl 
     bg-white text-indigo-600 font-semibold 
     border border-indigo-200 
@@ -940,6 +1026,7 @@ export default function SalesAdminDashboard() {
                     className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-gray-50/50 focus:bg-white transition"
                   >
                     <option value="">All Employees</option>
+                    <option value="unassigned">Unassigned</option>
                     {employees.map((emp) => (
                       <option key={emp._id} value={emp._id}>{emp.fullname}</option>
                     ))}
@@ -1124,6 +1211,118 @@ export default function SalesAdminDashboard() {
           </form>
             </div>
           </div>  
+        )}
+
+        {/* Delete employee – reassign leads modal */}
+        {deleteEmployeeTarget && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b flex-shrink-0">
+                <h2 className="text-lg font-bold text-gray-900">Delete Team Member</h2>
+                <button
+                  type="button"
+                  onClick={closeDeleteEmployeeModal}
+                  disabled={deleteEmployeeLoading}
+                  className="text-gray-400 hover:text-gray-600 rounded-full p-1 disabled:opacity-50"
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="px-6 pt-3 text-sm text-gray-600 flex-shrink-0">
+                Before deleting <strong>{deleteEmployeeTarget.fullname}</strong>, assign all their
+                leads to another team member.{" "}
+                <span className="text-gray-500">
+                  ({getEmployeeLeadCount(deleteEmployeeTarget._id)} lead(s) will be reassigned)
+                </span>
+              </p>
+              <form
+                onSubmit={handleConfirmDeleteEmployee}
+                className="px-6 pb-6 pt-4 flex flex-col flex-1 min-h-0"
+              >
+                {employees.filter(
+                  (emp) => String(emp._id) !== String(deleteEmployeeTarget._id)
+                ).length === 0 ? (
+                  <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    No other team members available. Add another employee first, then delete.
+                  </p>
+                ) : (
+                  <>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Reassign all leads to *
+                    </label>
+                    <div className="border border-gray-200 rounded-xl overflow-y-auto max-h-[40vh] mb-4 divide-y divide-gray-100">
+                      {employees
+                        .filter(
+                          (emp) =>
+                            String(emp._id) !== String(deleteEmployeeTarget._id)
+                        )
+                        .map((emp) => (
+                          <label
+                            key={emp._id}
+                            className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition ${
+                              String(reassignLeadsTo) === String(emp._id)
+                                ? "bg-indigo-50"
+                                : "hover:bg-gray-50"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="reassignLeadsTo"
+                              value={emp._id}
+                              checked={String(reassignLeadsTo) === String(emp._id)}
+                              onChange={() => setReassignLeadsTo(emp._id)}
+                              className="text-indigo-600"
+                            />
+                            <div className="h-9 w-9 flex-shrink-0 flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-indigo-700 text-white text-sm font-semibold">
+                              {emp.fullname?.charAt(0)?.toUpperCase()}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-sm text-gray-900 truncate">
+                                {emp.fullname}
+                              </p>
+                              <p className="text-xs text-gray-500 truncate">{emp.email}</p>
+                            </div>
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                                emp.isActive
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : "bg-red-100 text-red-700"
+                              }`}
+                            >
+                              {emp.isActive ? "Active" : "Deactivated"}
+                            </span>
+                          </label>
+                        ))}
+                    </div>
+                  </>
+                )}
+                <div className="flex justify-end gap-3 pt-2 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={closeDeleteEmployeeModal}
+                    disabled={deleteEmployeeLoading}
+                    className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={
+                      deleteEmployeeLoading ||
+                      !reassignLeadsTo ||
+                      employees.filter(
+                        (emp) => String(emp._id) !== String(deleteEmployeeTarget._id)
+                      ).length === 0
+                    }
+                    className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl shadow-sm transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {deleteEmployeeLoading ? "Deleting…" : "Delete & Reassign Leads"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
 
         {/* Change Password modal */}
@@ -1435,6 +1634,9 @@ export default function SalesAdminDashboard() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Actions
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Date & Time
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y text-sm divide-gray-100">
@@ -1622,6 +1824,9 @@ export default function SalesAdminDashboard() {
                           </option>
                         ))}
                       </select>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {formatLeadDateTime(lead.createdAt)}
                     </td>
                   </tr>
                 ))}
@@ -1816,6 +2021,10 @@ export default function SalesAdminDashboard() {
                           ))}
                         </select>
                       </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        <span className="font-semibold">Imported: </span>
+                        {formatLeadDateTime(lead.createdAt)}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -2256,7 +2465,10 @@ export default function SalesAdminDashboard() {
     {/* Overlay */}
     <div
       className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-      onClick={() => setShowEmployeeSidebar(false)}
+      onClick={() => {
+        setShowEmployeeSidebar(false);
+        setTeamMemberSearch("");
+      }}
     />
 
     {/* Drawer */}
@@ -2280,12 +2492,17 @@ export default function SalesAdminDashboard() {
               Sales Team
             </h2>
             <p className="text-xs text-indigo-200">
-              Total members: {employees.length}
+              {teamMemberSearch.trim()
+                ? `Showing ${filteredTeamMembers.length} of ${employees.length}`
+                : `Total members: ${employees.length}`}
             </p>
           </div>
 
           <button
-            onClick={() => setShowEmployeeSidebar(false)}
+            onClick={() => {
+              setShowEmployeeSidebar(false);
+              setTeamMemberSearch("");
+            }}
             className="h-9 w-9 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition"
           >
             ✕
@@ -2293,9 +2510,25 @@ export default function SalesAdminDashboard() {
         </div>
       </div>
 
+      {/* Search */}
+      <div className="px-4 sm:px-5 py-3 border-b border-gray-100 bg-white flex-shrink-0">
+        <input
+          type="text"
+          value={teamMemberSearch}
+          onChange={(e) => setTeamMemberSearch(e.target.value)}
+          placeholder="Search by name, email or mobile…"
+          className="sales-input-focus w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm placeholder:text-gray-400 bg-gray-50/50 focus:bg-white transition"
+        />
+      </div>
+
       {/* BODY */}
 <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-3 space-y-2">
-        {employees.map((emp) => (
+        {filteredTeamMembers.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-8">
+            No team members match your search.
+          </p>
+        ) : (
+        filteredTeamMembers.map((emp) => (
       <div
   key={emp._id}
   className="bg-white border rounded-xl px-3 py-2 shadow-sm hover:shadow transition"
@@ -2358,16 +2591,15 @@ export default function SalesAdminDashboard() {
       Change Password
     </button>
     <button
-      onClick={() =>
-        handleDeleteEmployee(emp._id, emp.fullname)
-      }
+      onClick={() => openDeleteEmployeeModal(emp)}
       className="flex-1 min-w-[70px] px-2 py-1 bg-red-100 text-red-600 rounded-md text-[11px] font-medium hover:bg-red-200 transition"
     >
       Delete
     </button>
   </div>
 </div>
-        ))}
+        ))
+        )}
 
       </div>
 
@@ -2376,6 +2608,7 @@ export default function SalesAdminDashboard() {
         <button
           onClick={() => {
             setShowEmployeeSidebar(false);
+            setTeamMemberSearch("");
             setShowAddEmployee(true);
           }}
           className="w-full py-2.5 rounded-xl text-sm

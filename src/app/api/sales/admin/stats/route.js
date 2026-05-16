@@ -42,6 +42,7 @@ export async function GET(req) {
       notInterestedLeads,
       ringingLeads,
       hotfollowupLeads,
+      unassignedLeads,
       paidLeads,
       totalEmployees,
       employeeStats,
@@ -56,6 +57,9 @@ export async function GET(req) {
       SalesLead.countDocuments({ status: "not_interested" }),
       SalesLead.countDocuments({ status: "ringing" }),
       SalesLead.countDocuments({ status: "hotfollowup" }),
+      SalesLead.countDocuments({
+        $or: [{ assignedTo: null }, { assignedTo: { $exists: false } }],
+      }),
       SalesLead.countDocuments({ paymentStatus: "paid" }),
       SalesEmployee.countDocuments({ isActive: true }),
       SalesLead.aggregate([
@@ -102,6 +106,7 @@ export async function GET(req) {
           notInterestedLeads,
           ringingLeads,
           hotfollowupLeads,
+          unassignedLeads,
           paidLeads,
           totalEmployees,
           employeeStats,
