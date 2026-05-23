@@ -29,6 +29,19 @@ const salesEmployeeSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    inactiveReason: {
+      type: String,
+      enum: ["manual", "low_paid_activity"],
+      default: null,
+    },
+    inactiveAt: {
+      type: Date,
+      default: null,
+    },
+    reactivatedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

@@ -111,6 +111,8 @@ export async function POST(req) {
           product: product ? product.toString().trim() : "Not specified",
           status: "new",
           paymentStatus: markAsPaid ? "paid" : "pending",
+          paidMarkedAt: markAsPaid ? new Date() : null,
+          paidMarkedBy: markAsPaid && assignedToId ? assignedToId : null,
           assignedTo: assignedToId,
           assignedAt: assignedToId ? new Date() : null,
           assignedBy: assignedToId ? admin.id : null,

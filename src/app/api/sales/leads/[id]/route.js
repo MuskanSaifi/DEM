@@ -45,6 +45,9 @@ export async function PATCH(req, { params }) {
       gst,
       mobile,
       companyName,
+      callReminderAt,
+      callReminderNotified,
+      clearCallReminder,
     } = await req.json();
 
     const lead = await SalesLead.findById(id);
@@ -75,7 +78,40 @@ export async function PATCH(req, { params }) {
       paymentStatus &&
       ["pending", "paid", "partial", "not_applicable"].includes(paymentStatus)
     ) {
+      const prevPayment = lead.paymentStatus || "pending";
       lead.paymentStatus = paymentStatus;
+      if (paymentStatus === "paid" && prevPayment !== "paid") {
+        lead.paidMarkedAt = new Date();
+        if (user.role === "sales-employee") {
+          lead.paidMarkedBy = user.id;
+        } else if (lead.assignedTo) {
+          lead.paidMarkedBy = lead.assignedTo;
+        }
+      }
+    }
+
+    if (clearCallReminder === true) {
+      lead.callReminderAt = null;
+      lead.callReminderNotified = false;
+    } else if (callReminderAt !== undefined) {
+      if (callReminderAt === null || callReminderAt === "") {
+        lead.callReminderAt = null;
+        lead.callReminderNotified = false;
+      } else {
+        const reminderDate = new Date(callReminderAt);
+        if (Number.isNaN(reminderDate.getTime())) {
+          return NextResponse.json(
+            { success: false, message: "Invalid call reminder date/time" },
+            { status: 400 }
+          );
+        }
+        lead.callReminderAt = reminderDate;
+        lead.callReminderNotified = false;
+      }
+    }
+
+    if (typeof callReminderNotified === "boolean") {
+      lead.callReminderNotified = callReminderNotified;
     }
 
     if (gst !== undefined) {

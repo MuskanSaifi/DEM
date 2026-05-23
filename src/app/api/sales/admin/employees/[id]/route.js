@@ -135,6 +135,14 @@ export async function PATCH(req, { params }) {
 
     if (typeof isActive === "boolean") {
       update.isActive = isActive;
+      if (isActive) {
+        update.inactiveReason = null;
+        update.inactiveAt = null;
+        update.reactivatedAt = new Date();
+      } else {
+        update.inactiveReason = "manual";
+        update.inactiveAt = new Date();
+      }
     }
 
     if (password && typeof password === "string") {

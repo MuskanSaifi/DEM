@@ -76,6 +76,8 @@ export default function SalesAdminDashboard() {
   const [showClientFilterModal, setShowClientFilterModal] = useState(false);
   const [showBestPerformerModal, setShowBestPerformerModal] = useState(false);
   const [showDailyReportModal, setShowDailyReportModal] = useState(false);
+  const [showLowPerformanceModal, setShowLowPerformanceModal] = useState(false);
+  const [lowPerformanceEmployees, setLowPerformanceEmployees] = useState([]);
   const [leaderboardDateFilter, setLeaderboardDateFilter] = useState({
     byDay: "",
     startDate: "",
@@ -308,10 +310,92 @@ export default function SalesAdminDashboard() {
       if (leadsData.success) setLeads(leadsData.leads);
       if (employeesData.success) setEmployees(employeesData.employees);
       if (statsData.success) setStats(statsData.stats);
+      await fetchWeeklyPerformance(token);
     } catch (err) {
       console.error("Fetch data error:", err);
     } finally {
       setLeadsLoading(false);
+    }
+  };
+
+  const fetchWeeklyPerformance = async (token) => {
+    try {
+      const res = await fetch("/api/sales/admin/weekly-performance", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setLowPerformanceEmployees(data.inactiveEmployees || []);
+      }
+    } catch (err) {
+      console.error("Weekly performance fetch error:", err);
+    }
+  };
+
+  const handleReactivateAllLowPerformance = async () => {
+    if (
+      !confirm(
+        "Reactivate ALL employees who were auto-deactivated for low paid activity? This will also repair paid lead records."
+      )
+    ) {
+      return;
+    }
+    const token = localStorage.getItem("salesAdminToken");
+    try {
+      const res = await fetch("/api/sales/admin/weekly-performance", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ action: "reactivateAll" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setToast({
+          type: "success",
+          message: data.message || `${data.reactivatedCount} employee(s) reactivated`,
+        });
+        fetchData(token);
+        fetchWeeklyPerformance(token);
+        setTimeout(() => setToast(null), 6000);
+      } else {
+        setToast({ type: "error", message: data.message || "Failed to reactivate" });
+        setTimeout(() => setToast(null), 5000);
+      }
+    } catch (err) {
+      setToast({ type: "error", message: "Failed to reactivate employees" });
+      setTimeout(() => setToast(null), 5000);
+    }
+  };
+
+  const handleReactivateEmployee = async (employeeId, employeeName) => {
+    const token = localStorage.getItem("salesAdminToken");
+    try {
+      const res = await fetch(`/api/sales/admin/employees/${employeeId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isActive: true }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setToast({
+          type: "success",
+          message: `${employeeName} reactivated successfully`,
+        });
+        fetchData(token);
+        fetchWeeklyPerformance(token);
+        setTimeout(() => setToast(null), 4000);
+      } else {
+        setToast({ type: "error", message: data.message || "Failed to reactivate" });
+        setTimeout(() => setToast(null), 4000);
+      }
+    } catch (err) {
+      setToast({ type: "error", message: "Failed to reactivate employee" });
+      setTimeout(() => setToast(null), 4000);
     }
   };
 
@@ -938,6 +1022,22 @@ export default function SalesAdminDashboard() {
     hover:-translate-y-0.5 transition-all duration-200"
   >
     📊 <span>Daily Report</span>
+  </button>
+
+  {/* Low Performance – auto-deactivated employees */}
+  <button
+    onClick={() => setShowLowPerformanceModal(true)}
+    className="flex items-center gap-2 px-6 py-3 rounded-2xl 
+    bg-gradient-to-r from-red-400 to-rose-600 
+    text-white font-semibold shadow-md hover:shadow-xl 
+    hover:-translate-y-0.5 transition-all duration-200"
+  >
+    ⚠️ <span>Low Performance</span>
+    {lowPerformanceEmployees.length > 0 && (
+      <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">
+        {lowPerformanceEmployees.length}
+      </span>
+    )}
   </button>
 
   {/* Bulk Import */}
@@ -2036,6 +2136,88 @@ export default function SalesAdminDashboard() {
           </div>
         </div>
       </main>
+
+      {/* Low Performance Modal – employees auto-deactivated (< 2 paid leads / week) */}
+      {showLowPerformanceModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div className="px-6 py-4 border-b flex justify-between items-center flex-shrink-0">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Low Performance – Inactive Employees</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Team members with fewer than 2 leads marked paid in the last 7 days
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowLowPerformanceModal(false)}
+                className="text-gray-500 hover:text-gray-700 rounded-full p-1"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-3">
+              {lowPerformanceEmployees.length === 0 ? (
+                <p className="text-center text-gray-500 py-8">
+                  No employees are inactive due to low paid activity.
+                </p>
+              ) : (
+                lowPerformanceEmployees.map((emp) => (
+                  <div
+                    key={emp._id}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border border-red-100 bg-red-50/40 rounded-xl"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-full bg-gradient-to-br from-red-400 to-rose-600 text-white font-semibold">
+                        {emp.fullname?.charAt(0)?.toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-gray-900 truncate">{emp.fullname}</p>
+                        <p className="text-xs text-gray-500 truncate">{emp.email}</p>
+                        <p className="text-xs text-red-600 mt-1">
+                          Paid in last 7 days: {emp.paidCountLast7Days ?? 0} / 2 required
+                          {emp.inactiveAt && (
+                            <span className="text-gray-500">
+                              {" "}
+                              · Deactivated {new Date(emp.inactiveAt).toLocaleString("en-IN")}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleReactivateEmployee(emp._id, emp.fullname)}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-xl transition flex-shrink-0"
+                    >
+                      Reactivate
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="px-6 py-4 border-t flex justify-between items-center gap-3 flex-shrink-0 flex-wrap">
+              {lowPerformanceEmployees.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleReactivateAllLowPerformance}
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium"
+                >
+                  Reactivate All ({lowPerformanceEmployees.length})
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setShowLowPerformanceModal(false)}
+                className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium ml-auto"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Best Performer Modal */}
       {showBestPerformerModal && (

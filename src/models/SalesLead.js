@@ -50,6 +50,23 @@ const salesLeadSchema = new mongoose.Schema(
       enum: ["pending", "paid", "partial", "not_applicable"],
       default: "pending",
     },
+    paidMarkedAt: {
+      type: Date,
+      default: null,
+    },
+    paidMarkedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SalesEmployee",
+      default: null,
+    },
+    callReminderAt: {
+      type: Date,
+      default: null,
+    },
+    callReminderNotified: {
+      type: Boolean,
+      default: false,
+    },
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "SalesEmployee",
@@ -102,6 +119,8 @@ salesLeadSchema.index({ assignedTo: 1, assignedAt: 1 });
 salesLeadSchema.index({ createdBy: 1 });
 salesLeadSchema.index({ status: 1 });
 salesLeadSchema.index({ paymentStatus: 1 });
+salesLeadSchema.index({ paidMarkedBy: 1, paidMarkedAt: 1 });
+salesLeadSchema.index({ callReminderAt: 1, callReminderNotified: 1 });
 salesLeadSchema.index({
   gst: 1,
   mobile: 1,

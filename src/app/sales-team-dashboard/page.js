@@ -14,6 +14,26 @@ function formatLocalYMD(d = new Date()) {
   return `${y}-${m}-${day}`;
 }
 
+function toDatetimeLocalValue(date) {
+  if (!date) return "";
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function formatReminderDisplay(date) {
+  if (!date) return "";
+  return new Date(date).toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
 export default function SalesTeamDashboard() {
   const [employee, setEmployee] = useState(null);
   const [leads, setLeads] = useState([]);
@@ -28,6 +48,7 @@ export default function SalesTeamDashboard() {
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [toast, setToast] = useState(null);
+  const [callReminderAlert, setCallReminderAlert] = useState(null);
 
 const [globalSearch, setGlobalSearch] = useState("");
 const [searchResults, setSearchResults] = useState([]);
@@ -60,6 +81,7 @@ const [hasSearched, setHasSearched] = useState(false);
   const [editingRemarkText, setEditingRemarkText] = useState("");
   const [editingRemarkType, setEditingRemarkType] = useState("general");
   const chatEndRef = useRef(null);
+  const shownReminderIdsRef = useRef(new Set());
   const router = useRouter();
 
   const remarkTypes = [
@@ -136,6 +158,35 @@ const [hasSearched, setHasSearched] = useState(false);
     fetchConversations(token);
     fetchChatContacts(token);
   }, []);
+
+  useEffect(() => {
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, []);
+
+  useEffect(() => {
+    if (loading || leads.length === 0) return undefined;
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const dueLead = leads.find((lead) => {
+        if (!lead.callReminderAt || lead.callReminderNotified) return false;
+        const reminderTime = new Date(lead.callReminderAt).getTime();
+        if (Number.isNaN(reminderTime) || reminderTime > now) return false;
+        return !shownReminderIdsRef.current.has(String(lead._id));
+      });
+      if (dueLead) {
+        shownReminderIdsRef.current.add(String(dueLead._id));
+        setCallReminderAlert(dueLead);
+        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+          new Notification("Call Reminder", {
+            body: `Call ${dueLead.clientName} – ${dueLead.mobile}`,
+          });
+        }
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [leads, loading]);
 
   const fetchChatContacts = async (token) => {
     try {
@@ -239,6 +290,18 @@ const [hasSearched, setHasSearched] = useState(false);
 
   const fetchLeads = async (token) => {
     try {
+      const perfRes = await fetch("/api/sales/team/performance-check", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (perfRes.status === 403) {
+        const perfData = await perfRes.json();
+        localStorage.removeItem("salesEmployeeToken");
+        localStorage.removeItem("salesEmployee");
+        alert(perfData.message || "Your account has been deactivated.");
+        router.push("/sales-team-login");
+        return;
+      }
+
       const res = await fetch("/api/sales/leads", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -405,6 +468,59 @@ const [hasSearched, setHasSearched] = useState(false);
       }
     } catch (err) {
       console.error("Update lead contact error:", err);
+    }
+  };
+
+  const handleSaveCallReminder = async (leadId, datetimeLocalValue) => {
+    const token = localStorage.getItem("salesEmployeeToken");
+    try {
+      const res = await fetch(`/api/sales/leads/${leadId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          callReminderAt: datetimeLocalValue
+            ? new Date(datetimeLocalValue).toISOString()
+            : null,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        shownReminderIdsRef.current.delete(String(leadId));
+        fetchLeads(token);
+        setToast({
+          type: "success",
+          message: datetimeLocalValue ? "Call reminder set" : "Call reminder cleared",
+        });
+        setTimeout(() => setToast(null), 2000);
+      } else {
+        setToast({ type: "error", message: data.message || "Could not set reminder" });
+        setTimeout(() => setToast(null), 3000);
+      }
+    } catch (err) {
+      console.error("Save call reminder error:", err);
+    }
+  };
+
+  const dismissCallReminder = async () => {
+    if (!callReminderAlert) return;
+    const token = localStorage.getItem("salesEmployeeToken");
+    const leadId = callReminderAlert._id;
+    setCallReminderAlert(null);
+    try {
+      await fetch(`/api/sales/leads/${leadId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ callReminderNotified: true }),
+      });
+      fetchLeads(token);
+    } catch (err) {
+      console.error("Dismiss call reminder error:", err);
     }
   };
 
@@ -1101,6 +1217,7 @@ useEffect(() => {
                   <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">GST</th>
                   <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Call Reminder</th>
                   <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Remarks</th>
                   <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -1247,6 +1364,27 @@ useEffect(() => {
                         <option value="partial">Partial</option>
                         <option value="not_applicable">N/A</option>
                       </select>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap align-top min-w-[11rem]">
+                      <input
+                        type="datetime-local"
+                        aria-label="Call reminder date and time"
+                        className="sales-input-focus w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs"
+                        defaultValue={toDatetimeLocalValue(lead.callReminderAt)}
+                        key={`rem-${lead._id}-${lead.callReminderAt ?? ""}`}
+                        onBlur={(e) => {
+                          const v = e.target.value;
+                          const prev = toDatetimeLocalValue(lead.callReminderAt);
+                          if (v !== prev) {
+                            handleSaveCallReminder(lead._id, v);
+                          }
+                        }}
+                      />
+                      {lead.callReminderAt && (
+                        <p className="text-[10px] text-indigo-600 mt-1">
+                          {formatReminderDisplay(lead.callReminderAt)}
+                        </p>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <button type="button" onClick={() => setShowRemarkModal(lead._id)} className="text-indigo-600 hover:underline font-medium text-sm">
@@ -1501,6 +1639,63 @@ useEffect(() => {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Call reminder popup */}
+      {callReminderAlert && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border-2 border-indigo-500 animate-pulse">
+            <div className="px-6 py-4 bg-indigo-600 text-white rounded-t-2xl">
+              <h2 className="text-lg font-bold">📞 Call Reminder</h2>
+              <p className="text-sm text-indigo-100 mt-1">It&apos;s time to call this lead</p>
+            </div>
+            <div className="px-6 py-5 space-y-3 text-sm">
+              <p>
+                <span className="font-semibold text-gray-700">Client:</span>{" "}
+                {callReminderAlert.clientName}
+              </p>
+              {callReminderAlert.companyName && (
+                <p>
+                  <span className="font-semibold text-gray-700">Company:</span>{" "}
+                  {callReminderAlert.companyName}
+                </p>
+              )}
+              <p>
+                <span className="font-semibold text-gray-700">Mobile:</span>{" "}
+                <a
+                  href={`tel:${callReminderAlert.mobile}`}
+                  className="text-indigo-600 font-medium hover:underline"
+                >
+                  {callReminderAlert.mobile}
+                </a>
+              </p>
+              {callReminderAlert.product && (
+                <p>
+                  <span className="font-semibold text-gray-700">Product:</span>{" "}
+                  {callReminderAlert.product}
+                </p>
+              )}
+              <p className="text-xs text-gray-500">
+                Scheduled: {formatReminderDisplay(callReminderAlert.callReminderAt)}
+              </p>
+            </div>
+            <div className="px-6 pb-6 flex flex-wrap gap-3">
+              <a
+                href={`tel:${callReminderAlert.mobile}`}
+                className="flex-1 min-w-[120px] text-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl transition"
+              >
+                Call Now
+              </a>
+              <button
+                type="button"
+                onClick={dismissCallReminder}
+                className="flex-1 min-w-[120px] px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition"
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>

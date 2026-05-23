@@ -224,7 +224,8 @@ for (const img of validImages) {
       tradeInformation,
       specifications: {
         ...specifications,
-        foldable: specifications.foldable === "Yes",
+        foldable:
+          specifications.foldable === "Yes" || specifications.foldable === true,
       },
       tradeShopping: {
         sellingPriceType: finalSellingPriceType, // Use the validated/defaulted type
