@@ -31,10 +31,10 @@ function clamp(n, min, max) {
 
 function getCompanyNameFontSize(companyName) {
   const len = (companyName || "").trim().length;
-  if (len <= 18) return 22;
-  if (len <= 26) return 20;
-  if (len <= 34) return 18;
-  return clamp(480 / Math.max(1, len), 14, 18);
+  if (len <= 18) return 30;
+  if (len <= 26) return 27;
+  if (len <= 34) return 23;
+  return clamp(620 / Math.max(1, len), 17, 23);
 }
 
 let cachedTemplateBytes;
@@ -91,11 +91,11 @@ export async function GET(_req, { params }) {
     const page = pdfDoc.getPages()[0];
 
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const semiBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
     const companyText = companyName.toUpperCase();
     const companyFontSize = getCompanyNameFontSize(companyText);
-    const companyTop = 328;
+    const companyTop = 314;
     const companyY = topToY(companyTop, companyFontSize);
     const companyX = centerXForText(companyText, boldFont, companyFontSize);
 
@@ -106,18 +106,32 @@ export async function GET(_req, { params }) {
       font: boldFont,
       color: rgb(0, 0, 0),
     });
+    page.drawText(companyText, {
+      x: companyX + 0.4,
+      y: companyY,
+      size: companyFontSize,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+    page.drawText(companyText, {
+      x: companyX,
+      y: companyY + 0.4,
+      size: companyFontSize,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
 
     const datesText = `issue Date ${formatMonthYear(cert.issuedAt)} / Valid Upto ${formatMonthYear(cert.validUntil)}`;
     const datesSize = 12;
-    const datesTop = 355;
+    const datesTop = 360;
     const datesY = topToY(datesTop, datesSize);
-    const datesX = centerXForText(datesText, semiBoldFont, datesSize);
+    const datesX = centerXForText(datesText, regularFont, datesSize);
 
     page.drawText(datesText, {
       x: datesX,
       y: datesY,
       size: datesSize,
-      font: semiBoldFont,
+      font: regularFont,
       color: rgb(0, 0, 0),
     });
 
