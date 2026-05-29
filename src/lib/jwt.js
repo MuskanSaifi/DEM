@@ -1,12 +1,11 @@
 // src/lib/jwt.js
 import jwt from "jsonwebtoken";
-
-const JWT_SECRET = process.env.JWT_SECRET || "YOUR_STRONG_DEV_SECRET";
+import { getJwtSecret } from "@/lib/env";
 
 export const generateToken = (user) => {
     return jwt.sign(
         { id: user._id, email: user.email },
-        process.env.JWT_SECRET,
+        getJwtSecret(),
         { expiresIn: "90d" }
     );
 };
@@ -14,7 +13,7 @@ export const generateToken = (user) => {
 
 export const verifyToken = (token) => {
     try {
-        return jwt.verify(token, JWT_SECRET);
+        return jwt.verify(token, getJwtSecret());
     } catch (error) {
         console.error("JWT Verification Error:", error.message);
         return null; // Return null if verification fails

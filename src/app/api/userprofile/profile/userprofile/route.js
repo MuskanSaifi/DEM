@@ -1,4 +1,5 @@
 import connectdb from "@/lib/dbConnect";
+import { getJwtSecret } from "@/lib/env";
 import Product from "@/models/Product"; // This import seems unused in the provided snippet but keeping it
 import User from "@/models/User";
 import jwt from "jsonwebtoken";
@@ -51,7 +52,7 @@ export async function PATCH(req) {
 
     const token = authorizationHeader.split(" ")[1];
     // Verify JWT token with the secret from environment variables
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, getJwtSecret());
     const body = await req.json();
 
     const existingUser = await User.findById(decoded.id);
@@ -163,7 +164,7 @@ export async function GET(req) {
     // Verify JWT token
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
+      decoded = jwt.verify(token, getJwtSecret());
     } catch (error) {
       console.error("JWT verification failed:", error);
       return new Response(

@@ -1,4 +1,5 @@
 import SalesEmployee from "@/models/SalesEmployee";
+import { getJwtSecret } from "@/lib/env";
 import SalesLead from "@/models/SalesLead";
 import connectdb from "@/lib/dbConnect";
 import { NextResponse } from "next/server";
@@ -11,7 +12,7 @@ async function verifyAdmin(req) {
     if (!token) return null;
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET || "your-secret-key"
+      getJwtSecret()
     );
     if (decoded.role !== "sales-admin") return null;
     return decoded;

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import MetaLead from "@/models/MetaLead";
 import connectdb from "@/lib/dbConnect";
 import { sendEmail } from "@/lib/sendEmail";
+import { getMetaLeadsEmail } from "@/lib/env";
 
 export async function POST(request) {
   try {
@@ -40,7 +41,7 @@ export async function POST(request) {
       hour12: true,
     });
 
-    const emailTo = process.env.META_LEADS_EMAIL || "harshitadigitalsuport@gmail.com";
+    const emailTo = getMetaLeadsEmail();
     const subject = "New Meta Lead Received";
     const html = `
       <p>You got a new meta-lead submission.</p>

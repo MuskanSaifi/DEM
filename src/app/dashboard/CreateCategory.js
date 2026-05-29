@@ -73,12 +73,18 @@ Heading.configure({ levels: [1, 2, 3, 4, 5, 6] }),
 
   // ✅ MODIFIED: Returns both secure_url and public_id
   const uploadImageToCloudinary = async (file) => {
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_CATEGORY_UPLOAD_PRESET;
+    if (!cloudName || !uploadPreset) {
+      throw new Error("Cloudinary env missing (NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME / CATEGORY_UPLOAD_PRESET)");
+    }
+
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("upload_preset", "unsigned_category_upload"); // Make sure this preset is configured in Cloudinary
+    formData.append("upload_preset", uploadPreset);
     formData.append("folder", "categories");
 
-    const res = await fetch("https://api.cloudinary.com/v1_1/dchek3sr8/image/upload", {
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
       method: "POST",
       body: formData,
     });

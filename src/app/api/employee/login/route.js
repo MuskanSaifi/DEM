@@ -1,9 +1,10 @@
 import connectdb from "@/lib/dbConnect";
+import { getJwtSecret } from "@/lib/env";
 import Employee from "@/models/Employee";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = getJwtSecret();
 
 export async function POST(req) {
   await connectdb();

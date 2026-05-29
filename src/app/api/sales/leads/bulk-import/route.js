@@ -1,4 +1,5 @@
 import SalesLead from "@/models/SalesLead";
+import { getJwtSecret } from "@/lib/env";
 import connectdb from "@/lib/dbConnect";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
@@ -15,7 +16,7 @@ async function verifyAdmin(req) {
 
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET || "your-secret-key"
+      getJwtSecret()
     );
 
     if (decoded.role !== "sales-admin") return null;

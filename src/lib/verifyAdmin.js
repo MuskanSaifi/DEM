@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { getJwtSecret } from "@/lib/env";
 import Admin from "@/models/Admin";
 import { connectDB } from "./db";
 
@@ -9,7 +10,7 @@ export const verifyAdmin = async (req) => {
   if (!token) throw new Error("Not authorized");
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, getJwtSecret());
     const admin = await Admin.findById(decoded.id).select("-password");
     return admin;
   } catch (error) {

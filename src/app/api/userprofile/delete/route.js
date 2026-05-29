@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getJwtSecret } from "@/lib/env";
 import jwt from "jsonwebtoken";
 import dbConnect from "@/lib/dbConnect";
 import User from "@/models/User";
@@ -16,7 +17,7 @@ export async function DELETE(req) {
     }
 
     const token = authorizationHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, getJwtSecret());
     const userId = decoded.id;
 
     // ✅ User exist check

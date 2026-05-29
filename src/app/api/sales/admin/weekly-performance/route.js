@@ -1,4 +1,5 @@
 import connectdb from "@/lib/dbConnect";
+import { getJwtSecret } from "@/lib/env";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import {
@@ -15,7 +16,7 @@ async function verifyAdmin(req) {
     if (!token) return null;
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET || "your-secret-key"
+      getJwtSecret()
     );
     if (decoded.role !== "sales-admin") return null;
     return decoded;

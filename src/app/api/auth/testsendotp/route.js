@@ -4,6 +4,7 @@ import User from "@/models/User";
 import BusinessProfile from "@/models/BusinessProfile";
 import Bankdetails from "@/models/BankDetails";
 import connectdb from "@/lib/dbConnect";
+import { getTestOtpCode, getOtpExpireMinutes } from "@/lib/env";
 
 export async function POST(req) {
     try {
@@ -44,9 +45,12 @@ export async function POST(req) {
             companyName,
         });
 
-        // ⭐ FIXED OTP FOR TESTING
-        user.otp = "12345";
-        user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+        const testOtp = getTestOtpCode();
+        if (!testOtp) {
+            return new Response(JSON.stringify({ error: "TEST_OTP_CODE is not configured" }), { status: 500 });
+        }
+        user.otp = testOtp;
+        user.otpExpires = new Date(Date.now() + getOtpExpireMinutes() * 60 * 1000);
 
         await user.save(); // Save User First
 
@@ -117,7 +121,7 @@ export async function POST(req) {
             JSON.stringify({
                 success: true,
                 message: "Test OTP sent successfully",
-                otp: "12345",  // return so you can login in test mode
+                otp: testOtp,
                 mobileNumber: finalMobile,
             }),
             { status: 200 }

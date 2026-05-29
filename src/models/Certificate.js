@@ -31,6 +31,8 @@ const certificateSchema = new mongoose.Schema(
     },
     revokedAt: { type: Date, default: null },
     revokedReason: { type: String, default: "" },
+    verifyOtp: { type: String, default: null },
+    verifyOtpExpires: { type: Date, default: null },
   },
   { timestamps: true }
 );

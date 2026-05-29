@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { getJwtSecret } from "@/lib/env";
 import Buyer from "@/models/Buyer";
 
 export const requireBuyerAuth = async (req) => {
@@ -7,7 +8,7 @@ export const requireBuyerAuth = async (req) => {
 
   const token = authHeader.split(" ")[1];
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, getJwtSecret());
     const buyer = await Buyer.findById(decoded.id);
     if (!buyer) return null;
 

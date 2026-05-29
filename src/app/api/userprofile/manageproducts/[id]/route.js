@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getJwtSecret } from "@/lib/env";
 import connectdb from "@/lib/dbConnect";
 import { requireSignIn } from "@/middlewares/requireSignIn";
 import Product from "@/models/Product";
@@ -15,7 +16,7 @@ const checkAdminAuth = async (req) => {
   try {
     const token = req.cookies.get("adminToken")?.value;
     if (!token) return null;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, getJwtSecret());
     const admin = await Admin.findById(decoded.id).select("-password");
     return admin || null;
   } catch (err) {

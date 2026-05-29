@@ -2,6 +2,7 @@
 import User from "@/models/User";
 import connectdb from "@/lib/dbConnect";
 import jwt from "jsonwebtoken";
+import { getJwtSecret, getTestOtpCode } from "@/lib/env";
 
 export async function POST(req) {
     try {
@@ -12,15 +13,14 @@ export async function POST(req) {
             return new Response(JSON.stringify({ error: "All fields required" }), { status: 400 });
         }
 
-        // ⭐ FIXED OTP VALIDATION
-        if (otp !== "12345") {
+        const testOtp = getTestOtpCode();
+        if (!testOtp || otp !== testOtp) {
             return new Response(JSON.stringify({ error: "Invalid OTP" }), { status: 400 });
         }
 
-        // ⭐ FIND USER
         const user = await User.findOne({
             mobileNumber,
-            otp: "12345",
+            otp: testOtp,
             otpExpires: { $gt: new Date() },
         });
 
@@ -33,10 +33,9 @@ export async function POST(req) {
         user.otpExpires = null;
         await user.save();
 
-        // ⭐ JWT TOKEN
         const token = jwt.sign(
             { id: user._id },
-            process.env.JWT_SECRET || "my-secret",
+            getJwtSecret(),
             { expiresIn: "30d" }
         );
 

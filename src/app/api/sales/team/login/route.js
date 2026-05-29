@@ -1,4 +1,5 @@
 import SalesEmployee from "@/models/SalesEmployee";
+import { getJwtSecret } from "@/lib/env";
 import connectdb from "@/lib/dbConnect";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
@@ -56,7 +57,7 @@ export async function POST(req) {
 
     const token = jwt.sign(
       { id: employee._id, email: employee.email, role: "sales-employee" },
-      process.env.JWT_SECRET || "your-secret-key",
+      getJwtSecret(),
       { expiresIn: "7d" }
     );
 

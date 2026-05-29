@@ -1,5 +1,6 @@
 // /api/employee/salary/route.js (Modified from my previous response)
 import connectdb from "@/lib/dbConnect";
+import { getJwtSecret } from "@/lib/env";
 import Employee from "@/models/Employee";
 import jwt from "jsonwebtoken";
 
@@ -11,7 +12,7 @@ export async function GET(req) {
   if (!token) return Response.json({ success: false, message: "Unauthorized" }, { status: 401 });
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, getJwtSecret());
     const emp = await Employee.findById(decoded.id);
 
     if (!emp) {

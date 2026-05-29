@@ -1,4 +1,5 @@
 import SalesAdmin from "@/models/SalesAdmin";
+import { getJwtSecret } from "@/lib/env";
 import connectdb from "@/lib/dbConnect";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
@@ -44,7 +45,7 @@ export async function POST(req) {
 
     const token = jwt.sign(
       { id: admin._id, email: admin.email, role: "sales-admin" },
-      process.env.JWT_SECRET || "your-secret-key",
+      getJwtSecret(),
       { expiresIn: "7d" }
     );
 

@@ -25,9 +25,7 @@ const Sidebar = ({ isSidebarOpen, setActiveContent, activeContent }) => {
     },
     {
       icon: "/assets/dashboardicons/Leads-Enquiry.png",
-      label: "Leads & Enquiry",
-      // subItems: ["Recieved Enquiry", "Buy Leads", "My Business Requirement", "Contact Book", "Call Alerts"],
-      subItems: ["Recieved Enquiry"],
+      label: "Recieved Enquiry",
     },
     { icon: "/assets/dashboardicons/Payments.png", label: "Payments" },
     { icon: "/assets/dashboardicons/Report.png", label: "Certificates" },

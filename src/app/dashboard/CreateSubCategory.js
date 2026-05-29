@@ -63,11 +63,17 @@ export default function CreateSubCategory() {
   };
 
   const uploadImageToCloudinary = async (file) => {
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_SUBCATEGORY_UPLOAD_PRESET;
+    if (!cloudName || !uploadPreset) {
+      throw new Error("Cloudinary env missing (NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME / SUBCATEGORY_UPLOAD_PRESET)");
+    }
+
     const fd = new FormData();
     fd.append("file", file);
-    fd.append("upload_preset", "unsigned_subcategory_upload");
+    fd.append("upload_preset", uploadPreset);
 
-    const res = await fetch("https://api.cloudinary.com/v1_1/dchek3sr8/image/upload", {
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
       method: "POST",
       body: fd,
     });

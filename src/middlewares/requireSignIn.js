@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { getJwtSecret } from "@/lib/env";
 
 export async function requireSignIn(req) {
   try {
@@ -13,7 +14,7 @@ export async function requireSignIn(req) {
     if (!token) return null;
 
     // Use try-catch to handle JWT verification errors
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, getJwtSecret());
     return { id: decoded.id, email: decoded.email };
   } catch (error) {
     console.error("Authentication Error:", error);

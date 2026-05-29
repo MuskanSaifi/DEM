@@ -5,10 +5,7 @@ import connectdb from "@/lib/dbConnect";
 export const WEEKLY_PAID_LEAD_MINIMUM = 2;
 export const WEEKLY_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
-/** Set SALES_AUTO_DEACTIVATION=true in env to enable automatic deactivation. */
-export function isAutoDeactivationEnabled() {
-  return process.env.SALES_AUTO_DEACTIVATION === "true";
-}
+export { getSalesAutoDeactivationEnabled as isAutoDeactivationEnabled } from "@/lib/env";
 
 export function getWeekStartDate() {
   return new Date(Date.now() - WEEKLY_WINDOW_MS);

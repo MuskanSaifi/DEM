@@ -1,4 +1,5 @@
 import connectdb from "@/lib/dbConnect";
+import { getJwtSecret } from "@/lib/env";
 import Buyer from "@/models/Buyer";
 import jwt from "jsonwebtoken";
 import slugify from "slugify";
@@ -27,7 +28,7 @@ export async function PATCH(req) {
       return new Response(JSON.stringify({ success: false, message: "No token provided" }), { status: 401 });
 
     const token = authorizationHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, getJwtSecret());
     const body = await req.json();
 
     const existingBuyer = await Buyer.findById(decoded.id);
@@ -80,7 +81,7 @@ export async function GET(req) {
       return new Response(JSON.stringify({ success: false, message: "No token provided" }), { status: 401 });
 
     const token = authorizationHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, getJwtSecret());
 
     const buyer = await Buyer.findById(
       decoded.id,

@@ -1,4 +1,5 @@
 import SalesEmployee from "@/models/SalesEmployee";
+import { getJwtSecret } from "@/lib/env";
 import connectdb from "@/lib/dbConnect";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
@@ -9,7 +10,7 @@ async function verifyEmployee(req) {
     if (!token) return null;
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET || "your-secret-key"
+      getJwtSecret()
     );
     if (decoded.role !== "sales-employee") return null;
     return decoded;

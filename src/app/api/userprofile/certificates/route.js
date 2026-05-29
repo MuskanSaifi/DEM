@@ -1,4 +1,5 @@
 import connectdb from "@/lib/dbConnect";
+import { getJwtSecret } from "@/lib/env";
 import jwt from "jsonwebtoken";
 import Certificate from "@/models/Certificate";
 
@@ -18,7 +19,7 @@ export async function GET(req) {
       ? authorizationHeader.split(" ")[1]
       : authorizationHeader;
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, getJwtSecret());
     const certs = await Certificate.find({ userId: decoded.id })
       .select("companyName certificateNumber issuedAt validUntil status createdAt")
       .sort({ createdAt: -1 })

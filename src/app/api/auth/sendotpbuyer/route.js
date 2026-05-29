@@ -1,7 +1,9 @@
 import Buyer from "@/models/Buyer";
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";
-import User from "@/models/User"; // Import User model
+import User from "@/models/User";
+import { send2FactorOtp } from "@/lib/twoFactor";
+import { getOtpExpireMinutes } from "@/lib/env";
 
 export async function POST(req) {
     try {
@@ -27,40 +29,21 @@ export async function POST(req) {
             // const generatedOtp = Math.floor(100000 + Math.random() * 900000);
             const generatedOtp = Math.floor(1000 + Math.random() * 9000);
             existingBuyer.otp = generatedOtp;
-            existingBuyer.otpExpires = new Date(Date.now() + 5 * 60000); // OTP valid for 5 minutes
+            existingBuyer.otpExpires = new Date(Date.now() + getOtpExpireMinutes() * 60000);
             await existingBuyer.save();
 
-            // Send OTP via 2Factor
-            try {
-                const apiKey = "afd6c091-063e-11f0-8b17-0200cd936042"; // Replace with environment variable
-                const otpTemplateName = "OTPtemplate"; // Replace with your template name
-    
-                const response = await fetch(
-                    `https://2factor.in/API/V1/${apiKey}/SMS/${formattedMobile}/${generatedOtp}/${otpTemplateName}`,
-                    { method: "GET" }
-                );
-
-                const result = await response.json();
-
-                if (response.ok && result.Status === "Success") {
-                    return new Response(JSON.stringify({ message: "OTP sent successfully", mobileNumber }), {
-                        status: 200,
-                        headers: { "Content-Type": "application/json" }
-                    });
-                } else {
-                    console.error("2Factor Error:", result);
-                    return new Response(JSON.stringify({ error: "Failed to send OTP. Please try again." }), {
-                        status: 500,
-                        headers: { "Content-Type": "application/json" }
-                    });
-                }
-            } catch (apiError) {
-                console.error("2Factor API Error:", apiError);
-                return new Response(JSON.stringify({ error: "Failed to send OTP. Please try again." }), {
+            const sent = await send2FactorOtp(formattedMobile, generatedOtp);
+            if (!sent.ok) {
+                return new Response(JSON.stringify({ error: sent.error || "Failed to send OTP. Please try again." }), {
                     status: 500,
                     headers: { "Content-Type": "application/json" }
                 });
             }
+
+            return new Response(JSON.stringify({ message: "OTP sent successfully", mobileNumber }), {
+                status: 200,
+                headers: { "Content-Type": "application/json" }
+            });
         }
 
         // ✅ Step 2: If OTP is provided, verify OTP and send product details

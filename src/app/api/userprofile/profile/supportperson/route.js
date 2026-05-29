@@ -1,4 +1,5 @@
 import connectdb from "@/lib/dbConnect";
+import { getJwtSecret } from "@/lib/env";
 import SupportPerson from "@/models/SupportPerson";
 import User from "@/models/User";
 import jwt from "jsonwebtoken";
@@ -28,7 +29,7 @@ export async function GET(req) {
 
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
+      decoded = jwt.verify(token, getJwtSecret());
     } catch (error) {
       console.error("JWT verification failed:", error);
       return new Response(

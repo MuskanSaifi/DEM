@@ -19,7 +19,7 @@ export async function GET(_req, { params }) {
     }
 
     const cert = await Certificate.findOne({ certificateNumber: certNo })
-      .select("certificateNumber companyName issuedAt validUntil status")
+      .select("certificateNumber status")
       .lean();
 
     if (!cert) {
@@ -28,13 +28,9 @@ export async function GET(_req, { params }) {
 
     return Response.json({
       success: true,
-      certificate: {
-        certificateNumber: cert.certificateNumber,
-        companyName: cert.companyName,
-        issuedAt: cert.issuedAt,
-        validUntil: cert.validUntil,
-        status: cert.status,
-      },
+      message: "Certificate exists. Use POST /api/certificates/verify/send-otp to verify via OTP.",
+      certificateNumber: cert.certificateNumber,
+      status: cert.status,
     });
   } catch (error) {
     console.error("Certificate verify error:", error);
