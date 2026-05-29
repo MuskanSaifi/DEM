@@ -4,6 +4,11 @@ import fs from "fs/promises";
 import connectdb from "@/lib/dbConnect";
 import { getUserFromRequest } from "@/lib/userAuth";
 import UserCertificateDocument from "@/models/UserCertificateDocument";
+import {
+  deleteUserCertificatePdf,
+  isCloudinaryFileUrl,
+  publicIdFromCloudinaryUrl,
+} from "@/lib/cloudinaryCertificates";
 
 export async function DELETE(req, { params }) {
   try {
@@ -19,13 +24,18 @@ export async function DELETE(req, { params }) {
       return NextResponse.json({ success: false, message: "Not found" }, { status: 404 });
     }
 
-    if (doc.fileUrl?.startsWith("/uploads/")) {
+    if (doc.cloudinaryPublicId) {
+      await deleteUserCertificatePdf(doc.cloudinaryPublicId);
+    } else if (doc.fileUrl?.startsWith("/uploads/")) {
       const diskPath = path.join(process.cwd(), "public", doc.fileUrl.replace(/^\//, ""));
       try {
         await fs.unlink(diskPath);
       } catch {
         /* file may already be removed */
       }
+    } else if (isCloudinaryFileUrl(doc.fileUrl)) {
+      const pid = publicIdFromCloudinaryUrl(doc.fileUrl);
+      if (pid) await deleteUserCertificatePdf(pid);
     }
 
     await UserCertificateDocument.findByIdAndDelete(id);

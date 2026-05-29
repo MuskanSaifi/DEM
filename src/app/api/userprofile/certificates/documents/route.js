@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import path from "path";
-import fs from "fs/promises";
 import connectdb from "@/lib/dbConnect";
 import { getUserFromRequest } from "@/lib/userAuth";
 import UserCertificateDocument from "@/models/UserCertificateDocument";
+import { uploadUserCertificatePdf } from "@/lib/cloudinaryCertificates";
 
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 
@@ -75,20 +74,16 @@ export async function POST(req) {
     }
 
     const originalName = safeFileName(file.name);
-    const storedName = `${Date.now()}-${originalName}`;
-    const dir = path.join(process.cwd(), "public", "uploads", "user-certificates", String(user.id));
-    await fs.mkdir(dir, { recursive: true });
-    const fullPath = path.join(dir, storedName);
-    await fs.writeFile(fullPath, buffer);
 
-    const fileUrl = `/uploads/user-certificates/${user.id}/${storedName}`;
+    const uploaded = await uploadUserCertificatePdf(buffer, user.id, originalName);
 
     const doc = await UserCertificateDocument.create({
       userId: user.id,
       title,
       fileName: originalName,
-      fileUrl,
-      fileSize: buffer.length,
+      fileUrl: uploaded.url,
+      cloudinaryPublicId: uploaded.publicId,
+      fileSize: uploaded.bytes || buffer.length,
       mimeType: mime,
     });
 
@@ -98,6 +93,12 @@ export async function POST(req) {
     );
   } catch (error) {
     console.error("User certificate documents POST:", error);
-    return NextResponse.json({ success: false, message: "Server error" }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        message: error?.message || "Upload failed. Please try again.",
+      },
+      { status: 500 }
+    );
   }
 }

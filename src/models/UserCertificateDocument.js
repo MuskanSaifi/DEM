@@ -16,6 +16,7 @@ const userCertificateDocumentSchema = new mongoose.Schema(
     },
     fileName: { type: String, required: true },
     fileUrl: { type: String, required: true },
+    cloudinaryPublicId: { type: String, default: "" },
     fileSize: { type: Number, default: 0 },
     mimeType: { type: String, default: "application/pdf" },
   },

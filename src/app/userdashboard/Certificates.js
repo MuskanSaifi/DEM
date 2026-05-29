@@ -46,6 +46,12 @@ export default function Certificates() {
 
   const getToken = () => localStorage.getItem("token");
 
+  const getDocumentViewUrl = (docId) => {
+    const token = getToken();
+    if (!token) return "#";
+    return `/api/userprofile/certificates/documents/file/${docId}?token=${encodeURIComponent(token)}`;
+  };
+
   const loadAll = useCallback(async () => {
     const token = getToken();
     const userRaw = localStorage.getItem("user");
@@ -377,7 +383,7 @@ export default function Certificates() {
                 </div>
                 <div className="mt-auto flex gap-2 pt-4">
                   <a
-                    href={doc.fileUrl}
+                    href={getDocumentViewUrl(doc._id)}
                     target="_blank"
                     rel="noreferrer"
                     className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold"
