@@ -3,6 +3,7 @@ import Certificate from "@/models/Certificate";
 import User from "@/models/User";
 import { send2FactorGrcOtp, maskMobileNumber } from "@/lib/twoFactor";
 import { getOtpExpireMinutes } from "@/lib/env";
+import { normalizeIndianMobile } from "@/lib/phone";
 
 function normalizeCertNo(value) {
   return (value || "")
@@ -10,6 +11,18 @@ function normalizeCertNo(value) {
     .trim()
     .replace(/\s+/g, "")
     .toUpperCase();
+}
+
+async function resolveVerifyMobile(cert) {
+  const stored = normalizeIndianMobile(cert.verifyMobileNumber || "");
+  if (stored) return stored;
+
+  if (cert.userId) {
+    const user = await User.findById(cert.userId).select("mobileNumber").lean();
+    return normalizeIndianMobile(user?.mobileNumber || "");
+  }
+
+  return "";
 }
 
 export async function POST(req) {
@@ -33,23 +46,13 @@ export async function POST(req) {
       );
     }
 
-    if (!cert.userId) {
+    const mobile = await resolveVerifyMobile(cert);
+    if (!mobile) {
       return Response.json(
         {
           success: false,
           message:
             "No mobile number linked to this certificate. Please contact Dial Export Mart support.",
-        },
-        { status: 400 }
-      );
-    }
-
-    const user = await User.findById(cert.userId).select("mobileNumber");
-    if (!user?.mobileNumber) {
-      return Response.json(
-        {
-          success: false,
-          message: "Registered mobile not found for this certificate.",
         },
         { status: 400 }
       );
@@ -62,7 +65,7 @@ export async function POST(req) {
     cert.verifyOtpExpires = otpExpires;
     await cert.save();
 
-    const sent = await send2FactorGrcOtp(user.mobileNumber, otp);
+    const sent = await send2FactorGrcOtp(mobile, otp);
     if (!sent.ok) {
       cert.verifyOtp = null;
       cert.verifyOtpExpires = null;
@@ -79,7 +82,7 @@ export async function POST(req) {
     return Response.json({
       success: true,
       message: "OTP sent via SMS to your registered mobile",
-      maskedMobile: maskMobileNumber(user.mobileNumber),
+      maskedMobile: maskMobileNumber(mobile),
       expiresInMinutes: getOtpExpireMinutes(),
       deliveryChannel: "sms",
     });

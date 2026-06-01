@@ -5,6 +5,7 @@ import Admin from "@/models/Admin";
 import User from "@/models/User";
 import BusinessProfile from "@/models/BusinessProfile";
 import Certificate from "@/models/Certificate";
+import { normalizeIndianMobile, isValidIndianMobile } from "@/lib/phone";
 
 function getAdminIdFromCookie(req) {
   const token = req.cookies.get("adminToken")?.value;
@@ -80,6 +81,9 @@ export async function POST(req) {
     const validUntilRaw = body.validUntil;
     const certificateNumberIn = (body.certificateNumber || "").trim();
     const companyNameIn = (body.companyName || "").trim();
+    const verifyMobileIn = normalizeIndianMobile(
+      body.verifyMobile || body.verifyMobileNumber || body.mobileNumber || ""
+    );
 
     if (!issuedAtRaw || !validUntilRaw) {
       return NextResponse.json(
@@ -118,15 +122,40 @@ export async function POST(req) {
     } else {
       if (!companyNameIn) {
         return NextResponse.json(
-          { success: false, message: "companyName is required when userSlug is not provided" },
+          { success: false, message: "Company name is required when no user profile slug is selected" },
+          { status: 400 }
+        );
+      }
+      if (!verifyMobileIn || !isValidIndianMobile(verifyMobileIn)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Valid mobile number is required for OTP verification (10-digit Indian number)",
+          },
           { status: 400 }
         );
       }
     }
 
+    let verifyMobileNumber = verifyMobileIn;
+    if (user && !verifyMobileNumber) {
+      verifyMobileNumber = normalizeIndianMobile(user.mobileNumber || "");
+    }
+    if (!verifyMobileNumber || !isValidIndianMobile(verifyMobileNumber)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Valid mobile number required for certificate OTP. Enter phone in lookup or link a user with mobile.",
+        },
+        { status: 400 }
+      );
+    }
+
     const cert = await Certificate.create({
       userId: user?._id || null,
       businessProfileId: businessProfile?._id || null,
+      verifyMobileNumber,
       companyName: user
         ? companyNameIn || businessProfile?.companyName || user.companyName || user.fullname || "—"
         : companyNameIn,

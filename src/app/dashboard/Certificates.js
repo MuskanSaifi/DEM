@@ -38,6 +38,7 @@ export default function Certificates() {
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupMessage, setLookupMessage] = useState("");
   const [lookupMessageType, setLookupMessageType] = useState("");
+  const [verifyMobile, setVerifyMobile] = useState("");
 
   const filtered = useMemo(() => certificates, [certificates]);
 
@@ -73,6 +74,7 @@ export default function Certificates() {
       setSlugSuggestions([]);
       setLookupMessage("");
       setLookupMessageType("");
+      setVerifyMobile("");
       setLookupLoading(false);
       return;
     }
@@ -89,9 +91,18 @@ export default function Certificates() {
         }
         const suggestions = data.suggestions || [];
         setSlugSuggestions(suggestions);
+        if (data.verifyMobile) setVerifyMobile(data.verifyMobile);
         if (!data.registered) {
-          setLookupMessage(data.message || "This number is not registered.");
-          setLookupMessageType("error");
+          if (data.canIssueWithoutAccount) {
+            setLookupMessage(
+              data.message ||
+                "No account on this number. Fill company name and issue — OTP will go to this mobile."
+            );
+            setLookupMessageType("info");
+          } else {
+            setLookupMessage(data.message || "Enter a valid 10-digit mobile number.");
+            setLookupMessageType("error");
+          }
         } else if (suggestions.length && suggestions.every((s) => !s.profileComplete)) {
           setLookupMessage("This customer profile is incomplete.");
           setLookupMessageType("warning");
@@ -118,8 +129,17 @@ export default function Certificates() {
     try {
       const trimmedUserSlug = issueForm.userSlug.trim();
       const trimmedCompanyName = issueForm.companyName.trim();
+      const mobileForOtp =
+        verifyMobile ||
+        (phoneSearch.replace(/[^\d]/g, "").length >= 10
+          ? `+91${phoneSearch.replace(/[^\d]/g, "").slice(-10)}`
+          : "");
+
       if (!trimmedUserSlug && !trimmedCompanyName) {
         throw new Error("Company name is required when user profile slug is empty");
+      }
+      if (!trimmedUserSlug && !mobileForOtp) {
+        throw new Error("Enter a valid mobile number for OTP verification");
       }
 
       const payload = {
@@ -128,6 +148,7 @@ export default function Certificates() {
         validUntil: issueForm.validUntil,
         companyName: trimmedCompanyName || undefined,
         certificateNumber: issueForm.certificateNumber.trim() || undefined,
+        verifyMobile: mobileForOtp || undefined,
       };
       const res = await fetch("/api/admin/certificates", {
         method: "POST",
@@ -191,7 +212,9 @@ export default function Certificates() {
       <div className="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
         <form onSubmit={handleIssue} className="lg:col-span-1 border rounded-xl p-4 bg-gray-50/50">
           <h3 className="text-sm font-bold text-gray-900 mb-3">Issue Certificate</h3>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Phone number lookup (optional)</label>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">
+            Mobile for OTP / lookup (required if no profile slug)
+          </label>
           <input
             value={phoneSearch}
             onChange={(e) => setPhoneSearch(e.target.value)}
@@ -204,13 +227,20 @@ export default function Certificates() {
           {!!lookupMessage && (
             <div
               className={`mt-2 text-xs px-2.5 py-2 rounded-md border ${
-                lookupMessageType === "warning"
+                lookupMessageType === "info"
+                  ? "bg-blue-50 border-blue-200 text-blue-800"
+                  : lookupMessageType === "warning"
                   ? "bg-amber-50 border-amber-200 text-amber-800"
                   : "bg-red-50 border-red-200 text-red-700"
               }`}
             >
               {lookupMessage}
             </div>
+          )}
+          {verifyMobile && !issueForm.userSlug.trim() && (
+            <p className="mt-2 text-[11px] text-gray-600">
+              OTP will be sent to: <span className="font-semibold">{verifyMobile}</span>
+            </p>
           )}
           {slugSuggestions.length > 0 && (
             <div className="mt-2 max-h-44 overflow-auto rounded-lg border bg-white">

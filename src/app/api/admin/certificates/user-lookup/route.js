@@ -4,16 +4,13 @@ import { verifyToken } from "@/lib/auth";
 import Admin from "@/models/Admin";
 import User from "@/models/User";
 import BusinessProfile from "@/models/BusinessProfile";
+import { normalizeIndianMobile, isValidIndianMobile } from "@/lib/phone";
 
 function getAdminIdFromCookie(req) {
   const token = req.cookies.get("adminToken")?.value;
   if (!token) return null;
   const decoded = verifyToken(token);
   return decoded?.id || null;
-}
-
-function normalizePhone(value) {
-  return (value || "").toString().replace(/[^\d]/g, "");
 }
 
 export async function GET(req) {
@@ -31,18 +28,22 @@ export async function GET(req) {
 
     const { searchParams } = new URL(req.url);
     const phoneInput = searchParams.get("phone") || "";
-    const normalized = normalizePhone(phoneInput);
+    const normalizedDigits = (phoneInput || "").toString().replace(/[^\d]/g, "");
 
-    if (!normalized) {
+    if (!normalizedDigits) {
       return NextResponse.json({
         success: true,
         registered: false,
         message: "Enter phone number to search",
         suggestions: [],
+        verifyMobile: "",
       });
     }
 
-    const regex = new RegExp(normalized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+    const regex = new RegExp(
+      normalizedDigits.slice(-10).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+      "i"
+    );
     const users = await User.find({
       $or: [{ mobileNumber: regex }, { alternateMobileNumber: regex }, { whatsappNumber: regex }],
     })
@@ -50,11 +51,18 @@ export async function GET(req) {
       .limit(10)
       .lean();
 
+    const verifyMobile = normalizeIndianMobile(phoneInput);
+
     if (!users.length) {
+      const validPhone = isValidIndianMobile(verifyMobile);
       return NextResponse.json({
         success: true,
         registered: false,
-        message: "This number is not registered.",
+        canIssueWithoutAccount: validPhone,
+        verifyMobile: validPhone ? verifyMobile : "",
+        message: validPhone
+          ? "No account on this number. You can still issue a certificate — OTP will be sent to this mobile."
+          : "Enter a valid 10-digit mobile number.",
         suggestions: [],
       });
     }
@@ -90,6 +98,8 @@ export async function GET(req) {
     return NextResponse.json({
       success: true,
       registered: true,
+      canIssueWithoutAccount: false,
+      verifyMobile: verifyMobile || normalizeIndianMobile(users[0]?.mobileNumber || ""),
       message: "",
       suggestions,
     });

@@ -15,6 +15,8 @@ const certificateSchema = new mongoose.Schema(
       index: true,
     },
     companyName: { type: String, required: true },
+    /** OTP for public GRC verify — used when no user account or override */
+    verifyMobileNumber: { type: String, default: "", index: true },
     certificateNumber: { type: String, required: true, unique: true, index: true },
     issuedAt: { type: Date, required: true, index: true },
     validUntil: { type: Date, required: true, index: true },
