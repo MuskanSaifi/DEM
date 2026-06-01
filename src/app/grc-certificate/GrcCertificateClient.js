@@ -72,12 +72,15 @@ export default function GrcCertificateClient({ initialCertNo = "" }) {
     }
   }, [certNoFromUrl]);
 
-  const pdfUrl =
-    verified?.userProfileSlug && verified.status === "active"
-      ? `/api/certificates/pdf/${verified.userProfileSlug}`
-      : pendingCertNo
-        ? `/api/certificates/pdf/${encodeURIComponent(pendingCertNo)}?certNo=${encodeURIComponent(pendingCertNo)}`
-        : "";
+  const pdfUrl = (() => {
+    if (!verified || verified.status !== "active") return "";
+    if (verified.userProfileSlug) {
+      return `/api/certificates/pdf/${verified.userProfileSlug}`;
+    }
+    const certNumber = verified.certificateNumber || pendingCertNo;
+    if (!certNumber) return "";
+    return `/api/certificates/pdf/${encodeURIComponent(certNumber)}?certNo=${encodeURIComponent(certNumber)}`;
+  })();
 
   const onSearch = async (e) => {
     e.preventDefault();
@@ -395,7 +398,7 @@ export default function GrcCertificateClient({ initialCertNo = "" }) {
                     </DetailBlock>
                   </div>
 
-                  {isActiveVerified && verified.userProfileSlug && (
+                  {isActiveVerified && pdfUrl && (
                     <div className="flex shrink-0 justify-center lg:justify-end lg:self-center">
                       <a
                         href={pdfUrl}
@@ -404,7 +407,7 @@ export default function GrcCertificateClient({ initialCertNo = "" }) {
                         className="inline-flex items-center gap-2 rounded-xl border-2 border-violet-600 bg-white px-5 py-2.5 text-sm font-bold text-violet-700 shadow-sm transition hover:bg-violet-50"
                       >
                         <FileDown className="h-5 w-5 shrink-0" aria-hidden />
-                        Open PDF
+                        View PDF
                       </a>
                     </div>
                   )}
