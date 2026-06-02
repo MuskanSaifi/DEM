@@ -222,7 +222,7 @@ export default function GrcCertificateClient({ initialCertNo = "" }) {
                   <input
                     value={certNo}
                     onChange={(e) => setCertNo(e.target.value)}
-                    placeholder="e.g. GRC9005VOUT9337"
+                    placeholder="e.g. GRC1002ABCD0001"
                     className="min-h-[2.75rem] flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
                   />
                   <button
