@@ -53,6 +53,15 @@ const hasSpecValue = (val) => {
   return s !== "" && s.toUpperCase() !== "N/A";
 };
 
+const formatStockDisplay = (product) => {
+  const qty =
+    product?.tradeShopping?.stockQuantity ?? product?.stockQuantity;
+  if (qty === null || qty === undefined || qty === "") {
+    return product?.tradeShopping?.stock || "In Stock";
+  }
+  const unit = (product?.tradeShopping?.unit || product?.unit || "").trim();
+  return unit ? `${qty} ${unit}` : String(qty);
+};
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -523,9 +532,7 @@ const ProductDetailPage = () => {
                           {(hasSpecValue(product.tradeShopping?.stockQuantity) || hasSpecValue(product.stockQuantity) || product.stockQuantity === 0) && (
                             <tr className="even:bg-gray-50">
                               <td className="py-2 px-3 font-medium text-gray-600">Stock</td>
-                              <td className="py-2 px-3">
-                                {product.tradeShopping?.stockQuantity ?? product.stockQuantity ?? "In Stock"}
-                              </td>
+                              <td className="py-2 px-3">{formatStockDisplay(product)}</td>
                             </tr>
                           )}
                           {hasSpecValue(product.specifications?.productType) && (
