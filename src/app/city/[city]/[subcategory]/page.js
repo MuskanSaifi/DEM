@@ -5,6 +5,7 @@ import Product from "@/models/Product";
 import SubCategory from "@/models/SubCategory";
 import BusinessProfile from "@/models/BusinessProfile";
 import Certificate from "@/models/Certificate";
+import User from "@/models/User";
 import Link from "next/link";
 import ProductListingClient from "./ProductListingClient";
 

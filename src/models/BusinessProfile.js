@@ -33,8 +33,8 @@ const businessProfileSchema = new mongoose.Schema({
 
     // Business Preferences
     businessType: {
-        type: [String], // 👈 Make sure this is an array of strings
-        default: [],
+        type: [String],
+        default: ["Supplier"],
       },
     workingDays: { type: [String] }, // Example: ["Monday", "Tuesday"]
     workingTime: {
@@ -44,6 +44,13 @@ const businessProfileSchema = new mongoose.Schema({
     preferredBusinessStates: [String],
     preferredBusinessCities: [String],
     nonBusinessCities: [String], // Cities to exclude
+});
+
+businessProfileSchema.pre("save", function (next) {
+  if (!Array.isArray(this.businessType) || this.businessType.length === 0) {
+    this.businessType = ["Supplier"];
+  }
+  next();
 });
 
 export default mongoose.models.BusinessProfile || mongoose.model("BusinessProfile", businessProfileSchema);

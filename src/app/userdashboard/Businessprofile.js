@@ -89,7 +89,7 @@ const sanitizeCompanyDescriptionPreview = (html) => {
 
 const BusinessProfile = () => {
   const [formData, setFormData] = useState({
-    businessType: [],
+    businessType: ["Supplier"],
     companyName: "",
     officeContact: "",
     faxNumber: "",
@@ -178,7 +178,11 @@ useEffect(() => {
         });
 
         if (res.data.success && res.data.data) {
-          setFormData(res.data.data);
+          const data = res.data.data;
+          if (!Array.isArray(data.businessType) || data.businessType.length === 0) {
+            data.businessType = ["Supplier"];
+          }
+          setFormData(data);
         }
       } catch (error) {
         console.error("Error:", error);
@@ -216,9 +220,17 @@ useEffect(() => {
       const token = localStorage.getItem("token");
       if (!token) return toast.error("Please login again");
 
+      const payload = {
+        ...formData,
+        businessType:
+          Array.isArray(formData.businessType) && formData.businessType.length > 0
+            ? formData.businessType
+            : ["Supplier"],
+      };
+
       const res = await axios.patch(
         "/api/userprofile/profile/businessprofile",
-        formData,
+        payload,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

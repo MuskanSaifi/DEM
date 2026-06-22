@@ -53,13 +53,24 @@ const hasSpecValue = (val) => {
   return s !== "" && s.toUpperCase() !== "N/A";
 };
 
+const formatMoqDisplay = (product) => {
+  const qty = product?.minimumOrderQuantity;
+  if (qty === null || qty === undefined || qty === "") return "N/A";
+  return String(qty);
+};
+
 const formatStockDisplay = (product) => {
   const qty =
     product?.tradeShopping?.stockQuantity ?? product?.stockQuantity;
   if (qty === null || qty === undefined || qty === "") {
     return product?.tradeShopping?.stock || "In Stock";
   }
-  const unit = (product?.tradeShopping?.unit || product?.unit || "").trim();
+  const unit = (
+    product?.moqUnit ||
+    product?.tradeShopping?.unit ||
+    product?.unit ||
+    ""
+  ).trim();
   return unit ? `${qty} ${unit}` : String(qty);
 };
 
@@ -494,7 +505,7 @@ const ProductDetailPage = () => {
                       ₹{product.price || "N/A"}
                     </div>
                     <div className="text-gray-700 font-medium text-lg">
-                      MOQ: <span className="font-bold text-gray-900">{product.minimumOrderQuantity || "N/A"}</span>
+                      MOQ: <span className="font-bold text-gray-900">{formatMoqDisplay(product)}</span>
                     </div>
                   </div>
 
