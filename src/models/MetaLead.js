@@ -41,6 +41,13 @@ const metaLeadSchema = new mongoose.Schema(
       enum: ["new", "contacted", "qualified", "lost"],
       default: "new",
     },
+    remarks: [
+      {
+        text: { type: String, required: true },
+        addedBy: { type: String, default: "Admin" },
+        addedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );
