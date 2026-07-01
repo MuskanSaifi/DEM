@@ -1,23 +1,29 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import BulkImportLeads from "@/components/sales/BulkImportLeads";
+import ImportDataHistory from "@/components/sales/ImportDataHistory";
+import AddEmployeeModal from "@/components/sales/AddEmployeeModal";
 import ClientFilterModal from "@/components/ClientFilterModal";
 import { useSalesChatSocket } from "@/lib/salesChatSocket";
+import { useDebounce } from "@/lib/useDebounce";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 import "@/components/styles/sales-dashboards.css";
 
+const LEADS_PER_PAGE = 50;
+
 export default function SalesAdminDashboard() {
   const [admin, setAdmin] = useState(null);
   const [leads, setLeads] = useState([]);
-  const [filteredLeads, setFilteredLeads] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [stats, setStats] = useState(null);
   const [leadsLoading, setLeadsLoading] = useState(true);
   const [showAddEmployee, setShowAddEmployee] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
+  const [showImportDataHistory, setShowImportDataHistory] = useState(false);
+  const [importHistoryRefreshKey, setImportHistoryRefreshKey] = useState(0);
   const [showRemarkModal, setShowRemarkModal] = useState(null);
   const [toast, setToast] = useState(null);
   const [showChat, setShowChat] = useState(false);
@@ -26,8 +32,8 @@ export default function SalesAdminDashboard() {
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [selectedLeads, setSelectedLeads] = useState([]);
+  const [leadsPage, setLeadsPage] = useState(1);
   const [assignTo, setAssignTo] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [filters, setFilters] = useState({
     status: "",
     assignedTo: "",
@@ -37,6 +43,10 @@ export default function SalesAdminDashboard() {
     dateFrom: "",
     dateTo: "",
   });
+  const [searchDraft, setSearchDraft] = useState("");
+  const [gstDraft, setGstDraft] = useState("");
+  const debouncedSearch = useDebounce(searchDraft, 300);
+  const debouncedGst = useDebounce(gstDraft, 300);
   const [reportDate, setReportDate] = useState(() => {
     const d = new Date();
     return d.toISOString().slice(0, 10);
@@ -57,12 +67,6 @@ export default function SalesAdminDashboard() {
   const [showChangePasswordInput, setShowChangePasswordInput] = useState(false);
   const [employeeSearch, setEmployeeSearch] = useState("");
   const [teamMemberSearch, setTeamMemberSearch] = useState("");
-  const [employeeForm, setEmployeeForm] = useState({
-    fullname: "",
-    email: "",
-    password: "",
-    mobileNumber: "",
-  });
   const [remarkData, setRemarkData] = useState({
     remark: "",
     remarkType: "general",
@@ -202,8 +206,17 @@ export default function SalesAdminDashboard() {
   }, [reportDate]);
 
   useEffect(() => {
-    // Apply filters
-    let filtered = [...leads];
+    setFilters((f) =>
+      f.search === debouncedSearch ? f : { ...f, search: debouncedSearch }
+    );
+  }, [debouncedSearch]);
+
+  useEffect(() => {
+    setFilters((f) => (f.gst === debouncedGst ? f : { ...f, gst: debouncedGst }));
+  }, [debouncedGst]);
+
+  const filteredLeads = useMemo(() => {
+    let filtered = leads;
     if (filters.status) {
       filtered = filtered.filter((lead) => lead.status === filters.status);
     }
@@ -219,8 +232,8 @@ export default function SalesAdminDashboard() {
     }
     if (filters.paymentStatus) {
       if (filters.paymentStatus === "unpaid") {
-        filtered = filtered.filter(
-          (lead) => ["pending", "partial"].includes(lead.paymentStatus || "pending")
+        filtered = filtered.filter((lead) =>
+          ["pending", "partial"].includes(lead.paymentStatus || "pending")
         );
       } else {
         filtered = filtered.filter(
@@ -241,8 +254,8 @@ export default function SalesAdminDashboard() {
     }
     if (filters.gst) {
       const gstLower = filters.gst.toLowerCase();
-      filtered = filtered.filter(
-        (lead) => (lead.gst || "").toLowerCase().includes(gstLower)
+      filtered = filtered.filter((lead) =>
+        (lead.gst || "").toLowerCase().includes(gstLower)
       );
     }
     if (filters.dateFrom || filters.dateTo) {
@@ -262,8 +275,42 @@ export default function SalesAdminDashboard() {
         return true;
       });
     }
-    setFilteredLeads(filtered);
+    return filtered;
   }, [leads, filters]);
+
+  const totalLeadPages = Math.max(
+    1,
+    Math.ceil(filteredLeads.length / LEADS_PER_PAGE)
+  );
+
+  const paginatedLeads = useMemo(() => {
+    const safePage = Math.min(leadsPage, totalLeadPages);
+    const start = (safePage - 1) * LEADS_PER_PAGE;
+    return filteredLeads.slice(start, start + LEADS_PER_PAGE);
+  }, [filteredLeads, leadsPage, totalLeadPages]);
+
+  const selectedLeadSet = useMemo(
+    () => new Set(selectedLeads),
+    [selectedLeads]
+  );
+
+  useEffect(() => {
+    setLeadsPage(1);
+  }, [
+    filters.status,
+    filters.assignedTo,
+    filters.paymentStatus,
+    filters.search,
+    filters.gst,
+    filters.dateFrom,
+    filters.dateTo,
+  ]);
+
+  useEffect(() => {
+    if (leadsPage > totalLeadPages) {
+      setLeadsPage(totalLeadPages);
+    }
+  }, [leadsPage, totalLeadPages]);
 
   useEffect(() => {
     if (selectedConversation) {
@@ -331,6 +378,54 @@ export default function SalesAdminDashboard() {
       console.error("Weekly performance fetch error:", err);
     }
   };
+
+  const refreshStats = useCallback(async (token) => {
+    try {
+      const res = await fetch("/api/sales/admin/stats", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) setStats(data.stats);
+    } catch (err) {
+      console.error("Stats refresh error:", err);
+    }
+  }, []);
+
+  const patchLead = useCallback(
+    async (leadId, body, localUpdate, options = {}) => {
+      const token = localStorage.getItem("salesAdminToken");
+      if (!token) return;
+
+      setLeads((prev) =>
+        prev.map((l) => (l._id === leadId ? { ...l, ...localUpdate } : l))
+      );
+
+      try {
+        const res = await fetch(`/api/sales/leads/${leadId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          fetchData(token);
+          return;
+        }
+        if (options.refreshStats) refreshStats(token);
+        if (options.refreshLeaderboard) fetchLeaderboard(token);
+        if (options.refreshReport) fetchDailyReport(token, reportDate);
+        if (options.toast) {
+          setToast({ type: "success", message: options.toast });
+          setTimeout(() => setToast(null), 2000);
+        }
+      } catch {
+        fetchData(token);
+      }
+    },
+    [reportDate, refreshStats]
+  );
 
   const handleReactivateAllLowPerformance = async () => {
     if (
@@ -463,43 +558,6 @@ export default function SalesAdminDashboard() {
     } catch (err) {
       console.error("Leaderboard error:", err);
       setLeaderboard([]);
-    }
-  };
-
-  const handleAddEmployee = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem("salesAdminToken");
-    try {
-      const res = await fetch("/api/sales/admin/add-employee", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(employeeForm),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setToast({
-          type: "success",
-          message: "Employee added successfully",
-        });
-        setShowAddEmployee(false);
-        setEmployeeForm({
-          fullname: "",
-          email: "",
-          password: "",
-          mobileNumber: "",
-        });
-        fetchData(token);
-        setTimeout(() => setToast(null), 3000);
-      } else {
-        setToast({ type: "error", message: data.message || "Failed to add employee" });
-        setTimeout(() => setToast(null), 3000);
-      }
-    } catch (err) {
-      setToast({ type: "error", message: "Failed to add employee" });
-      setTimeout(() => setToast(null), 3000);
     }
   };
 
@@ -744,6 +802,7 @@ export default function SalesAdminDashboard() {
         });
         setShowBulkImport(false);
         fetchData(token);
+        setImportHistoryRefreshKey((k) => k + 1);
         setTimeout(() => setToast(null), 5000);
       } else {
         setToast({ type: "error", message: data.message || "Import failed" });
@@ -915,12 +974,13 @@ export default function SalesAdminDashboard() {
               onClose={() => setShowClientFilterModal(false)}
               onApply={(vals) => {
                 const parts = [vals.name, vals.email, vals.phone, vals.businessName].filter(Boolean);
+                const search = parts.join(" ");
+                setSearchDraft(search);
                 setFilters((f) => ({
                   ...f,
-                  search: parts.join(" "),
+                  search,
                   paymentStatus: vals.paymentStatus || "",
                 }));
-                // Modal stays open so user can see search result
               }}
             />
             <button
@@ -1071,6 +1131,17 @@ export default function SalesAdminDashboard() {
     </span>
   </button>
 
+  {/* Imported Data History */}
+  <button
+    onClick={() => setShowImportDataHistory(true)}
+    className="flex items-center gap-2 px-6 py-3 rounded-2xl 
+    bg-gradient-to-r from-cyan-500 to-blue-600 
+    text-white font-semibold shadow-md hover:shadow-xl 
+    hover:-translate-y-0.5 transition-all duration-200"
+  >
+    📋 Imported Data
+  </button>
+
   {/* Spacer */}
   <div className="flex-1" />
 
@@ -1137,8 +1208,8 @@ export default function SalesAdminDashboard() {
                   <input
                     type="text"
                     placeholder="Client, company, mobile, product…"
-                    value={filters.search}
-                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                    value={searchDraft}
+                    onChange={(e) => setSearchDraft(e.target.value)}
                     className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm placeholder:text-gray-400 bg-gray-50/50 focus:bg-white transition"
                   />
                 </div>
@@ -1162,8 +1233,8 @@ export default function SalesAdminDashboard() {
                   <input
                     type="text"
                     placeholder="Search by GST"
-                    value={filters.gst}
-                    onChange={(e) => setFilters({ ...filters, gst: e.target.value })}
+                    value={gstDraft}
+                    onChange={(e) => setGstDraft(e.target.value)}
                     className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm placeholder:text-gray-400 bg-gray-50/50 focus:bg-white transition"
                   />
                 </div>
@@ -1194,7 +1265,19 @@ export default function SalesAdminDashboard() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFilters({ status: "", assignedTo: "", paymentStatus: "", search: "", gst: "", dateFrom: "", dateTo: "" })}
+                  onClick={() => {
+                    setSearchDraft("");
+                    setGstDraft("");
+                    setFilters({
+                      status: "",
+                      assignedTo: "",
+                      paymentStatus: "",
+                      search: "",
+                      gst: "",
+                      dateFrom: "",
+                      dateTo: "",
+                    });
+                  }}
                   className="w-full px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg border border-gray-200 transition text-sm"
                 >
                   Clear Filters
@@ -1222,96 +1305,20 @@ export default function SalesAdminDashboard() {
         )}
 
         {/* Add Employee – modal popup */}
-        {showAddEmployee && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-              <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b">
-                <h2 className="text-lg font-bold text-gray-900">Add Sales Employee</h2>
-                <button
-                  onClick={() => setShowAddEmployee(false)}
-                  className="text-gray-400 hover:text-gray-600 rounded-full p-1"
-                  aria-label="Close add employee"
-                >
-                  ✕
-                </button>
-              </div>
-              <form onSubmit={handleAddEmployee} className="px-6 pb-6 pt-4 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <input
-                type="text"
-                placeholder="Full Name *"
-                required
-                value={employeeForm.fullname}
-                onChange={(e) =>
-                  setEmployeeForm({ ...employeeForm, fullname: e.target.value })
-                }
-                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
-              />
-              <input
-                type="email"
-                placeholder="Email *"
-                required
-                value={employeeForm.email}
-                onChange={(e) =>
-                  setEmployeeForm({ ...employeeForm, email: e.target.value })
-                }
-                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
-              />
-        <div className="relative">
-  <input
-    type={showPassword ? "text" : "password"}
-    placeholder="Password *"
-    required
-    value={employeeForm.password}
-    onChange={(e) =>
-      setEmployeeForm({
-        ...employeeForm,
-        password: e.target.value,
-      })
-    }
-    className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm w-full pr-10"
-  />
-
-  <button
-    type="button"
-    onClick={() => setShowPassword(!showPassword)}
-    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-  >
-    {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
-  </button>
-</div>
-              <input
-                type="tel"
-                placeholder="Mobile"
-                value={employeeForm.mobileNumber}
-                onChange={(e) =>
-                  setEmployeeForm({
-                    ...employeeForm,
-                    mobileNumber: e.target.value,
-                  })
-                }
-                className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2.5 text-sm"
-              />
-            </div>
-                <div className="flex justify-end gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddEmployee(false)}
-                    className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition"
-                  >
-                    Cancel
-                  </button>
-            <button
-              type="submit"
-                    className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition text-sm"
-            >
-              Add Employee
-            </button>
-                </div>
-          </form>
-            </div>
-          </div>  
-        )}
+        <AddEmployeeModal
+          open={showAddEmployee}
+          onClose={() => setShowAddEmployee(false)}
+          onSuccess={() => {
+            setToast({ type: "success", message: "Employee added successfully" });
+            const token = localStorage.getItem("salesAdminToken");
+            if (token) fetchData(token);
+            setTimeout(() => setToast(null), 3000);
+          }}
+          onError={(message) => {
+            setToast({ type: "error", message });
+            setTimeout(() => setToast(null), 3000);
+          }}
+        />
 
         {/* Delete employee – reassign leads modal */}
         {deleteEmployeeTarget && (
@@ -1613,10 +1620,8 @@ export default function SalesAdminDashboard() {
                 <input
                   type="text"
                   placeholder="Search by client, company, mobile or product…"
-                  value={filters.search}
-                  onChange={(e) =>
-                    setFilters({ ...filters, search: e.target.value })
-                  }
+                  value={searchDraft}
+                  onChange={(e) => setSearchDraft(e.target.value)}
                   className="sales-input-focus min-w-[200px] max-w-xs border border-gray-300 rounded-lg px-3 py-2 text-sm placeholder:text-gray-400 bg-white focus:bg-white transition"
                 />
                 <select
@@ -1740,7 +1745,7 @@ export default function SalesAdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y text-sm divide-gray-100">
-                    {filteredLeads.map((lead, index) => (
+                    {paginatedLeads.map((lead, index) => (
                       <tr
                         key={lead._id}
                         className={`sales-table-row-hover transition ${
@@ -1750,14 +1755,14 @@ export default function SalesAdminDashboard() {
                     <td className="px-6 py-4">
                       <input
                         type="checkbox"
-                        checked={selectedLeads.includes(lead._id)}
+                        checked={selectedLeadSet.has(lead._id)}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSelectedLeads([...selectedLeads, lead._id]);
+                            setSelectedLeads((prev) => [...prev, lead._id]);
                           } else {
-                            setSelectedLeads(
-                              selectedLeads.filter((id) => id !== lead._id)
-                            );
+                              setSelectedLeads((prev) =>
+                                prev.filter((id) => id !== lead._id)
+                              );
                           }
                         }}
                         className="cursor-pointer w-4 h-4"
@@ -1802,22 +1807,13 @@ export default function SalesAdminDashboard() {
                       <select
                         value={lead.status}
                         onChange={(e) => {
-                          const token = localStorage.getItem("salesAdminToken");
-                          fetch(`/api/sales/leads/${lead._id}`, {
-                            method: "PATCH",
-                            headers: {
-                              "Content-Type": "application/json",
-                              Authorization: `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({ status: e.target.value }),
-                          }).then(() => {
-                            fetchData(token);
-                            setToast({
-                              type: "success",
-                              message: "Status updated",
-                            });
-                            setTimeout(() => setToast(null), 2000);
-                          });
+                          const status = e.target.value;
+                          patchLead(
+                            lead._id,
+                            { status },
+                            { status },
+                            { toast: "Status updated" }
+                          );
                         }}
                         className={`px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer ${
                           lead.status === "converted"
@@ -1857,21 +1853,18 @@ export default function SalesAdminDashboard() {
                       <select
                         value={lead.paymentStatus || "pending"}
                         onChange={(e) => {
-                          const token = localStorage.getItem("salesAdminToken");
-                          fetch(`/api/sales/leads/${lead._id}`, {
-                            method: "PATCH",
-                            headers: {
-                              "Content-Type": "application/json",
-                              Authorization: `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({ paymentStatus: e.target.value }),
-                          }).then(() => {
-                            fetchData(token);
-                            fetchLeaderboard(token);
-                            fetchDailyReport(token, reportDate);
-                            setToast({ type: "success", message: "Payment status updated" });
-                            setTimeout(() => setToast(null), 2000);
-                          });
+                          const paymentStatus = e.target.value;
+                          patchLead(
+                            lead._id,
+                            { paymentStatus },
+                            { paymentStatus },
+                            {
+                              toast: "Payment status updated",
+                              refreshLeaderboard: true,
+                              refreshReport: true,
+                              refreshStats: true,
+                            }
+                          );
                         }}
                         className={`px-2 py-1 rounded text-xs font-medium border cursor-pointer ${
                           lead.paymentStatus === "paid"
@@ -1896,24 +1889,22 @@ export default function SalesAdminDashboard() {
                       <select
                         value={lead.assignedTo?._id || ""}
                         onChange={(e) => {
-                          if (e.target.value) {
-                            fetch(`/api/sales/leads/${lead._id}`, {
-                              method: "PATCH",
-                              headers: {
-                                "Content-Type": "application/json",
-                                Authorization: `Bearer ${localStorage.getItem(
-                                  "salesAdminToken"
-                                )}`,
-                              },
-                              body: JSON.stringify({
-                                assignedTo: e.target.value,
-                              }),
-                            }).then(() => {
-                              const token =
-                                localStorage.getItem("salesAdminToken");
-                              fetchData(token);
-                            });
-                          }
+                          const assignedToId = e.target.value;
+                          if (!assignedToId) return;
+                          const emp = employees.find((em) => em._id === assignedToId);
+                          patchLead(
+                            lead._id,
+                            { assignedTo: assignedToId },
+                            {
+                              assignedTo: emp
+                                ? {
+                                    _id: emp._id,
+                                    fullname: emp.fullname,
+                                    email: emp.email,
+                                  }
+                                : assignedToId,
+                            }
+                          );
                         }}
                         className="text-sm border rounded px-2 py-1"
                       >
@@ -1935,20 +1926,20 @@ export default function SalesAdminDashboard() {
 
                 {/* Mobile cards */}
                 <div className="md:hidden divide-y divide-gray-100">
-                  {filteredLeads.map((lead) => (
+                  {paginatedLeads.map((lead) => (
                     <div key={lead._id} className="p-4 space-y-2">
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <div className="flex items-center gap-2">
                             <input
                               type="checkbox"
-                              checked={selectedLeads.includes(lead._id)}
+                              checked={selectedLeadSet.has(lead._id)}
                               onChange={(e) => {
                                 if (e.target.checked) {
-                                  setSelectedLeads([...selectedLeads, lead._id]);
+                                  setSelectedLeads((prev) => [...prev, lead._id]);
                                 } else {
-                                  setSelectedLeads(
-                                    selectedLeads.filter((id) => id !== lead._id)
+                                  setSelectedLeads((prev) =>
+                                    prev.filter((id) => id !== lead._id)
                                   );
                                 }
                               }}
@@ -1999,22 +1990,13 @@ export default function SalesAdminDashboard() {
                         <select
                           value={lead.status}
                           onChange={(e) => {
-                            const token = localStorage.getItem("salesAdminToken");
-                            fetch(`/api/sales/leads/${lead._id}`, {
-                              method: "PATCH",
-                              headers: {
-                                "Content-Type": "application/json",
-                                Authorization: `Bearer ${token}`,
-                              },
-                              body: JSON.stringify({ status: e.target.value }),
-                            }).then(() => {
-                              fetchData(token);
-                              setToast({
-                                type: "success",
-                                message: "Status updated",
-                              });
-                              setTimeout(() => setToast(null), 2000);
-                            });
+                            const status = e.target.value;
+                            patchLead(
+                              lead._id,
+                              { status },
+                              { status },
+                              { toast: "Status updated" }
+                            );
                           }}
                           className={`px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer ${
                             lead.status === "converted"
@@ -2052,24 +2034,18 @@ export default function SalesAdminDashboard() {
                         <select
                           value={lead.paymentStatus || "pending"}
                           onChange={(e) => {
-                            const token = localStorage.getItem("salesAdminToken");
-                            fetch(`/api/sales/leads/${lead._id}`, {
-                              method: "PATCH",
-                              headers: {
-                                "Content-Type": "application/json",
-                                Authorization: `Bearer ${token}`,
-                              },
-                              body: JSON.stringify({ paymentStatus: e.target.value }),
-                            }).then(() => {
-                              fetchData(token);
-                              fetchLeaderboard(token);
-                              fetchDailyReport(token, reportDate);
-                              setToast({
-                                type: "success",
-                                message: "Payment status updated",
-                              });
-                              setTimeout(() => setToast(null), 2000);
-                            });
+                            const paymentStatus = e.target.value;
+                            patchLead(
+                              lead._id,
+                              { paymentStatus },
+                              { paymentStatus },
+                              {
+                                toast: "Payment status updated",
+                                refreshLeaderboard: true,
+                                refreshReport: true,
+                                refreshStats: true,
+                              }
+                            );
                           }}
                           className={`px-2 py-1 rounded text-xs font-medium border cursor-pointer ${
                             lead.paymentStatus === "paid"
@@ -2092,24 +2068,22 @@ export default function SalesAdminDashboard() {
                         <select
                           value={lead.assignedTo?._id || ""}
                           onChange={(e) => {
-                            if (e.target.value) {
-                              fetch(`/api/sales/leads/${lead._id}`, {
-                                method: "PATCH",
-                                headers: {
-                                  "Content-Type": "application/json",
-                                  Authorization: `Bearer ${localStorage.getItem(
-                                    "salesAdminToken"
-                                  )}`,
-                                },
-                                body: JSON.stringify({
-                                  assignedTo: e.target.value,
-                                }),
-                              }).then(() => {
-                                const token =
-                                  localStorage.getItem("salesAdminToken");
-                                fetchData(token);
-                              });
-                            }
+                            const assignedToId = e.target.value;
+                            if (!assignedToId) return;
+                            const emp = employees.find((em) => em._id === assignedToId);
+                            patchLead(
+                              lead._id,
+                              { assignedTo: assignedToId },
+                              {
+                                assignedTo: emp
+                                  ? {
+                                      _id: emp._id,
+                                      fullname: emp.fullname,
+                                      email: emp.email,
+                                    }
+                                  : assignedToId,
+                              }
+                            );
                           }}
                           className="text-xs border rounded px-2 py-1 bg-white"
                         >
@@ -2131,6 +2105,41 @@ export default function SalesAdminDashboard() {
               </>
             )}
           </div>
+          {!leadsLoading && filteredLeads.length > LEADS_PER_PAGE && (
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-gray-200 bg-gray-50/80">
+              <p className="text-sm text-gray-600">
+                Showing{" "}
+                <span className="font-medium">
+                  {(leadsPage - 1) * LEADS_PER_PAGE + 1}–
+                  {Math.min(leadsPage * LEADS_PER_PAGE, filteredLeads.length)}
+                </span>{" "}
+                of <span className="font-medium">{filteredLeads.length}</span> leads
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={leadsPage <= 1}
+                  onClick={() => setLeadsPage((p) => Math.max(1, p - 1))}
+                  className="px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40"
+                >
+                  ← Prev
+                </button>
+                <span className="text-sm text-gray-600 min-w-[80px] text-center">
+                  Page {leadsPage} / {totalLeadPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={leadsPage >= totalLeadPages}
+                  onClick={() =>
+                    setLeadsPage((p) => Math.min(totalLeadPages, p + 1))
+                  }
+                  className="px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40"
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         </div>
           </div>
@@ -2218,6 +2227,19 @@ export default function SalesAdminDashboard() {
           </div>
         </div>
       )}
+
+      <ImportDataHistory
+        open={showImportDataHistory}
+        onClose={() => setShowImportDataHistory(false)}
+        employees={employees}
+        refreshKey={importHistoryRefreshKey}
+        onAssignSuccess={(message) => {
+          setToast({ type: "success", message });
+          const token = localStorage.getItem("salesAdminToken");
+          if (token) fetchData(token);
+          setTimeout(() => setToast(null), 5000);
+        }}
+      />
 
       {/* Best Performer Modal */}
       {showBestPerformerModal && (

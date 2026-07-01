@@ -83,6 +83,19 @@ const salesLeadSchema = new mongoose.Schema(
       ref: "SalesEmployee",
       required: true,
     },
+    source: {
+      type: String,
+      enum: ["manual", "bulk_import"],
+      default: "manual",
+    },
+    importBatchId: {
+      type: String,
+      default: null,
+    },
+    importedAt: {
+      type: Date,
+      default: null,
+    },
     remarks: [
       {
         remark: String,
@@ -127,6 +140,8 @@ salesLeadSchema.index({
   companyName: 1,
   email: 1,
 });
+salesLeadSchema.index({ source: 1, importedAt: -1 });
+salesLeadSchema.index({ importBatchId: 1 });
 
 // Avoid using cached model with stale schema (e.g. after adding new enum values)
 if (mongoose.models.SalesLead) delete mongoose.models.SalesLead;

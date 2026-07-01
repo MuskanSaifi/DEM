@@ -3,6 +3,7 @@ import { getJwtSecret } from "@/lib/env";
 import connectdb from "@/lib/dbConnect";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 function normalizeMobile(m) {
   if (!m || typeof m !== "string") return "";
@@ -51,6 +52,9 @@ export async function POST(req) {
     // Handle assignedTo - convert empty string to null
     const assignedToId =
       assignedTo && assignedTo.trim() !== "" ? assignedTo : null;
+
+    const importBatchId = crypto.randomUUID();
+    const importedAt = new Date();
 
     // Validate and format leads
     const formattedLeads = leads
@@ -118,6 +122,9 @@ export async function POST(req) {
           assignedAt: assignedToId ? new Date() : null,
           assignedBy: assignedToId ? admin.id : null,
           createdBy: admin.id,
+          source: "bulk_import",
+          importBatchId,
+          importedAt,
         };
       })
       .filter((lead) => lead !== null); // Remove invalid entries
@@ -198,6 +205,8 @@ export async function POST(req) {
         imported: insertedLeads.length,
         skipped: leads.length - insertedLeads.length,
         skippedDuplicates,
+        importBatchId,
+        importedAt,
       },
       { status: 201 }
     );

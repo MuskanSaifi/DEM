@@ -90,7 +90,8 @@ export async function GET(req) {
     const leads = await SalesLead.find(query)
       .populate("assignedTo", "fullname email")
       .populate("createdBy", "fullname email")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     return NextResponse.json({ success: true, leads }, { status: 200 });
   } catch (error) {
