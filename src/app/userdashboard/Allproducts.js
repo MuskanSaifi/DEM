@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import Swal from "sweetalert2";
 import { Modal, Button } from "react-bootstrap";
 import LocationSelector from "./components/LocationSelector";
+import { MOQ_UNIT_OPTIONS, normalizeMoqUnit } from "@/lib/moqUnits";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -221,7 +222,7 @@ const AllProducts = () => {
         price: product.price || "",
         currency: product.currency || "INR",
         minimumOrderQuantity: product.minimumOrderQuantity || "",
-        moqUnit: product.moqUnit || "", // ✅ Fixed: Changed from "Number" to empty string
+        moqUnit: normalizeMoqUnit(product.moqUnit),
         country: product.country || "", // ✅ Added country
         state: product.state || "",
         city: product.city || "",
@@ -901,39 +902,15 @@ const AllProducts = () => {
                 <select
                   className="form-control"
                   name="basicDetails.moqUnit"
-                  value={formData.basicDetails.moqUnit}
+                  value={formData.basicDetails.moqUnit || ""}
                   onChange={handleChange}
                 >
-                  <option value="Kilogram">Kilogram</option>
-                   {/* <!-- New Units Added --> */}
-  <option value="Grams">Gram</option>
-  <option value="Metric Tons">Metric Ton</option>
-  <option value="Ton/Tons">Ton</option>
-  <option value="Piece/Pieces">Piece</option>
-  <option value="Unit/Units">Unit</option>
-  <option value="Watt">Watt</option>
-  <option value="Dozen">Dozen</option>
-  <option value="Pairs">Pair</option>
-  <option value="Set/Sets">Set</option>
-  <option value="Box/Boxes">Box</option>
-  <option value="Carton/Cartons">Carton</option>
-  <option value="Bag/Bags">Bag</option>
-  <option value="Roll/Rolls">Roll</option>
-  <option value="Sheet/Sheets">Sheet</option>
-  <option value="Meter/Meters">Meter</option>
-  <option value="Centimeter">Centimeter</option>
-  <option value="Inch/Inches">Inch</option>
-  <option value="Square Feet">Square Feet</option>
-  <option value="Square Meter">Square Meter</option>
-  <option value="Cubic Feet">Cubic Feet</option>
-  <option value="Cubic Meter">Cubic Meter</option>
-  <option value="Liter/Liters">Liter</option>
-  <option value="Milliliters">Milliliter</option>
-  <option value="Gallon/Gallons">Gallon</option>
-  <option value="Barrel/Barrels">Barrel</option>
-  <option value="Pack">Pack</option>
-<option value="Pouch">Pouch</option>
-<option value="Bottle">Bottle</option>
+                  <option value="">Select Unit</option>
+                  {MOQ_UNIT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               <LocationSelector formData={formData} setFormData={setFormData} />

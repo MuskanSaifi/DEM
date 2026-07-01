@@ -8,6 +8,7 @@ import { Country, State, City } from 'country-state-city';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { IndianLocation } from "./Indianlocation";
+import { MOQ_UNIT_OPTIONS } from "@/lib/moqUnits";
 
 
 // Slug generator function
@@ -649,36 +650,11 @@ const handleSubmit = async (e) => {
                                                 required
                                             >
   <option value="">Select Unit</option>
-  <option value="Kilogram">Kg</option>
-<option value="Grams">Gram</option>
-<option value="Metric Tons">Metric Ton</option>
-<option value="Ton/Tons">Ton</option>
-<option value="Piece">Piece</option>
-<option value="Pieces">Pieces</option>
-<option value="Unit/Units">Unit</option>
-<option value="Watt">Watt</option>
-<option value="Dozen">Dozen</option>
-<option value="Pairs">Pair</option>
-<option value="Set/Sets">Set</option>
-<option value="Box/Boxes">Box</option>
-<option value="Carton/Cartons">Carton</option>
-<option value="Bag/Bags">Bag</option>
-<option value="Roll/Rolls">Roll</option>
-<option value="Sheet/Sheets">Sheet</option>
-<option value="Meter/Meters">Meter</option>
-<option value="Centimeter">Centimeter</option>
-<option value="Inch/Inches">Inch</option>
-<option value="Square Feet">Sq. Ft</option>
-<option value="Square Meter">Sq. Mtr</option>
-<option value="Cubic Feet">Cu. Ft</option>
-<option value="Cubic Meter">Cu. Mtr</option>
-<option value="Liter/Liters">Liter</option>
-<option value="Milliliter">Milliliter</option>
-<option value="Gallon/Gallons">Gallon</option>
-<option value="Barrel/Barrels">Barrel</option>
-<option value="Pack">Pack</option>
-<option value="Pouch">Pouch</option>
-<option value="Bottle">Bottle</option>
+  {MOQ_UNIT_OPTIONS.map((opt) => (
+    <option key={opt.value} value={opt.value}>
+      {opt.label}
+    </option>
+  ))}
 
                                             </select>
                                         </div>
