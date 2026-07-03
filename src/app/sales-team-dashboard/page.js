@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import ClientFilterModal from "@/components/ClientFilterModal";
+import BulkImportLeads from "@/components/sales/BulkImportLeads";
+import DuplicateImportModal from "@/components/sales/DuplicateImportModal";
 import { useSalesChatSocket } from "@/lib/salesChatSocket";
 import "@/components/styles/sales-dashboards.css";
 import { FiSearch, FiMessageCircle, FiLogOut} from "react-icons/fi";
@@ -40,6 +42,9 @@ export default function SalesTeamDashboard() {
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddLead, setShowAddLead] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
+  const [duplicateLeads, setDuplicateLeads] = useState([]);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [showRemarkModal, setShowRemarkModal] = useState(null);
   const [showChat, setShowChat] = useState(false);
   const [conversations, setConversations] = useState([]);
@@ -388,6 +393,56 @@ const [hasSearched, setHasSearched] = useState(false);
     }
   };
 
+  const handleBulkImport = async (leadsData, _assignedTo, markAsPaid = false) => {
+    const token = localStorage.getItem("salesEmployeeToken");
+    try {
+      const res = await fetch("/api/sales/leads/bulk-import", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          leads: leadsData,
+          markAsPaid: !!markAsPaid,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.imported > 0) {
+          setToast({
+            type: "success",
+            message:
+              data.message ||
+              `${data.imported} leads imported successfully${
+                data.skipped > 0 ? `, ${data.skipped} duplicate skip` : ""
+              }`,
+          });
+          setShowBulkImport(false);
+          fetchLeads(token);
+          setTimeout(() => setToast(null), 5000);
+        }
+        if (data.duplicateLeads?.length > 0) {
+          setDuplicateLeads(data.duplicateLeads);
+          setShowDuplicateModal(true);
+          if (data.imported === 0) {
+            setToast({
+              type: "error",
+              message: data.message || "Saare records duplicate hain — koi upload nahi hua.",
+            });
+            setTimeout(() => setToast(null), 5000);
+          }
+        }
+      } else {
+        setToast({ type: "error", message: data.message || "Import failed" });
+        setTimeout(() => setToast(null), 5000);
+      }
+    } catch (err) {
+      setToast({ type: "error", message: "Import failed: " + err.message });
+      setTimeout(() => setToast(null), 5000);
+    }
+  };
+
   const handleAddRemark = async (leadId) => {
     if (!remarkData.remark.trim()) {
       alert("Please enter a remark");
@@ -683,6 +738,15 @@ useEffect(() => {
           </button>
         </div>
       )}
+
+      <DuplicateImportModal
+        open={showDuplicateModal}
+        duplicates={duplicateLeads}
+        onClose={() => {
+          setShowDuplicateModal(false);
+          setDuplicateLeads([]);
+        }}
+      />
       <header className="bg-gradient-to-r from-indigo-600 to-indigo-800 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap justify-between items-center gap-4">
       <div className="flex items-center gap-3">
@@ -1086,14 +1150,35 @@ useEffect(() => {
           </div>
         )}
 
-        <div className="mb-6">
+        <div className="mb-6 flex flex-wrap gap-3">
           <button
-            onClick={() => setShowAddLead(!showAddLead)}
+            onClick={() => {
+              setShowAddLead(!showAddLead);
+              setShowBulkImport(false);
+            }}
             className="sales-btn-primary px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition flex items-center gap-2"
           >
             {showAddLead ? "✕ Cancel" : "➕ Add New Lead"}
           </button>
+          <button
+            onClick={() => {
+              setShowBulkImport(!showBulkImport);
+              setShowAddLead(false);
+            }}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl
+            bg-gradient-to-r from-emerald-500 to-green-700
+            text-white font-semibold shadow-md hover:shadow-xl
+            hover:-translate-y-0.5 transition-all duration-200"
+          >
+            📥 {showBulkImport ? "Cancel Import" : "Bulk Import Leads"}
+          </button>
         </div>
+
+        {showBulkImport && (
+          <div className="mb-6">
+            <BulkImportLeads onImport={handleBulkImport} />
+          </div>
+        )}
 
         {showAddLead && (
           <form
@@ -1196,12 +1281,26 @@ useEffect(() => {
                   {leads.length === 0 ? "Add your first lead to get started." : "Try clearing filters or search."}
                 </p>
                 {leads.length === 0 && (
-                  <button
-                    onClick={() => setShowAddLead(true)}
-                    className="mt-4 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition"
-                  >
-                    ➕ Add New Lead
-                  </button>
+                  <div className="flex flex-wrap gap-3 justify-center mt-4">
+                    <button
+                      onClick={() => {
+                        setShowAddLead(true);
+                        setShowBulkImport(false);
+                      }}
+                      className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition"
+                    >
+                      ➕ Add New Lead
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowBulkImport(true);
+                        setShowAddLead(false);
+                      }}
+                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl shadow-sm transition"
+                    >
+                      📥 Bulk Import Leads
+                    </button>
+                  </div>
                 )}
               </div>
             ) : (

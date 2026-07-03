@@ -12,6 +12,21 @@ function formatDisplayDate(dateStr) {
   });
 }
 
+function SourceBadge({ source }) {
+  if (source === "bulk_import") {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+        Sheet Import
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-sky-100 text-sky-800">
+      Single
+    </span>
+  );
+}
+
 export default function ImportDataHistory({
   open,
   onClose,
@@ -19,6 +34,10 @@ export default function ImportDataHistory({
   onAssignSuccess,
   refreshKey = 0,
 }) {
+  const [employeeImports, setEmployeeImports] = useState([]);
+  const [employeesLoading, setEmployeesLoading] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedEmployeeInfo, setSelectedEmployeeInfo] = useState(null);
   const [dates, setDates] = useState([]);
   const [datesLoading, setDatesLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -27,6 +46,7 @@ export default function ImportDataHistory({
   const [selectedLeadIds, setSelectedLeadIds] = useState([]);
   const [assignTo, setAssignTo] = useState("");
   const [employeeSearch, setEmployeeSearch] = useState("");
+  const [listEmployeeSearch, setListEmployeeSearch] = useState("");
   const [showAssignDropdown, setShowAssignDropdown] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [error, setError] = useState("");
@@ -37,9 +57,9 @@ export default function ImportDataHistory({
       ? localStorage.getItem("salesAdminToken")
       : null;
 
-  const fetchDates = useCallback(async () => {
+  const fetchEmployeeImports = useCallback(async () => {
     if (!token) return;
-    setDatesLoading(true);
+    setEmployeesLoading(true);
     setError("");
     try {
       const res = await fetch("/api/sales/leads/import-history", {
@@ -47,20 +67,46 @@ export default function ImportDataHistory({
       });
       const data = await res.json();
       if (data.success) {
-        setDates(data.dates || []);
+        setEmployeeImports(data.employees || []);
       } else {
-        setError(data.message || "Failed to load import dates");
+        setError(data.message || "Failed to load employee import data");
       }
     } catch (err) {
-      setError("Failed to load import dates: " + err.message);
+      setError("Failed to load employee import data: " + err.message);
     } finally {
-      setDatesLoading(false);
+      setEmployeesLoading(false);
     }
   }, [token]);
 
-  const fetchLeadsForDate = useCallback(
-    async (date) => {
-      if (!token || !date) return;
+  const fetchDatesForEmployee = useCallback(
+    async (employeeId) => {
+      if (!token || !employeeId) return;
+      setDatesLoading(true);
+      setError("");
+      try {
+        const res = await fetch(
+          `/api/sales/leads/import-history?employeeId=${encodeURIComponent(employeeId)}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const data = await res.json();
+        if (data.success) {
+          setDates(data.dates || []);
+          setSelectedEmployeeInfo(data.employee || null);
+        } else {
+          setError(data.message || "Failed to load import dates");
+        }
+      } catch (err) {
+        setError("Failed to load import dates: " + err.message);
+      } finally {
+        setDatesLoading(false);
+      }
+    },
+    [token]
+  );
+
+  const fetchLeadsForEmployeeDate = useCallback(
+    async (employeeId, date) => {
+      if (!token || !employeeId || !date) return;
       setLeadsLoading(true);
       setError("");
       setSelectedLeadIds([]);
@@ -68,12 +114,13 @@ export default function ImportDataHistory({
       setEmployeeSearch("");
       try {
         const res = await fetch(
-          `/api/sales/leads/import-history?date=${encodeURIComponent(date)}`,
+          `/api/sales/leads/import-history?employeeId=${encodeURIComponent(employeeId)}&date=${encodeURIComponent(date)}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const data = await res.json();
         if (data.success) {
           setLeads(data.leads || []);
+          if (data.employee) setSelectedEmployeeInfo(data.employee);
         } else {
           setError(data.message || "Failed to load imported leads");
         }
@@ -88,21 +135,31 @@ export default function ImportDataHistory({
 
   useEffect(() => {
     if (open) {
+      setSelectedEmployee(null);
+      setSelectedEmployeeInfo(null);
       setSelectedDate(null);
+      setDates([]);
       setLeads([]);
       setSelectedLeadIds([]);
+      setListEmployeeSearch("");
       setTableSearch("");
-      fetchDates();
+      fetchEmployeeImports();
     }
-  }, [open, refreshKey, fetchDates]);
+  }, [open, refreshKey, fetchEmployeeImports]);
 
   useEffect(() => {
-    if (selectedDate) {
-      fetchLeadsForDate(selectedDate);
+    if (selectedEmployee) {
+      fetchDatesForEmployee(selectedEmployee);
     }
-  }, [selectedDate, fetchLeadsForDate]);
+  }, [selectedEmployee, fetchDatesForEmployee]);
 
-  const filteredEmployees = useMemo(() => {
+  useEffect(() => {
+    if (selectedEmployee && selectedDate) {
+      fetchLeadsForEmployeeDate(selectedEmployee, selectedDate);
+    }
+  }, [selectedEmployee, selectedDate, fetchLeadsForEmployeeDate]);
+
+  const filteredEmployeesForAssign = useMemo(() => {
     const q = employeeSearch.trim().toLowerCase();
     if (!q) return employees;
     return employees.filter((e) =>
@@ -110,10 +167,20 @@ export default function ImportDataHistory({
     );
   }, [employees, employeeSearch]);
 
-  const selectedEmployee = useMemo(
+  const selectedAssignEmployee = useMemo(
     () => employees.find((e) => e._id === assignTo),
     [employees, assignTo]
   );
+
+  const filteredEmployeeImports = useMemo(() => {
+    const q = listEmployeeSearch.trim().toLowerCase();
+    if (!q) return employeeImports;
+    return employeeImports.filter(
+      (e) =>
+        (e.fullname || "").toLowerCase().includes(q) ||
+        (e.email || "").toLowerCase().includes(q)
+    );
+  }, [employeeImports, listEmployeeSearch]);
 
   const filteredLeads = useMemo(() => {
     const q = tableSearch.trim().toLowerCase();
@@ -124,7 +191,8 @@ export default function ImportDataHistory({
         (l.companyName || "").toLowerCase().includes(q) ||
         (l.mobile || "").includes(q) ||
         (l.email || "").toLowerCase().includes(q) ||
-        (l.state || "").toLowerCase().includes(q)
+        (l.state || "").toLowerCase().includes(q) ||
+        (l.product || "").toLowerCase().includes(q)
     );
   }, [leads, tableSearch]);
 
@@ -154,8 +222,9 @@ export default function ImportDataHistory({
         setSelectedLeadIds([]);
         setAssignTo("");
         setEmployeeSearch("");
-        await fetchLeadsForDate(selectedDate);
-        await fetchDates();
+        await fetchLeadsForEmployeeDate(selectedEmployee, selectedDate);
+        await fetchDatesForEmployee(selectedEmployee);
+        await fetchEmployeeImports();
         onAssignSuccess?.(data.message);
       } else {
         setError(data.message || "Assignment failed");
@@ -168,12 +237,23 @@ export default function ImportDataHistory({
   };
 
   const handleClose = () => {
+    setSelectedEmployee(null);
+    setSelectedEmployeeInfo(null);
     setSelectedDate(null);
+    setDates([]);
     setLeads([]);
     setSelectedLeadIds([]);
     setError("");
     onClose();
   };
+
+  const employeeName = selectedEmployeeInfo?.fullname || "Employee";
+
+  const modalTitle = selectedDate
+    ? `Fresh New Import Data — ${employeeName} — ${formatDisplayDate(selectedDate)}`
+    : selectedEmployee
+      ? `Fresh New Import Data — ${employeeName} — Select Date`
+      : "Fresh New Import Data — Select Employee";
 
   if (!open) return null;
 
@@ -182,25 +262,27 @@ export default function ImportDataHistory({
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[92vh] flex flex-col">
         <div className="px-6 py-4 border-b flex justify-between items-center flex-shrink-0">
           <div className="flex items-center gap-3">
-            {selectedDate && (
+            {(selectedEmployee || selectedDate) && (
               <button
                 type="button"
                 onClick={() => {
-                  setSelectedDate(null);
-                  setLeads([]);
-                  setSelectedLeadIds([]);
-                  setTableSearch("");
+                  if (selectedDate) {
+                    setSelectedDate(null);
+                    setLeads([]);
+                    setSelectedLeadIds([]);
+                    setTableSearch("");
+                  } else {
+                    setSelectedEmployee(null);
+                    setSelectedEmployeeInfo(null);
+                    setDates([]);
+                  }
                 }}
                 className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
               >
                 ← Back
               </button>
             )}
-            <h2 className="text-lg font-bold text-gray-900">
-              {selectedDate
-                ? `Imported Data — ${formatDisplayDate(selectedDate)}`
-                : "Imported Data — Select Date"}
-            </h2>
+            <h2 className="text-lg font-bold text-gray-900">{modalTitle}</h2>
           </div>
           <button
             type="button"
@@ -218,46 +300,201 @@ export default function ImportDataHistory({
           </div>
         )}
 
-        {!selectedDate ? (
+        {!selectedEmployee ? (
+          <div className="flex-1 overflow-auto p-4 flex flex-col">
+            <div className="mb-4 px-2">
+              <input
+                type="text"
+                value={listEmployeeSearch}
+                onChange={(e) => setListEmployeeSearch(e.target.value)}
+                placeholder="Search employee by name or email…"
+                className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              />
+            </div>
+            {employeesLoading ? (
+              <p className="text-center text-gray-500 py-12">Loading employees…</p>
+            ) : filteredEmployeeImports.length === 0 ? (
+              <div className="text-center py-16">
+                <span className="text-5xl block mb-3">👥</span>
+                <p className="text-gray-600 font-medium">No employees found</p>
+              </div>
+            ) : (
+              <div className="overflow-auto border border-gray-200 rounded-xl mx-2">
+                <table className="min-w-full">
+                  <thead className="bg-gray-50 sticky top-0 z-10">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                        Employee
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                        Email
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                        Total Leads
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                        Sheet Import
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                        Single Lead
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                        Last Activity
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                        Status
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {filteredEmployeeImports.map((emp) => (
+                      <tr
+                        key={emp.employeeId}
+                        onClick={() => setSelectedEmployee(emp.employeeId)}
+                        className="hover:bg-indigo-50/60 cursor-pointer transition"
+                      >
+                        <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                          {emp.fullname}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                          {emp.email || "—"}
+                        </td>
+                        <td className="px-4 py-3 text-sm font-semibold text-gray-900">
+                          {emp.totalLeads || 0}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {emp.sheetCount > 0 ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="font-medium text-emerald-700">
+                                {emp.sheetCount}
+                              </span>
+                              <SourceBadge source="bulk_import" />
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">0</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {emp.singleCount > 0 ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="font-medium text-sky-700">
+                                {emp.singleCount}
+                              </span>
+                              <SourceBadge source="manual" />
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">0</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                          {emp.lastActivityDate
+                            ? formatDisplayDate(emp.lastActivityDate)
+                            : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {emp.isActive ? (
+                            <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
+                              Active
+                            </span>
+                          ) : (
+                            <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                              Inactive
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ) : !selectedDate ? (
           <div className="flex-1 overflow-auto p-4">
             {datesLoading ? (
               <p className="text-center text-gray-500 py-12">Loading dates…</p>
             ) : dates.length === 0 ? (
               <div className="text-center py-16">
                 <span className="text-5xl block mb-3">📋</span>
-                <p className="text-gray-600 font-medium">No imported data yet</p>
+                <p className="text-gray-600 font-medium">
+                  {employeeName} ne abhi tak koi lead add nahi ki
+                </p>
                 <p className="text-sm text-gray-400 mt-1">
-                  Use &quot;Bulk Import Leads&quot; to import a sheet. Imported
-                  data will appear here by date.
+                  Sheet import ya single form se add karne par yahan dikhega.
                 </p>
               </div>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {dates.map((item) => (
-                  <button
-                    key={item.date}
-                    type="button"
-                    onClick={() => setSelectedDate(item.date)}
-                    className="text-left p-4 rounded-xl border border-gray-200 hover:border-indigo-400 hover:bg-indigo-50/50 hover:shadow-md transition-all group"
-                  >
-                    <p className="font-semibold text-gray-900 group-hover:text-indigo-700">
-                      {formatDisplayDate(item.date)}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {item.count} lead{item.count !== 1 ? "s" : ""} imported
-                    </p>
-                    {item.unassigned > 0 && (
-                      <span className="inline-block mt-2 text-xs font-medium bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
-                        {item.unassigned} unassigned
-                      </span>
-                    )}
-                    {item.batchCount > 1 && (
-                      <span className="inline-block mt-2 ml-1 text-xs text-gray-400">
-                        ({item.batchCount} imports)
-                      </span>
-                    )}
-                  </button>
-                ))}
+              <div className="overflow-auto border border-gray-200 rounded-xl">
+                <table className="min-w-full">
+                  <thead className="bg-gray-50 sticky top-0 z-10">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                        Date
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                        Total Leads
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                        Sheet Import
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                        Single Lead
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                        Unassigned
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {dates.map((item) => (
+                      <tr
+                        key={item.date}
+                        onClick={() => setSelectedDate(item.date)}
+                        className="hover:bg-indigo-50/60 cursor-pointer transition"
+                      >
+                        <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                          {formatDisplayDate(item.date)}
+                        </td>
+                        <td className="px-4 py-3 text-sm font-semibold text-gray-900">
+                          {item.count}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {item.sheetCount > 0 ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="font-medium text-emerald-700">
+                                {item.sheetCount}
+                              </span>
+                              <SourceBadge source="bulk_import" />
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">0</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {item.singleCount > 0 ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="font-medium text-sky-700">
+                                {item.singleCount}
+                              </span>
+                              <SourceBadge source="manual" />
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">0</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {item.unassigned > 0 ? (
+                            <span className="text-xs font-medium bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
+                              {item.unassigned}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">0</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
@@ -268,7 +505,7 @@ export default function ImportDataHistory({
                 type="text"
                 value={tableSearch}
                 onChange={(e) => setTableSearch(e.target.value)}
-                placeholder="Search client, company, mobile…"
+                placeholder="Search client, company, mobile, product…"
                 className="sales-input-focus border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1 min-w-[200px]"
               />
               <button
@@ -327,6 +564,12 @@ export default function ImportDataHistory({
                         Mobile
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                        Product
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                        Source
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                         State
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
@@ -368,6 +611,12 @@ export default function ImportDataHistory({
                           {lead.mobile}
                         </td>
                         <td className="px-4 py-2.5 text-sm text-gray-600">
+                          {lead.product || "—"}
+                        </td>
+                        <td className="px-4 py-2.5 text-sm">
+                          <SourceBadge source={lead.source} />
+                        </td>
+                        <td className="px-4 py-2.5 text-sm text-gray-600">
                           {lead.state || "—"}
                         </td>
                         <td className="px-4 py-2.5 text-sm">
@@ -399,7 +648,7 @@ export default function ImportDataHistory({
                     onClick={() => setShowAssignDropdown((p) => !p)}
                     className="sales-input-focus border-2 border-amber-400 rounded-xl px-4 py-2 bg-white min-w-[200px] font-medium text-sm flex items-center justify-between gap-2"
                   >
-                    <span>{selectedEmployee?.fullname || "Select Employee"}</span>
+                    <span>{selectedAssignEmployee?.fullname || "Select Employee"}</span>
                     <span className="text-xs text-gray-500">▾</span>
                   </button>
                   {showAssignDropdown && (
@@ -412,7 +661,7 @@ export default function ImportDataHistory({
                         className="sales-input-focus w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm mb-2"
                       />
                       <div className="max-h-48 overflow-y-auto">
-                        {filteredEmployees.map((emp) => (
+                        {filteredEmployeesForAssign.map((emp) => (
                           <button
                             key={emp._id}
                             type="button"
