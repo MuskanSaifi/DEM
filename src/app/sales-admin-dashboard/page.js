@@ -8,6 +8,11 @@ import AddEmployeeModal from "@/components/sales/AddEmployeeModal";
 import ClientFilterModal from "@/components/ClientFilterModal";
 import { useSalesChatSocket } from "@/lib/salesChatSocket";
 import { useDebounce } from "@/lib/useDebounce";
+import {
+  SALES_LEAD_STATUS_LABELS,
+  SALES_LEAD_STATUS_OPTIONS,
+  formatSalesLeadStatus,
+} from "@/lib/salesLeadStatus";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 import "@/components/styles/sales-dashboards.css";
@@ -1017,7 +1022,7 @@ export default function SalesAdminDashboard() {
               <div className="mt-1 text-xl font-bold text-gray-900">{stats.totalLeads}</div>
             </button>
             <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "new", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-gray-400 text-left">
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">New</div>
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{SALES_LEAD_STATUS_LABELS.new}</div>
               <div className="mt-1 text-xl font-bold text-gray-900">{stats.newLeads}</div>
             </button>
             <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "contacted", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-amber-500 text-left">
@@ -1177,16 +1182,11 @@ export default function SalesAdminDashboard() {
                     className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-gray-50/50 focus:bg-white transition"
                   >
                     <option value="">All Status</option>
-                    <option value="new">New</option>
-                    <option value="contacted">Contacted</option>
-                    <option value="qualified">Qualified</option>
-                    <option value="converted">Converted</option>
-                    <option value="lost">Lost</option>
-                    <option value="followup">Follow-up</option>
-                    <option value="proposal">Proposal</option>
-                    <option value="not_interested">Not interested</option>
-                    <option value="ringing">Ringing</option>
-                    <option value="hotfollowup">Hot follow-up</option>
+                    {SALES_LEAD_STATUS_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -1837,16 +1837,11 @@ export default function SalesAdminDashboard() {
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
-                        <option value="new">New</option>
-                        <option value="contacted">Contacted</option>
-                        <option value="qualified">Qualified</option>
-                        <option value="converted">Converted</option>
-                        <option value="lost">Lost</option>
-                        <option value="followup">Follow-up</option>
-                        <option value="proposal">Proposal</option>
-                        <option value="not_interested">Not interested</option>
-                        <option value="ringing">Ringing</option>
-                        <option value="hotfollowup">Hot follow-up</option>
+                        {SALES_LEAD_STATUS_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
                       </select>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -2020,16 +2015,11 @@ export default function SalesAdminDashboard() {
                               : "bg-gray-100 text-gray-800"
                           }`}
                         >
-                          <option value="new">New</option>
-                          <option value="contacted">Contacted</option>
-                          <option value="qualified">Qualified</option>
-                          <option value="converted">Converted</option>
-                          <option value="lost">Lost</option>
-                          <option value="followup">Follow-up</option>
-                          <option value="proposal">Proposal</option>
-                          <option value="not_interested">Not interested</option>
-                          <option value="ringing">Ringing</option>
-                          <option value="hotfollowup">Hot follow-up</option>
+                          {SALES_LEAD_STATUS_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
                         </select>
                         <select
                           value={lead.paymentStatus || "pending"}
@@ -2406,7 +2396,7 @@ export default function SalesAdminDashboard() {
                                         <span className="font-medium">{l.clientName}</span>
                                         <span className="text-gray-600">{l.companyName || "-"}</span>
                                         <span className="text-gray-600">{l.product}</span>
-                                        <span className={`px-2 py-0.5 rounded text-xs ${l.status === "converted" ? "bg-green-100" : l.status === "lost" ? "bg-red-100" : "bg-gray-100"}`}>{l.status}</span>
+                                        <span className={`px-2 py-0.5 rounded text-xs ${l.status === "converted" ? "bg-green-100" : l.status === "lost" ? "bg-red-100" : "bg-gray-100"}`}>{formatSalesLeadStatus(l.status)}</span>
                                         <span className={`px-2 py-0.5 rounded text-xs ${l.paymentStatus === "paid" ? "bg-green-100" : "bg-gray-100"}`}>{l.paymentStatus || "pending"}</span>
                                         {l.lastRemark && <span className="text-gray-500 truncate max-w-[200px]" title={l.lastRemark.remark}>{l.lastRemark.remarkType}: {l.lastRemark.remark}</span>}
                                       </div>

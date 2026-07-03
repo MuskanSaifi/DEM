@@ -6,6 +6,10 @@ import ClientFilterModal from "@/components/ClientFilterModal";
 import BulkImportLeads from "@/components/sales/BulkImportLeads";
 import DuplicateImportModal from "@/components/sales/DuplicateImportModal";
 import { useSalesChatSocket } from "@/lib/salesChatSocket";
+import {
+  SALES_LEAD_STATUS_OPTIONS,
+  formatSalesLeadStatus,
+} from "@/lib/salesLeadStatus";
 import "@/components/styles/sales-dashboards.css";
 import { FiSearch, FiMessageCircle, FiLogOut} from "react-icons/fi";
 
@@ -922,7 +926,7 @@ useEffect(() => {
 
               <td className="px-6 py-4">
                 <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-600">
-                  {lead.status}
+                  {formatSalesLeadStatus(lead.status)}
                 </span>
               </td>
 
@@ -974,16 +978,11 @@ useEffect(() => {
                 className="sales-input-focus w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-gray-50/50 focus:bg-white transition"
               >
                 <option value="">All Status</option>
-                <option value="new">New</option>
-                <option value="contacted">Contacted</option>
-                <option value="qualified">Qualified</option>
-                <option value="converted">Converted</option>
-                <option value="lost">Lost</option>
-                <option value="followup">Follow-up</option>
-                <option value="proposal">Proposal</option>
-                <option value="not_interested">Not interested</option>
-                <option value="ringing">Ringing</option>
-                <option value="hotfollowup">Hot follow-up</option>
+                {SALES_LEAD_STATUS_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -1414,16 +1413,11 @@ useEffect(() => {
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
-                        <option value="new">New</option>
-                        <option value="contacted">Contacted</option>
-                        <option value="qualified">Qualified</option>
-                        <option value="converted">Converted</option>
-                        <option value="lost">Lost</option>
-                        <option value="followup">Follow-up</option>
-                        <option value="proposal">Proposal</option>
-                        <option value="not_interested">Not interested</option>
-                        <option value="ringing">Ringing</option>
-                        <option value="hotfollowup">Hot follow-up</option>
+                        {SALES_LEAD_STATUS_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
                       </select>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
