@@ -27,6 +27,32 @@ function parseDayRange(date) {
   return { dayStart, dayEnd };
 }
 
+function getActivityDateString(activityDate) {
+  if (!activityDate) return null;
+  return new Date(activityDate).toLocaleDateString("en-CA", {
+    timeZone: IST_TIMEZONE,
+  });
+}
+
+function isSheetImportLead(lead) {
+  return lead?.source === "bulk_import";
+}
+
+async function findLeadsForEmployeeOnDate(employeeId, date) {
+  const leads = await SalesLead.find({
+    createdBy: new mongoose.Types.ObjectId(employeeId),
+  })
+    .populate("assignedTo", "fullname email")
+    .populate("createdBy", "fullname email")
+    .sort({ importedAt: -1, createdAt: -1 })
+    .lean();
+
+  return leads.filter((lead) => {
+    const activityDate = lead.importedAt || lead.createdAt;
+    return getActivityDateString(activityDate) === date;
+  });
+}
+
 function aggregateDatesByEmployee(employeeId) {
   return SalesLead.aggregate([
     { $match: { createdBy: new mongoose.Types.ObjectId(employeeId) } },
@@ -52,7 +78,7 @@ function aggregateDatesByEmployee(employeeId) {
           $sum: { $cond: [{ $eq: ["$source", "bulk_import"] }, 1, 0] },
         },
         singleCount: {
-          $sum: { $cond: [{ $eq: ["$source", "manual"] }, 1, 0] },
+          $sum: { $cond: [{ $ne: ["$source", "bulk_import"] }, 1, 0] },
         },
         unassigned: {
           $sum: {
@@ -140,24 +166,7 @@ export async function GET(req) {
         );
       }
 
-      const { dayStart, dayEnd } = parseDayRange(date);
-      const leads = await SalesLead.find({
-        createdBy: employeeId,
-        $or: [
-          {
-            source: "bulk_import",
-            importedAt: { $gte: dayStart, $lt: dayEnd },
-          },
-          {
-            source: "manual",
-            createdAt: { $gte: dayStart, $lt: dayEnd },
-          },
-        ],
-      })
-        .populate("assignedTo", "fullname email")
-        .populate("createdBy", "fullname email")
-        .sort({ importedAt: -1, createdAt: -1 })
-        .lean();
+      const leads = await findLeadsForEmployeeOnDate(employeeId, date);
 
       return NextResponse.json({
         success: true,
@@ -166,8 +175,8 @@ export async function GET(req) {
         employee,
         leads,
         total: leads.length,
-        sheetCount: leads.filter((l) => l.source === "bulk_import").length,
-        singleCount: leads.filter((l) => l.source === "manual").length,
+        sheetCount: leads.filter((l) => isSheetImportLead(l)).length,
+        singleCount: leads.filter((l) => !isSheetImportLead(l)).length,
         unassigned: leads.filter((l) => !l.assignedTo).length,
       });
     }
