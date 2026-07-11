@@ -1,8 +1,17 @@
 import { getJwtSecret } from "@/lib/env";
 import jwt from "jsonwebtoken";
 
-/** Roles allowed for DEM Calling (uses existing sales login tokens). */
-export const CALLING_ROLES = ["sales-admin", "sales-employee"];
+/** Roles allowed for DEM Calling (sales + dedicated calling logins). */
+export const CALLING_ROLES = [
+  "sales-admin",
+  "sales-employee",
+  "calling-admin",
+  "calling-agent",
+];
+
+export function signCallingToken(payload) {
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: "7d" });
+}
 
 export async function verifyCallingToken(req, allowedRoles = []) {
   try {
