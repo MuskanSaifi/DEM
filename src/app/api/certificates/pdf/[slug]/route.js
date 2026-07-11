@@ -95,7 +95,7 @@ export async function GET(_req, { params }) {
 
     const companyText = companyName.toUpperCase();
     const companyFontSize = getCompanyNameFontSize(companyText);
-    const companyTop = 314;
+    const companyTop = 296;
     const companyY = topToY(companyTop, companyFontSize);
     const companyX = centerXForText(companyText, boldFont, companyFontSize);
 
@@ -123,7 +123,7 @@ export async function GET(_req, { params }) {
 
     const datesText = `issue Date ${formatMonthYear(cert.issuedAt)} / Valid Upto ${formatMonthYear(cert.validUntil)}`;
     const datesSize = 12;
-    const datesTop = 360;
+    const datesTop = 342;
     const datesY = topToY(datesTop, datesSize);
     const datesX = centerXForText(datesText, regularFont, datesSize);
 

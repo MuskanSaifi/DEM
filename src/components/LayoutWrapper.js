@@ -9,19 +9,21 @@ import Footer from "./Footer";
 const LayoutWrapper = ({ children }) => {
   const pathname = usePathname();
 
+  const hideChrome =
+    pathname?.startsWith("/sales-calling/") ||
+    pathname === "/about" ||
+    pathname === "/dashboard" ||
+    pathname === "/support-dashboard" ||
+    pathname === "/about/aboutstudent" ||
+    pathname === "/about/aboutcollege";
+
+  if (hideChrome) {
+    return <>{children}</>;
+  }
+
   return (
     <>
-      {pathname !== "/about" &&
-      pathname !== "/dashboard" &&
-      pathname !== "/support-dashboard" &&
-      pathname !== "/about/aboutstudent" &&
-      pathname !== "/about/aboutcollege" ? (
-        <Header />
-      ) : (
-        <div className="res-color2 text-light p-1 text-sm m-0 text-center">
-          Welcome back! Let’s make some updates and keep things running great.
-        </div>
-      )}
+      <Header />
 
       {children}
 
