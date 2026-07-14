@@ -40,10 +40,300 @@ function formatReminderDisplay(date) {
   });
 }
 
+/** Fresh = status not updated yet (stays in Fresh Data table until status changes). */
+function isFreshLead(lead) {
+  return (lead.status || "new") === "new";
+}
+
+/** Admin-assigned vs employee self-import / self-added. */
+function getLeadOrigin(lead) {
+  if (lead.assignedBy) {
+    const adminName =
+      typeof lead.assignedBy === "object" && lead.assignedBy?.fullname
+        ? lead.assignedBy.fullname
+        : null;
+    return {
+      label: "Admin",
+      title: adminName
+        ? `Assigned / imported by admin (${adminName})`
+        : "Assigned / imported by admin",
+      className: "bg-indigo-100 text-indigo-800",
+    };
+  }
+  if (lead.source === "bulk_import") {
+    return {
+      label: "Self Import",
+      title: "Bulk imported by you",
+      className: "bg-emerald-100 text-emerald-800",
+    };
+  }
+  return {
+    label: "Self Added",
+    title: "Manually added by you",
+    className: "bg-slate-100 text-slate-700",
+  };
+}
+
+function statusSelectClass(status) {
+  if (status === "converted") return "bg-green-100 text-green-800";
+  if (status === "qualified") return "bg-blue-100 text-blue-800";
+  if (status === "contacted") return "bg-yellow-100 text-yellow-800";
+  if (status === "lost") return "bg-red-100 text-red-800";
+  if (status === "followup") return "bg-sky-100 text-sky-800";
+  if (status === "proposal") return "bg-violet-100 text-violet-800";
+  if (status === "not_interested") return "bg-red-100 text-red-800";
+  if (status === "ringing") return "bg-orange-100 text-orange-800";
+  if (status === "hotfollowup") return "bg-rose-100 text-rose-800";
+  return "bg-gray-100 text-gray-800";
+}
+
+function paymentSelectClass(paymentStatus) {
+  if (paymentStatus === "paid") return "bg-green-100 text-green-800";
+  if (paymentStatus === "partial") return "bg-amber-100 text-amber-800";
+  if (paymentStatus === "not_applicable") return "bg-gray-100 text-gray-600";
+  return "bg-gray-100 text-gray-800";
+}
+
+function EmployeeLeadsTable({
+  title,
+  sectionId,
+  leads,
+  headerClassName = "bg-gray-50/50",
+  emptyTitle,
+  emptySubtitle,
+  showEmptyActions = false,
+  onAddLead,
+  onBulkImport,
+  onUpdateContact,
+  onSaveReminder,
+  onSelfAssign,
+  onOpenRemark,
+  onStatusChange,
+  onPaymentChange,
+  onError,
+}) {
+  return (
+    <div
+      id={sectionId}
+      className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+    >
+      <div className={`px-6 py-4 border-b border-gray-100 ${headerClassName}`}>
+        <h2 className="text-lg font-bold text-gray-900">
+          {title} ({leads.length})
+        </h2>
+      </div>
+      <div
+        className="overflow-x-auto overflow-y-auto border-t border-gray-100"
+        style={{ height: "500px" }}
+      >
+        {leads.length === 0 ? (
+          <div className="sales-empty-state">
+            <div className="sales-empty-state-icon">📋</div>
+            <p className="font-medium text-gray-600">{emptyTitle}</p>
+            <p className="text-sm mt-1 text-gray-500">{emptySubtitle}</p>
+            {showEmptyActions && (
+              <div className="flex flex-wrap gap-3 justify-center mt-4">
+                <button
+                  type="button"
+                  onClick={onAddLead}
+                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition"
+                >
+                  ➕ Add New Lead
+                </button>
+                <button
+                  type="button"
+                  onClick={onBulkImport}
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl shadow-sm transition"
+                >
+                  📥 Bulk Import Leads
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <table className="min-w-full">
+            <thead className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Client
+                </th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Company
+                </th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Mobile
+                </th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Product
+                </th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  GST
+                </th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Source
+                </th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Payment
+                </th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Call Reminder
+                </th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Remarks
+                </th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y text-sm divide-gray-100">
+              {leads.map((lead) => {
+                const origin = getLeadOrigin(lead);
+                return (
+                  <tr key={lead._id} className="sales-table-row-hover transition">
+                    <td className="px-6 py-4 whitespace-nowrap">{lead.clientName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap align-top">
+                      <input
+                        type="text"
+                        aria-label="Company name"
+                        className="sales-input-focus w-full min-w-[7rem] max-w-[14rem] border border-gray-200 rounded-lg px-2 py-1.5 text-sm"
+                        defaultValue={lead.companyName || ""}
+                        key={`c-${lead._id}-${lead.companyName ?? ""}`}
+                        onBlur={(e) => {
+                          const v = e.target.value.trim();
+                          const prev = (lead.companyName || "").trim();
+                          if (v !== prev) {
+                            onUpdateContact(lead._id, { companyName: v });
+                          }
+                        }}
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap align-top">
+                      <input
+                        type="tel"
+                        aria-label="Mobile number"
+                        className="sales-input-focus w-full min-w-[7rem] max-w-[10rem] border border-gray-200 rounded-lg px-2 py-1.5 text-sm"
+                        defaultValue={lead.mobile}
+                        key={`m-${lead._id}-${lead.mobile}`}
+                        onBlur={(e) => {
+                          const v = e.target.value.trim().replace(/\s+/g, "");
+                          if (!v) {
+                            onError?.("Mobile cannot be empty");
+                            e.target.value = lead.mobile;
+                            return;
+                          }
+                          if (v !== lead.mobile) {
+                            onUpdateContact(lead._id, { mobile: v });
+                          }
+                        }}
+                      />
+                    </td>
+                    <td className="px-6 py-4">{lead.product}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{lead.gst || "-"}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        title={origin.title}
+                        className={`inline-flex px-2 py-1 rounded text-xs font-medium ${origin.className}`}
+                      >
+                        {origin.label}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <select
+                        value={lead.status}
+                        onChange={(e) => onStatusChange(lead._id, e.target.value)}
+                        className={`px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer ${statusSelectClass(lead.status)}`}
+                      >
+                        {SALES_LEAD_STATUS_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <select
+                        value={lead.paymentStatus || "pending"}
+                        onChange={(e) => onPaymentChange(lead._id, e.target.value)}
+                        className={`px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer ${paymentSelectClass(lead.paymentStatus)}`}
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
+                        <option value="partial">Partial</option>
+                        <option value="not_applicable">N/A</option>
+                      </select>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap align-top min-w-[11rem]">
+                      <input
+                        type="datetime-local"
+                        aria-label="Call reminder date and time"
+                        className="sales-input-focus w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs"
+                        defaultValue={toDatetimeLocalValue(lead.callReminderAt)}
+                        key={`rem-${lead._id}-${lead.callReminderAt ?? ""}`}
+                        onBlur={(e) => {
+                          const v = e.target.value;
+                          const prev = toDatetimeLocalValue(lead.callReminderAt);
+                          if (v !== prev) {
+                            onSaveReminder(lead._id, v);
+                          }
+                        }}
+                      />
+                      {lead.callReminderAt && (
+                        <p className="text-[10px] text-indigo-600 mt-1">
+                          {formatReminderDisplay(lead.callReminderAt)}
+                        </p>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        type="button"
+                        onClick={() => onOpenRemark(lead._id)}
+                        className="text-indigo-600 hover:underline font-medium text-sm"
+                      >
+                        {lead.remarks?.length
+                          ? `${lead.remarks.length} remark(s)`
+                          : "Remark"}
+                      </button>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                      <div className="flex gap-2">
+                        {!lead.assignedTo && (
+                          <button
+                            type="button"
+                            onClick={() => onSelfAssign(lead._id)}
+                            className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
+                          >
+                            ✋ Self Assign
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => onOpenRemark(lead._id)}
+                          className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
+                        >
+                          💬 Remark
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function SalesTeamDashboard() {
   const [employee, setEmployee] = useState(null);
   const [leads, setLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
+  const [freshLeads, setFreshLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddLead, setShowAddLead] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
@@ -103,6 +393,14 @@ const [hasSearched, setHasSearched] = useState(false);
   ];
 
   const currentUserId = employee?.id;
+
+  const freshDataCount = useMemo(
+    () =>
+      leads.filter(
+        (l) => (l.paymentStatus || "pending") !== "paid" && isFreshLead(l)
+      ).length,
+    [leads]
+  );
 
   // Chat list: admins to chat with, merged with conversation data; sort unread first, then recent
   const chatList = useMemo(() => {
@@ -210,19 +508,19 @@ const [hasSearched, setHasSearched] = useState(false);
   };
 
   useEffect(() => {
-    // Paid leads are hidden from list: only show non-paid in My Leads
+    // Paid leads are hidden from list: only show non-paid in tables
     const visibleLeads = leads.filter(
       (lead) => (lead.paymentStatus || "pending") !== "paid"
     );
     let filtered = [...visibleLeads];
-    if (filters.status) {
-      filtered = filtered.filter((lead) => lead.status === filters.status);
-    }
     if (filters.paymentStatus) {
       if (filters.paymentStatus === "unpaid") {
         filtered = filtered.filter(
           (lead) => ["pending", "partial"].includes(lead.paymentStatus || "pending")
         );
+      } else if (filters.paymentStatus === "paid") {
+        // Paid are already excluded from visible; keep empty when paid filter selected
+        filtered = [];
       } else {
         filtered = filtered.filter(
           (lead) => (lead.paymentStatus || "pending") === filters.paymentStatus
@@ -270,7 +568,20 @@ const [hasSearched, setHasSearched] = useState(false);
         return true;
       });
     }
-    setFilteredLeads(filtered);
+
+    // Fresh Data = status still "new" (admin or self). Moves to My Leads once status updates.
+    // Always keep Fresh Data visible (ignore status filter except explicit "new" focus).
+    const fresh = filtered.filter(isFreshLead);
+    let my = filtered.filter((lead) => !isFreshLead(lead));
+
+    if (filters.status === "new") {
+      my = [];
+    } else if (filters.status) {
+      my = my.filter((lead) => lead.status === filters.status);
+    }
+
+    setFreshLeads(fresh);
+    setFilteredLeads(my);
   }, [leads, filters]);
 
   useEffect(() => {
@@ -580,6 +891,50 @@ const [hasSearched, setHasSearched] = useState(false);
       fetchLeads(token);
     } catch (err) {
       console.error("Dismiss call reminder error:", err);
+    }
+  };
+
+  const handleStatusChange = async (leadId, status) => {
+    const token = localStorage.getItem("salesEmployeeToken");
+    try {
+      await fetch(`/api/sales/leads/${leadId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status }),
+      });
+      fetchLeads(token);
+      setToast({ type: "success", message: "Status updated" });
+      setTimeout(() => setToast(null), 2000);
+    } catch (err) {
+      console.error("Status update error:", err);
+    }
+  };
+
+  const handlePaymentChange = async (leadId, paymentStatus) => {
+    const token = localStorage.getItem("salesEmployeeToken");
+    try {
+      await fetch(`/api/sales/leads/${leadId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ paymentStatus }),
+      });
+      fetchLeads(token);
+      setToast({
+        type: "success",
+        message:
+          paymentStatus === "paid"
+            ? "Marked paid. Lead will no longer show in list."
+            : "Payment status updated",
+      });
+      setTimeout(() => setToast(null), 2500);
+    } catch (err) {
+      console.error("Payment update error:", err);
     }
   };
 
@@ -1091,7 +1446,22 @@ useEffect(() => {
 
         {/* My Summary – status cards clickable to filter */}
         {leads.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-10 gap-3 mb-6">
+            <button
+              type="button"
+              onClick={() => {
+                setFilters((f) => ({ ...f, status: "new", paymentStatus: "" }));
+                requestAnimationFrame(() => {
+                  document
+                    .getElementById("fresh-data-section")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                });
+              }}
+              className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-cyan-500 text-left"
+            >
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Fresh Data</div>
+              <div className="mt-1 text-xl font-bold text-cyan-700">{freshDataCount}</div>
+            </button>
             <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "", paymentStatus: "" }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Assigned to me</div>
               <div className="mt-1 text-xl font-bold text-gray-900">
@@ -1262,249 +1632,67 @@ useEffect(() => {
           </form>
         )}
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-            <h2 className="text-lg font-bold text-gray-900">My Leads ({filteredLeads.length})</h2>
-          </div>
-          <div
-            className="overflow-x-auto overflow-y-auto border-t border-gray-100"
-            style={{ height: "500px" }}
-          >
-            {filteredLeads.length === 0 ? (
-              <div className="sales-empty-state">
-                <div className="sales-empty-state-icon">📋</div>
-                <p className="font-medium text-gray-600">
-                  {leads.length === 0 ? "No leads yet" : "No leads match your filters"}
-                </p>
-                <p className="text-sm mt-1 text-gray-500">
-                  {leads.length === 0 ? "Add your first lead to get started." : "Try clearing filters or search."}
-                </p>
-                {leads.length === 0 && (
-                  <div className="flex flex-wrap gap-3 justify-center mt-4">
-                    <button
-                      onClick={() => {
-                        setShowAddLead(true);
-                        setShowBulkImport(false);
-                      }}
-                      className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition"
-                    >
-                      ➕ Add New Lead
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowBulkImport(true);
-                        setShowAddLead(false);
-                      }}
-                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl shadow-sm transition"
-                    >
-                      📥 Bulk Import Leads
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-            <table className="min-w-full">
-              <thead className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Client
-                  </th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Company</th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Mobile</th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">GST</th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment</th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Call Reminder</th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Remarks</th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y text-sm divide-gray-100">
-                {filteredLeads.map((lead) => (
-                  <tr key={lead._id} className="sales-table-row-hover transition">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {lead.clientName}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap align-top">
-                      <input
-                        type="text"
-                        aria-label="Company name"
-                        className="sales-input-focus w-full min-w-[7rem] max-w-[14rem] border border-gray-200 rounded-lg px-2 py-1.5 text-sm"
-                        defaultValue={lead.companyName || ""}
-                        key={`c-${lead._id}-${lead.companyName ?? ""}`}
-                        onBlur={(e) => {
-                          const v = e.target.value.trim();
-                          const prev = (lead.companyName || "").trim();
-                          if (v !== prev) {
-                            handleUpdateLeadContact(lead._id, {
-                              companyName: v,
-                            });
-                          }
-                        }}
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap align-top">
-                      <input
-                        type="tel"
-                        aria-label="Mobile number"
-                        className="sales-input-focus w-full min-w-[7rem] max-w-[10rem] border border-gray-200 rounded-lg px-2 py-1.5 text-sm"
-                        defaultValue={lead.mobile}
-                        key={`m-${lead._id}-${lead.mobile}`}
-                        onBlur={(e) => {
-                          const v = e.target.value.trim().replace(/\s+/g, "");
-                          if (!v) {
-                            setToast({
-                              type: "error",
-                              message: "Mobile cannot be empty",
-                            });
-                            setTimeout(() => setToast(null), 3000);
-                            e.target.value = lead.mobile;
-                            return;
-                          }
-                          if (v !== lead.mobile) {
-                            handleUpdateLeadContact(lead._id, { mobile: v });
-                          }
-                        }}
-                      />
-                    </td>
-                    <td className="px-6 py-4">{lead.product}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{lead.gst || "-"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={lead.status}
-                        onChange={(e) => {
-                          const token = localStorage.getItem("salesEmployeeToken");
-                          fetch(`/api/sales/leads/${lead._id}`, {
-                            method: "PATCH",
-                            headers: {
-                              "Content-Type": "application/json",
-                              Authorization: `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({ status: e.target.value }),
-                          }).then(() => {
-                            fetchLeads(token);
-                            setToast({
-                              type: "success",
-                              message: "Status updated",
-                            });
-                            setTimeout(() => setToast(null), 2000);
-                          });
-                        }}
-                        className={`px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer ${
-                          lead.status === "converted"
-                            ? "bg-green-100 text-green-800"
-                            : lead.status === "qualified"
-                            ? "bg-blue-100 text-blue-800"
-                            : lead.status === "contacted"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : lead.status === "lost"
-                            ? "bg-red-100 text-red-800"
-                            : lead.status === "followup"
-                            ? "bg-sky-100 text-sky-800"
-                            : lead.status === "proposal"
-                            ? "bg-violet-100 text-violet-800"
-                            : lead.status === "not_interested"
-                            ? "bg-red-100 text-red-800"
-                            : lead.status === "ringing"
-                            ? "bg-orange-100 text-orange-800"
-                            : lead.status === "hotfollowup"
-                            ? "bg-rose-100 text-rose-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {SALES_LEAD_STATUS_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={lead.paymentStatus || "pending"}
-                        onChange={(e) => {
-                          const token = localStorage.getItem("salesEmployeeToken");
-                          const newVal = e.target.value;
-                          fetch(`/api/sales/leads/${lead._id}`, {
-                            method: "PATCH",
-                            headers: {
-                              "Content-Type": "application/json",
-                              Authorization: `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({ paymentStatus: newVal }),
-                          }).then(() => {
-                            fetchLeads(token);
-                            setToast({
-                              type: "success",
-                              message: newVal === "paid" ? "Marked paid. Lead will no longer show in list." : "Payment status updated",
-                            });
-                            setTimeout(() => setToast(null), 2500);
-                          });
-                        }}
-                        className={`px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer ${
-                          lead.paymentStatus === "paid"
-                            ? "bg-green-100 text-green-800"
-                            : lead.paymentStatus === "partial"
-                            ? "bg-amber-100 text-amber-800"
-                            : lead.paymentStatus === "not_applicable"
-                            ? "bg-gray-100 text-gray-600"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="paid">Paid</option>
-                        <option value="partial">Partial</option>
-                        <option value="not_applicable">N/A</option>
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap align-top min-w-[11rem]">
-                      <input
-                        type="datetime-local"
-                        aria-label="Call reminder date and time"
-                        className="sales-input-focus w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs"
-                        defaultValue={toDatetimeLocalValue(lead.callReminderAt)}
-                        key={`rem-${lead._id}-${lead.callReminderAt ?? ""}`}
-                        onBlur={(e) => {
-                          const v = e.target.value;
-                          const prev = toDatetimeLocalValue(lead.callReminderAt);
-                          if (v !== prev) {
-                            handleSaveCallReminder(lead._id, v);
-                          }
-                        }}
-                      />
-                      {lead.callReminderAt && (
-                        <p className="text-[10px] text-indigo-600 mt-1">
-                          {formatReminderDisplay(lead.callReminderAt)}
-                        </p>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <button type="button" onClick={() => setShowRemarkModal(lead._id)} className="text-indigo-600 hover:underline font-medium text-sm">
-                        {lead.remarks?.length ? `${lead.remarks.length} remark(s)` : "Remark"}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap space-x-2">
-                      <div className="flex gap-2">
-                        {!lead.assignedTo && (
-                          <button
-                            onClick={() => handleSelfAssign(lead._id)}
-                            className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
-                          >
-                            ✋ Self Assign
-                          </button>
-                        )}
-                        <button type="button" onClick={() => setShowRemarkModal(lead._id)} className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
-                          💬 Remark
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            )}
-          </div>
+        <div className="space-y-6">
+          <EmployeeLeadsTable
+            sectionId="fresh-data-section"
+            title="Fresh Data"
+            headerClassName="bg-cyan-50/80"
+            leads={freshLeads}
+            emptyTitle={
+              freshDataCount === 0
+                ? "No fresh data"
+                : "No fresh data match your filters"
+            }
+            emptySubtitle={
+              freshDataCount === 0
+                ? "New imports and assigned leads with status not updated will appear here."
+                : "Try clearing search or date filters."
+            }
+            onUpdateContact={handleUpdateLeadContact}
+            onSaveReminder={handleSaveCallReminder}
+            onSelfAssign={handleSelfAssign}
+            onOpenRemark={setShowRemarkModal}
+            onStatusChange={handleStatusChange}
+            onPaymentChange={handlePaymentChange}
+            onError={(message) => {
+              setToast({ type: "error", message });
+              setTimeout(() => setToast(null), 3000);
+            }}
+          />
+          <EmployeeLeadsTable
+            sectionId="my-leads-section"
+            title="My Leads"
+            leads={filteredLeads}
+            emptyTitle={
+              leads.length === 0
+                ? "No leads yet"
+                : "No leads match your filters"
+            }
+            emptySubtitle={
+              leads.length === 0
+                ? "Add your first lead to get started."
+                : "Fresh data stays above until you update status."
+            }
+            showEmptyActions={leads.length === 0}
+            onAddLead={() => {
+              setShowAddLead(true);
+              setShowBulkImport(false);
+            }}
+            onBulkImport={() => {
+              setShowBulkImport(true);
+              setShowAddLead(false);
+            }}
+            onUpdateContact={handleUpdateLeadContact}
+            onSaveReminder={handleSaveCallReminder}
+            onSelfAssign={handleSelfAssign}
+            onOpenRemark={setShowRemarkModal}
+            onStatusChange={handleStatusChange}
+            onPaymentChange={handlePaymentChange}
+            onError={(message) => {
+              setToast({ type: "error", message });
+              setTimeout(() => setToast(null), 3000);
+            }}
+          />
         </div>
       </main>
 

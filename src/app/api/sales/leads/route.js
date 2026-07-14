@@ -90,6 +90,7 @@ export async function GET(req) {
     const leads = await SalesLead.find(query)
       .populate("assignedTo", "fullname email")
       .populate("createdBy", "fullname email")
+      .populate("assignedBy", "fullname email")
       .sort({ createdAt: -1 })
       .lean();
 
