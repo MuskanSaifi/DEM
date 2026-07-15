@@ -336,6 +336,9 @@ export default function ImportDataHistory({
                         Sheet Import
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                        Admin Assigned
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                         Single Lead
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
@@ -369,6 +372,15 @@ export default function ImportDataHistory({
                                 {emp.sheetCount}
                               </span>
                               <SourceBadge source="bulk_import" />
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">0</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {emp.adminAssignedCount > 0 ? (
+                            <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                              {emp.adminAssignedCount} assigned
                             </span>
                           ) : (
                             <span className="text-gray-400">0</span>
@@ -417,89 +429,138 @@ export default function ImportDataHistory({
               <div className="text-center py-16">
                 <span className="text-5xl block mb-3">📋</span>
                 <p className="text-gray-600 font-medium">
-                  {employeeName} ne abhi tak koi lead add nahi ki
+                  {employeeName} ke liye abhi koi lead history nahi hai
                 </p>
                 <p className="text-sm text-gray-400 mt-1">
-                  Sheet import ya single form se add karne par yahan dikhega.
+                  Admin sheet assign ya employee self import/add ke baad yahan date-wise dikhega.
                 </p>
               </div>
             ) : (
-              <div className="overflow-auto border border-gray-200 rounded-xl">
-                <table className="min-w-full">
-                  <thead className="bg-gray-50 sticky top-0 z-10">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                        Date
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                        Total Leads
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                        Sheet Import
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                        Single Lead
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                        Unassigned
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {dates.map((item) => (
-                      <tr
-                        key={item.date}
-                        onClick={() => setSelectedDate(item.date)}
-                        className="hover:bg-indigo-50/60 cursor-pointer transition"
-                      >
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                          {formatDisplayDate(item.date)}
-                        </td>
-                        <td className="px-4 py-3 text-sm font-semibold text-gray-900">
-                          {item.count}
-                        </td>
-                        <td className="px-4 py-3 text-sm">
-                          {item.sheetCount > 0 ? (
-                            <span className="inline-flex items-center gap-1.5">
-                              <span className="font-medium text-emerald-700">
-                                {item.sheetCount}
-                              </span>
-                              <SourceBadge source="bulk_import" />
-                            </span>
-                          ) : (
-                            <span className="text-gray-400">0</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-sm">
-                          {item.singleCount > 0 ? (
-                            <span className="inline-flex items-center gap-1.5">
-                              <span className="font-medium text-sky-700">
-                                {item.singleCount}
-                              </span>
-                              <SourceBadge source="manual" />
-                            </span>
-                          ) : (
-                            <span className="text-gray-400">0</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-sm">
-                          {item.unassigned > 0 ? (
-                            <span className="text-xs font-medium bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
-                              {item.unassigned}
-                            </span>
-                          ) : (
-                            <span className="text-gray-400">0</span>
-                          )}
-                        </td>
+              <div className="space-y-3">
+                <p className="text-sm text-gray-600 px-1">
+                  Date pe click karke us din assign / import hui leads dekho.
+                </p>
+                <div className="overflow-auto border border-gray-200 rounded-xl">
+                  <table className="min-w-full">
+                    <thead className="bg-gray-50 sticky top-0 z-10">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                          Date
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                          Total Assigned / Added
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                          Sheet Import
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                          Admin Assigned
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                          Single Lead
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                          Unassigned
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {dates.map((item) => (
+                        <tr
+                          key={item.date}
+                          onClick={() => setSelectedDate(item.date)}
+                          className="hover:bg-indigo-50/60 cursor-pointer transition"
+                        >
+                          <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                            <div>{formatDisplayDate(item.date)}</div>
+                            {(item.adminAssignedCount > 0 || item.sheetCount > 0) && (
+                              <div className="text-xs text-indigo-600 mt-0.5 font-normal">
+                                {item.adminAssignedCount > 0
+                                  ? `${item.adminAssignedCount} leads admin ne assign ki`
+                                  : `${item.sheetCount} sheet import`}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-sm font-semibold text-gray-900">
+                            {item.count}
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            {item.sheetCount > 0 ? (
+                              <span className="inline-flex items-center gap-1.5">
+                                <span className="font-medium text-emerald-700">
+                                  {item.sheetCount}
+                                </span>
+                                <SourceBadge source="bulk_import" />
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">0</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            {item.adminAssignedCount > 0 ? (
+                              <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                {item.adminAssignedCount}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">0</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            {item.singleCount > 0 ? (
+                              <span className="inline-flex items-center gap-1.5">
+                                <span className="font-medium text-sky-700">
+                                  {item.singleCount}
+                                </span>
+                                <SourceBadge source="manual" />
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">0</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            {item.unassigned > 0 ? (
+                              <span className="text-xs font-medium bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
+                                {item.unassigned}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">0</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>
         ) : (
           <>
+            <div className="mx-6 mt-3 px-4 py-3 bg-indigo-50 border border-indigo-100 rounded-xl text-sm text-indigo-900">
+              <span className="font-semibold">{formatDisplayDate(selectedDate)}</span>
+              {" — "}
+              <span className="font-bold">{leads.length}</span> leads{" "}
+              {employeeName} ke liye
+              {leads.filter((l) => l.assignedBy).length > 0 && (
+                <>
+                  {" "}
+                  ·{" "}
+                  <span className="font-semibold">
+                    {leads.filter((l) => l.assignedBy).length} admin assigned
+                  </span>
+                </>
+              )}
+              {leads.filter((l) => l.source === "bulk_import").length > 0 && (
+                <>
+                  {" "}
+                  ·{" "}
+                  <span className="font-semibold text-emerald-800">
+                    {leads.filter((l) => l.source === "bulk_import").length} sheet
+                    import
+                  </span>
+                </>
+              )}
+            </div>
             <div className="px-6 py-3 border-b bg-gray-50/50 flex flex-wrap items-center gap-3 flex-shrink-0">
               <input
                 type="text"
@@ -575,6 +636,9 @@ export default function ImportDataHistory({
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                         Assigned To
                       </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                        Assigned By
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -628,6 +692,18 @@ export default function ImportDataHistory({
                             <span className="text-amber-600 font-medium">
                               Unassigned
                             </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2.5 text-sm">
+                          {lead.assignedBy ? (
+                            <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                              Admin
+                              {lead.assignedBy.fullname
+                                ? ` · ${lead.assignedBy.fullname}`
+                                : ""}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 text-xs">Self</span>
                           )}
                         </td>
                       </tr>

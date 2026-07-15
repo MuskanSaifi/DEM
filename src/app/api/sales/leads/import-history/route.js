@@ -38,30 +38,48 @@ function isSheetImportLead(lead) {
   return lead?.source === "bulk_import";
 }
 
+/** Prefer assignment time, then import time, then create time. */
+function getLeadActivityDate(lead) {
+  return lead?.assignedAt || lead?.importedAt || lead?.createdAt || null;
+}
+
+function employeeLeadMatch(employeeId) {
+  const oid = new mongoose.Types.ObjectId(employeeId);
+  return {
+    $or: [{ assignedTo: oid }, { createdBy: oid }],
+  };
+}
+
 async function findLeadsForEmployeeOnDate(employeeId, date) {
-  const leads = await SalesLead.find({
-    createdBy: new mongoose.Types.ObjectId(employeeId),
-  })
+  const leads = await SalesLead.find(employeeLeadMatch(employeeId))
     .populate("assignedTo", "fullname email")
     .populate("createdBy", "fullname email")
-    .sort({ importedAt: -1, createdAt: -1 })
+    .populate("assignedBy", "fullname email")
+    .sort({ assignedAt: -1, importedAt: -1, createdAt: -1 })
     .lean();
 
-  return leads.filter((lead) => {
-    const activityDate = lead.importedAt || lead.createdAt;
-    return getActivityDateString(activityDate) === date;
-  });
+  return leads.filter(
+    (lead) => getActivityDateString(getLeadActivityDate(lead)) === date
+  );
 }
 
 function aggregateDatesByEmployee(employeeId) {
+  const oid = new mongoose.Types.ObjectId(employeeId);
   return SalesLead.aggregate([
-    { $match: { createdBy: new mongoose.Types.ObjectId(employeeId) } },
+    {
+      $match: {
+        $or: [{ assignedTo: oid }, { createdBy: oid }],
+      },
+    },
     {
       $project: {
         source: 1,
         assignedTo: 1,
+        assignedBy: 1,
         importBatchId: 1,
-        activityDate: { $ifNull: ["$importedAt", "$createdAt"] },
+        activityDate: {
+          $ifNull: ["$assignedAt", { $ifNull: ["$importedAt", "$createdAt"] }],
+        },
       },
     },
     {
@@ -79,6 +97,15 @@ function aggregateDatesByEmployee(employeeId) {
         },
         singleCount: {
           $sum: { $cond: [{ $ne: ["$source", "bulk_import"] }, 1, 0] },
+        },
+        adminAssignedCount: {
+          $sum: {
+            $cond: [
+              { $ne: [{ $ifNull: ["$assignedBy", null] }, null] },
+              1,
+              0,
+            ],
+          },
         },
         unassigned: {
           $sum: {
@@ -106,6 +133,7 @@ function aggregateDatesByEmployee(employeeId) {
         count: 1,
         sheetCount: 1,
         singleCount: 1,
+        adminAssignedCount: 1,
         unassigned: 1,
         batchCount: {
           $size: {
@@ -167,6 +195,7 @@ export async function GET(req) {
       }
 
       const leads = await findLeadsForEmployeeOnDate(employeeId, date);
+      const adminAssignedCount = leads.filter((l) => l.assignedBy).length;
 
       return NextResponse.json({
         success: true,
@@ -177,6 +206,7 @@ export async function GET(req) {
         total: leads.length,
         sheetCount: leads.filter((l) => isSheetImportLead(l)).length,
         singleCount: leads.filter((l) => !isSheetImportLead(l)).length,
+        adminAssignedCount,
         unassigned: leads.filter((l) => !l.assignedTo).length,
       });
     }
@@ -194,6 +224,10 @@ export async function GET(req) {
       const totalLeads = dates.reduce((sum, d) => sum + d.count, 0);
       const sheetCount = dates.reduce((sum, d) => sum + d.sheetCount, 0);
       const singleCount = dates.reduce((sum, d) => sum + d.singleCount, 0);
+      const adminAssignedCount = dates.reduce(
+        (sum, d) => sum + (d.adminAssignedCount || 0),
+        0
+      );
 
       return NextResponse.json({
         success: true,
@@ -203,6 +237,7 @@ export async function GET(req) {
         totalLeads,
         sheetCount,
         singleCount,
+        adminAssignedCount,
       });
     }
 
@@ -217,11 +252,15 @@ export async function GET(req) {
       const { dayStart, dayEnd } = parseDayRange(date);
       const leads = await SalesLead.find({
         source: "bulk_import",
-        importedAt: { $gte: dayStart, $lt: dayEnd },
+        $or: [
+          { importedAt: { $gte: dayStart, $lt: dayEnd } },
+          { assignedAt: { $gte: dayStart, $lt: dayEnd } },
+        ],
       })
         .populate("assignedTo", "fullname email")
         .populate("createdBy", "fullname email")
-        .sort({ importedAt: -1 })
+        .populate("assignedBy", "fullname email")
+        .sort({ assignedAt: -1, importedAt: -1 })
         .lean();
 
       return NextResponse.json({
@@ -243,12 +282,45 @@ export async function GET(req) {
     const leadStats =
       employeeObjectIds.length > 0
         ? await SalesLead.aggregate([
-            { $match: { createdBy: { $in: employeeObjectIds } } },
+            {
+              $match: {
+                $or: [
+                  { assignedTo: { $in: employeeObjectIds } },
+                  { createdBy: { $in: employeeObjectIds } },
+                ],
+              },
+            },
+            {
+              $addFields: {
+                // Attribute lead to assignee when present, else creator (self add/import)
+                employeeKey: { $ifNull: ["$assignedTo", "$createdBy"] },
+                activityAt: {
+                  $ifNull: [
+                    "$assignedAt",
+                    { $ifNull: ["$importedAt", "$createdAt"] },
+                  ],
+                },
+              },
+            },
+            {
+              $match: {
+                employeeKey: { $in: employeeObjectIds },
+              },
+            },
             {
               $group: {
-                _id: { employee: "$createdBy", source: "$source" },
+                _id: { employee: "$employeeKey", source: "$source" },
                 count: { $sum: 1 },
-                lastAt: { $max: { $ifNull: ["$importedAt", "$createdAt"] } },
+                adminAssignedCount: {
+                  $sum: {
+                    $cond: [
+                      { $ne: [{ $ifNull: ["$assignedBy", null] }, null] },
+                      1,
+                      0,
+                    ],
+                  },
+                },
+                lastAt: { $max: "$activityAt" },
               },
             },
           ])
@@ -261,6 +333,7 @@ export async function GET(req) {
         statsMap.set(empId, {
           sheetCount: 0,
           singleCount: 0,
+          adminAssignedCount: 0,
           lastActivityAt: null,
         });
       }
@@ -270,6 +343,7 @@ export async function GET(req) {
       } else {
         entry.singleCount += stat.count;
       }
+      entry.adminAssignedCount += stat.adminAssignedCount || 0;
       if (
         !entry.lastActivityAt ||
         (stat.lastAt && stat.lastAt > entry.lastActivityAt)
@@ -282,6 +356,7 @@ export async function GET(req) {
       const stats = statsMap.get(String(emp._id)) || {
         sheetCount: 0,
         singleCount: 0,
+        adminAssignedCount: 0,
         lastActivityAt: null,
       };
       const totalLeads = stats.sheetCount + stats.singleCount;
@@ -293,6 +368,7 @@ export async function GET(req) {
         totalLeads,
         sheetCount: stats.sheetCount,
         singleCount: stats.singleCount,
+        adminAssignedCount: stats.adminAssignedCount,
         lastActivityAt: stats.lastActivityAt,
         lastActivityDate: stats.lastActivityAt
           ? new Date(stats.lastActivityAt).toLocaleDateString("en-CA", {

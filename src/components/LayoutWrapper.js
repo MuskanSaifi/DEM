@@ -10,7 +10,6 @@ const LayoutWrapper = ({ children }) => {
   const pathname = usePathname();
 
   const hideChrome =
-    pathname?.startsWith("/sales-calling/") ||
     pathname === "/about" ||
     pathname === "/dashboard" ||
     pathname === "/support-dashboard" ||

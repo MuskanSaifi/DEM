@@ -169,7 +169,8 @@ export async function POST(req) {
         assignedTo: assignedToId,
         assignedAt: assignedToId ? new Date() : null,
         assignedBy: !isEmployee && assignedToId ? user.id : null,
-        createdBy: user.id,
+        // Admin sheet assign: attribute ownership to employee so history/stats work
+        createdBy: isEmployee ? user.id : assignedToId || user.id,
         source: "bulk_import",
         importBatchId,
         importedAt,

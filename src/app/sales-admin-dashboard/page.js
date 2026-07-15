@@ -6,7 +6,6 @@ import BulkImportLeads from "@/components/sales/BulkImportLeads";
 import ImportDataHistory from "@/components/sales/ImportDataHistory";
 import AddEmployeeModal from "@/components/sales/AddEmployeeModal";
 import ClientFilterModal from "@/components/ClientFilterModal";
-import LiveCallsPanel from "@/components/sales/LiveCallsPanel";
 import { useSalesChatSocket } from "@/lib/salesChatSocket";
 import { useDebounce } from "@/lib/useDebounce";
 import {
@@ -1294,14 +1293,6 @@ export default function SalesAdminDashboard() {
         <div className="mb-6 flex gap-3 flex-wrap">
       
         </div>
-
-        {/* Live Calls — sales team app monitoring */}
-        {admin?.id && (
-          <LiveCallsPanel
-            adminId={admin.id}
-            token={typeof window !== "undefined" ? localStorage.getItem("salesAdminToken") : null}
-          />
-        )}
 
         {/* Bulk Import */}
         {showBulkImport && (
