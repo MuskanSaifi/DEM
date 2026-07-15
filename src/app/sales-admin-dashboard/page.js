@@ -17,7 +17,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 import "@/components/styles/sales-dashboards.css";
 
-const LEADS_PER_PAGE = 50;
+const LEADS_BATCH = 50;
 
 export default function SalesAdminDashboard() {
   const [admin, setAdmin] = useState(null);
@@ -37,7 +37,7 @@ export default function SalesAdminDashboard() {
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [selectedLeads, setSelectedLeads] = useState([]);
-  const [leadsPage, setLeadsPage] = useState(1);
+  const [visibleLeadCount, setVisibleLeadCount] = useState(LEADS_BATCH);
   const [assignTo, setAssignTo] = useState("");
   const [filters, setFilters] = useState({
     status: "",
@@ -80,6 +80,7 @@ export default function SalesAdminDashboard() {
   const [editingRemarkText, setEditingRemarkText] = useState("");
   const [editingRemarkType, setEditingRemarkType] = useState("general");
   const chatEndRef = useRef(null);
+  const leadsScrollRef = useRef(null);
   const router = useRouter();
   const [showAssignDropdown, setShowAssignDropdown] = useState(false);
   const [showClientFilterModal, setShowClientFilterModal] = useState(false);
@@ -283,16 +284,12 @@ export default function SalesAdminDashboard() {
     return filtered;
   }, [leads, filters]);
 
-  const totalLeadPages = Math.max(
-    1,
-    Math.ceil(filteredLeads.length / LEADS_PER_PAGE)
+  const visibleLeads = useMemo(
+    () => filteredLeads.slice(0, visibleLeadCount),
+    [filteredLeads, visibleLeadCount]
   );
 
-  const paginatedLeads = useMemo(() => {
-    const safePage = Math.min(leadsPage, totalLeadPages);
-    const start = (safePage - 1) * LEADS_PER_PAGE;
-    return filteredLeads.slice(start, start + LEADS_PER_PAGE);
-  }, [filteredLeads, leadsPage, totalLeadPages]);
+  const hasMoreLeads = visibleLeadCount < filteredLeads.length;
 
   const selectedLeadSet = useMemo(
     () => new Set(selectedLeads),
@@ -300,7 +297,10 @@ export default function SalesAdminDashboard() {
   );
 
   useEffect(() => {
-    setLeadsPage(1);
+    setVisibleLeadCount(LEADS_BATCH);
+    if (leadsScrollRef.current) {
+      leadsScrollRef.current.scrollTop = 0;
+    }
   }, [
     filters.status,
     filters.assignedTo,
@@ -312,10 +312,21 @@ export default function SalesAdminDashboard() {
   ]);
 
   useEffect(() => {
-    if (leadsPage > totalLeadPages) {
-      setLeadsPage(totalLeadPages);
+    setVisibleLeadCount((prev) =>
+      Math.min(prev, Math.max(filteredLeads.length, LEADS_BATCH))
+    );
+  }, [filteredLeads.length]);
+
+  const handleLeadsScroll = useCallback(() => {
+    const el = leadsScrollRef.current;
+    if (!el || !hasMoreLeads) return;
+    const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 200;
+    if (nearBottom) {
+      setVisibleLeadCount((prev) =>
+        Math.min(prev + LEADS_BATCH, filteredLeads.length)
+      );
     }
-  }, [leadsPage, totalLeadPages]);
+  }, [hasMoreLeads, filteredLeads.length]);
 
   useEffect(() => {
     if (selectedConversation) {
@@ -1658,7 +1669,11 @@ export default function SalesAdminDashboard() {
             </div>
           </div>
     <div className="relative h-[70vh] max-h-[650px] border border-gray-200 rounded-xl overflow-hidden">
-  <div className="h-full overflow-auto">
+  <div
+    ref={leadsScrollRef}
+    className="h-full overflow-auto"
+    onScroll={handleLeadsScroll}
+  >
             {leadsLoading ? (
               <div
                 className="flex flex-col items-center justify-center gap-3 min-h-[280px] py-16"
@@ -1745,7 +1760,7 @@ export default function SalesAdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y text-sm divide-gray-100">
-                    {paginatedLeads.map((lead, index) => (
+                    {visibleLeads.map((lead, index) => (
                       <tr
                         key={lead._id}
                         className={`sales-table-row-hover transition ${
@@ -1921,7 +1936,7 @@ export default function SalesAdminDashboard() {
 
                 {/* Mobile cards */}
                 <div className="md:hidden divide-y divide-gray-100">
-                  {paginatedLeads.map((lead) => (
+                  {visibleLeads.map((lead) => (
                     <div key={lead._id} className="p-4 space-y-2">
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -2094,42 +2109,25 @@ export default function SalesAdminDashboard() {
                 </div>
               </>
             )}
-          </div>
-          {!leadsLoading && filteredLeads.length > LEADS_PER_PAGE && (
-            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-gray-200 bg-gray-50/80">
-              <p className="text-sm text-gray-600">
-                Showing{" "}
-                <span className="font-medium">
-                  {(leadsPage - 1) * LEADS_PER_PAGE + 1}–
-                  {Math.min(leadsPage * LEADS_PER_PAGE, filteredLeads.length)}
-                </span>{" "}
-                of <span className="font-medium">{filteredLeads.length}</span> leads
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={leadsPage <= 1}
-                  onClick={() => setLeadsPage((p) => Math.max(1, p - 1))}
-                  className="px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40"
-                >
-                  ← Prev
-                </button>
-                <span className="text-sm text-gray-600 min-w-[80px] text-center">
-                  Page {leadsPage} / {totalLeadPages}
-                </span>
-                <button
-                  type="button"
-                  disabled={leadsPage >= totalLeadPages}
-                  onClick={() =>
-                    setLeadsPage((p) => Math.min(totalLeadPages, p + 1))
-                  }
-                  className="px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40"
-                >
-                  Next →
-                </button>
+            {!leadsLoading && filteredLeads.length > 0 && (
+              <div className="sticky bottom-0 z-10 px-4 py-2.5 border-t border-gray-200 bg-white/95 text-center text-sm text-gray-600 backdrop-blur-sm">
+                {hasMoreLeads ? (
+                  <span>
+                    Showing{" "}
+                    <span className="font-medium">{visibleLeads.length}</span> of{" "}
+                    <span className="font-medium">{filteredLeads.length}</span>{" "}
+                    — scroll down for more
+                  </span>
+                ) : (
+                  <span>
+                    Showing all{" "}
+                    <span className="font-medium">{filteredLeads.length}</span>{" "}
+                    leads
+                  </span>
+                )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
         </div>
           </div>
