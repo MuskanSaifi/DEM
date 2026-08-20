@@ -29,7 +29,12 @@ const PricingPlans = () => {
         const res = await fetch("/api/adminprofile/plans");
         if (!res.ok) throw new Error("Failed to fetch plans");
         const data = await res.json();
-        setPlans(data);
+        const toPrice = (value) =>
+          Number(String(value ?? "").replace(/,/g, "")) || 0;
+        const sorted = Array.isArray(data)
+          ? [...data].sort((a, b) => toPrice(a.price) - toPrice(b.price))
+          : [];
+        setPlans(sorted);
       } catch (err) {
         console.error(err);
       } finally {
@@ -153,7 +158,7 @@ const PricingPlans = () => {
           {plans.map((plan) => (
             <div
               key={plan._id}
-              className={`card ${plan.highlighted ? "highlight" : ""}`}
+              className={`pricing-card ${plan.highlighted ? "highlight" : ""}`}
             >
               {plan.highlighted && (
                 <div className="ribbon shadow">
@@ -187,7 +192,7 @@ const PricingPlans = () => {
               <p className="gst">+ 18% GST Per Year</p>
 
               <button
-                className="shadow"
+                className="pricing-pay-btn shadow"
                 onClick={() => handlePayNowClick(plan)}
               >
                 Pay Now

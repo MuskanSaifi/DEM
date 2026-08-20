@@ -19,54 +19,59 @@
 
 /* Pricing Cards Container */
 .pricing-cards {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 28px;
+  align-items: stretch;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 8px 16px 48px;
 }
 
 .pricing-titlt {
   font-size: 14px !important;
 }
 
-/* Individual Card Styling */
-.card {
+/* Individual Card Styling — avoid Bootstrap .card */
+.pricing-card {
   background: #fff;
   border-radius: 24px;
-  width: 300px;
-  max-width: 100%;
+  width: 100%;
+  min-width: 0;
   padding: 30px 25px;
   box-shadow: 0 15px 40px rgba(0,0,0,0.1);
   position: relative;
-  transition: transform 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   text-align: left;
   border: 2px solid transparent;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  isolation: isolate;
 }
 
-.card:hover {
-  transform: translateY(-15px) scale(1.02);
+.pricing-card:hover {
+  transform: translateY(-8px);
   box-shadow: 0 20px 50px rgba(0,0,0,0.2);
   border: 2px solid #6D4AAF;
 }
 
-.card.highlight {
+.pricing-card.highlight {
   background: #6D4AAF;
   color: white;
   border: 2px solid #5a3c91;
   box-shadow: 0 20px 50px rgba(0,0,0,0.25);
-  transform: scale(1.05);
-  z-index: 2;
 }
 
-.card.highlight:hover {
-  transform: scale(1.07);
+.pricing-card.highlight:hover {
+  transform: translateY(-8px);
 }
 
-.card.highlight ul li,
-.card.highlight h3,
-.card.highlight .gst,
-.card.highlight .accordion-header {
+.pricing-card.highlight ul li,
+.pricing-card.highlight h3,
+.pricing-card.highlight .gst,
+.pricing-card.highlight .accordion-header {
   color: white;
 }
 
@@ -86,33 +91,35 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-.card h2 {
+.pricing-card h2 {
   text-align: center;
   margin-bottom: 30px;
   font-size: 1.6rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
+  word-break: break-word;
 }
 
 /* Price and GST */
-.card h3 {
-  font-size: 2.5rem;
+.pricing-card h3 {
+  font-size: clamp(1.6rem, 4vw, 2.5rem);
   font-weight: 600;
-  margin-top: 25px;
+  margin-top: auto;
   margin-bottom: 5px;
   text-align: center;
+  overflow-wrap: anywhere;
 }
 
-.card .gst {
+.pricing-card .gst {
   font-size: 0.95rem;
   color: #718096;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   text-align: center;
 }
 
-/* Buttons */
-.card button {
+/* Pay Now only — not accordion buttons */
+.pricing-pay-btn {
   width: 100%;
   padding: 14px 10px;
   background: linear-gradient(90deg, #6D4AAF, #5a3c91);
@@ -126,19 +133,19 @@
   box-shadow: 0 8px 20px rgba(109, 74, 175, 0.4);
 }
 
-.card button:hover {
+.pricing-pay-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 25px rgba(109, 74, 175, 0.6);
   opacity: 0.95;
 }
 
-.card.highlight button {
+.pricing-card.highlight .pricing-pay-btn {
   background: white;
   color: #6D4AAF;
   box-shadow: 0 8px 20px rgba(255, 255, 255, 0.3);
 }
 
-.card.highlight button:hover {
+.pricing-card.highlight .pricing-pay-btn:hover {
   background: #f0f0f0;
 }
 
@@ -148,7 +155,7 @@
   padding: 15px 0;
 }
 
-.card.highlight .accordion-item {
+.pricing-card.highlight .accordion-item {
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -160,19 +167,22 @@
   width: 100%;
   background: none;
   border: none;
+  box-shadow: none;
   text-align: left;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.95rem;
   padding: 0;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  color: inherit;
   transition: color 0.3s ease;
 }
 
-.card.highlight .accordion-header {
-  color: #6D4AAF;
+.pricing-card.highlight .accordion-header {
+  color: white;
 }
 
 .accordion-header svg {
@@ -228,15 +238,31 @@
 }
 
 /* Responsive adjustments */
+@media (max-width: 1024px) {
+  .pricing-cards {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+    gap: 20px;
+  }
+}
+
 @media (max-width: 768px) {
   .pricing-section {
-    padding: 60px 15px;
+    padding: 40px 12px;
   }
   .title {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
+    margin-bottom: 28px;
   }
   .pricing-cards {
-    flex-direction: column;
-    align-items: center;
+    grid-template-columns: 1fr;
+    max-width: 420px;
+    gap: 20px;
+  }
+  .pricing-card {
+    padding: 24px 18px;
+  }
+  .pricing-card:hover,
+  .pricing-card.highlight:hover {
+    transform: none;
   }
 }

@@ -7,7 +7,10 @@ import PlansModel from "@/models/PlansModel";
 export async function GET() {
   try {
     await connectdb();
-    const plans = await PlansModel.find().sort({ createdAt: 1 });
+    const plans = await PlansModel.find().lean();
+    const toPrice = (value) =>
+      Number(String(value ?? "").replace(/,/g, "")) || 0;
+    plans.sort((a, b) => toPrice(a.price) - toPrice(b.price));
     return NextResponse.json(plans);
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
