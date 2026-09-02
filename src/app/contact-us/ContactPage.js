@@ -85,9 +85,7 @@ const ContactPage = () => {
                 <FaBuilding className="text-[#6D4AAF]" />{" "}
                 <strong className="text-gray-800">Dial Export Mart</strong>
               </p>
-              <p className="flex items-center gap-2 text-gray-600">
-                <FaMapMarkerAlt className="text-[#6D4AAF]" /> Rawat Plaza, Sector 7, Ramphal Chowk
-              </p>
+       <p className="flex items-center gap-2 text-gray-600"> <FaMapMarkerAlt className="text-[#6D4AAF]" /> <span> <strong>Registered Office:</strong> 61, T/F, LAXMI NAGAR, THIRD FLOOR, VIJAY BLOCK, DELHI-110092 </span> </p>
               <p className="flex items-center gap-2 text-gray-600">
                 <FaPhone className="text-[#6D4AAF]" /> +91 8448668076
               </p>

@@ -117,9 +117,11 @@ const socialLinks = [
             <div>
               <p className="text-lg font-semibold text-white mb-3">Contact</p>
               <p className="text-sm my-2 flex items-center gap-2">
-                <FaMapMarkerAlt className="text-gray-400 shrink-0" />
-                Rawat Plaza, Sector 7, Ramphal Chowk
-              </p>
+  <FaMapMarkerAlt className="text-gray-400 shrink-0" />
+  <span>
+    <strong>Registered Office:</strong> 61, T/F, LAXMI NAGAR, THIRD FLOOR, VIJAY BLOCK, DELHI-110092
+  </span>
+</p>
               <p className="text-sm my-2 flex items-center gap-2">
                 <FaPhoneAlt className="text-gray-400 shrink-0" />
                 +91 8448668076
