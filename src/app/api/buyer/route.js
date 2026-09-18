@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import Buyer from '@/models/Buyer'; // adjust this path as needed
 import connectdb from '@/lib/dbConnect';
+import { isBuyerNameTakenToday, SAME_NAME_TODAY_MESSAGE } from '@/lib/buyerDailyNameLimit';
 
 export async function POST(request) {
   try {
@@ -30,10 +31,6 @@ export async function POST(request) {
     if (!email) {
         return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
-    // productname is essential for this new logic, but not necessarily required by schema
-    // if (!productname) {
-    //     return NextResponse.json({ error: 'Product name is required for inquiry tracking' }, { status: 400 });
-    // }
 
     // Check for existing buyer with the same mobileNumber
     let existingBuyer = await Buyer.findOne({ mobileNumber });
@@ -64,6 +61,10 @@ export async function POST(request) {
     }
 
     // If no existing buyer, create a new one
+    if (await isBuyerNameTakenToday(fullname)) {
+      return NextResponse.json({ error: SAME_NAME_TODAY_MESSAGE }, { status: 409 });
+    }
+
     const newBuyer = new Buyer({
       fullname,
       email,

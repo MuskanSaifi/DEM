@@ -6,7 +6,7 @@
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
-    // ✅ Import error handlers
+    await import("./lib/dnsSetup.js");
     await import("./lib/errorHandler.js");
   }
 }

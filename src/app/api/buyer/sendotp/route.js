@@ -2,6 +2,7 @@ import connectdb from "@/lib/dbConnect";
 import Buyer from "@/models/Buyer";
 import { send2FactorOtp } from "@/lib/twoFactor";
 import { getOtpExpireMinutes } from "@/lib/env";
+import { isBuyerNameTakenToday, SAME_NAME_TODAY_MESSAGE } from "@/lib/buyerDailyNameLimit";
 
 export async function POST(req) {
   try {
@@ -28,6 +29,13 @@ export async function POST(req) {
           headers: { "Content-Type": "application/json" },
         }
       );
+    }
+
+    if (await isBuyerNameTakenToday(fullname)) {
+      return new Response(JSON.stringify({ error: SAME_NAME_TODAY_MESSAGE }), {
+        status: 409,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const otp = Math.floor(1000 + Math.random() * 9000);

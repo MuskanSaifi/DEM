@@ -4,6 +4,7 @@ import Product from "@/models/Product";
 import User from "@/models/User";
 import { send2FactorOtp } from "@/lib/twoFactor";
 import { getOtpExpireMinutes } from "@/lib/env";
+import { isBuyerNameTakenToday, SAME_NAME_TODAY_MESSAGE } from "@/lib/buyerDailyNameLimit";
 
 export async function POST(req) {
     try {
@@ -21,6 +22,12 @@ export async function POST(req) {
         let existingBuyer = await Buyer.findOne({ mobileNumber });
 
         if (!existingBuyer) {
+            if (await isBuyerNameTakenToday(fullname)) {
+                return new Response(JSON.stringify({ error: SAME_NAME_TODAY_MESSAGE }), {
+                    status: 409,
+                    headers: { "Content-Type": "application/json" }
+                });
+            }
             existingBuyer = new Buyer({ fullname, email, mobileNumber, countryCode, companyName, productname });
         }
 

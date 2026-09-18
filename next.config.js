@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Next 16 Turbopack FS cache compaction OOMs this machine
+  experimental: {
+    turbopackFileSystemCacheForDev: false,
+  },
+
   images: {
     remotePatterns: [
       {

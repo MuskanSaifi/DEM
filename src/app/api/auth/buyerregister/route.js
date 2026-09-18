@@ -1,6 +1,7 @@
 import Buyer from "@/models/Buyer";
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";
+import { isBuyerNameTakenToday, SAME_NAME_TODAY_MESSAGE } from "@/lib/buyerDailyNameLimit";
 
 export async function POST(req) {
     try {
@@ -21,6 +22,12 @@ export async function POST(req) {
         let existingBuyer = await Buyer.findOne({ mobileNumber: formattedMobile });
 
         if (!existingBuyer) {
+            if (await isBuyerNameTakenToday(fullname)) {
+                return new Response(JSON.stringify({ error: SAME_NAME_TODAY_MESSAGE }), {
+                    status: 409,
+                    headers: { "Content-Type": "application/json" }
+                });
+            }
             // If buyer does not exist, create a new one
             existingBuyer = new Buyer({
                 fullname,

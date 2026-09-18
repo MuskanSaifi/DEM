@@ -35,5 +35,7 @@ const BuyerSchema = new mongoose.Schema({
   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
 }, { timestamps: true });
 
+BuyerSchema.index({ createdAt: -1 });
+
 const Buyer = mongoose.models.Buyer || mongoose.model("Buyer", BuyerSchema);
 export default Buyer;
