@@ -15,7 +15,12 @@ async function main() {
 
   const fakeEmailFilter = { email: FAKE_EMAIL };
   const rahulFilter = { fullname: NAME };
-  const spamFilter = { fullname: NAME, email: FAKE_EMAIL };
+  const spamFilter = {
+    $or: [
+      { fullname: NAME, email: FAKE_EMAIL },
+      { email: FAKE_EMAIL },
+    ],
+  };
 
   const [totalBuyers, rahulCount, fakeEmailCount, spamCount] = await Promise.all([
     Buyer.countDocuments({}),
@@ -25,7 +30,7 @@ async function main() {
   ]);
 
   const byDay = await Buyer.aggregate([
-    { $match: spamFilter },
+    { $match: fakeEmailFilter },
     {
       $group: {
         _id: {
@@ -34,8 +39,8 @@ async function main() {
         count: { $sum: 1 },
       },
     },
-    { $sort: { count: -1 } },
-    { $limit: 15 },
+    { $sort: { _id: -1 } },
+    { $limit: 20 },
   ]);
 
   console.log(
@@ -47,7 +52,7 @@ async function main() {
   );
 
   if (!shouldDelete) {
-    console.log("Dry run. Re-run with --delete to remove spam Rahul Sharma (fake user_* emails).");
+    console.log("Dry run. Re-run with --delete to remove fake user_*@gmail.com spam buyers.");
     process.exit(0);
   }
 

@@ -2,6 +2,7 @@ import Buyer from "@/models/Buyer";
 import connectdb from "@/lib/dbConnect";
 import Product from "@/models/Product";
 import { isBuyerNameTakenToday, SAME_NAME_TODAY_MESSAGE } from "@/lib/buyerDailyNameLimit";
+import { assertValidBuyerEmail } from "@/lib/buyerSpamGuard";
 
 export async function POST(req) {
     try {
@@ -12,6 +13,14 @@ export async function POST(req) {
 
         if (!mobileNumber || !productname || !countryCode) {
             return new Response(JSON.stringify({ error: "All fields (including country code) are required" }), {
+                status: 400,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
+        const emailCheck = assertValidBuyerEmail(email);
+        if (!emailCheck.ok) {
+            return new Response(JSON.stringify({ error: emailCheck.error }), {
                 status: 400,
                 headers: { "Content-Type": "application/json" }
             });

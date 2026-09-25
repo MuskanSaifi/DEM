@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import Buyer from '@/models/Buyer'; // adjust this path as needed
 import connectdb from '@/lib/dbConnect';
 import { isBuyerNameTakenToday, SAME_NAME_TODAY_MESSAGE } from '@/lib/buyerDailyNameLimit';
+import { assertValidBuyerEmail } from '@/lib/buyerSpamGuard';
 
 export async function POST(request) {
   try {
@@ -30,6 +31,11 @@ export async function POST(request) {
     }
     if (!email) {
         return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    }
+
+    const emailCheck = assertValidBuyerEmail(email);
+    if (!emailCheck.ok) {
+      return NextResponse.json({ error: emailCheck.error }, { status: 400 });
     }
 
     // Check for existing buyer with the same mobileNumber
