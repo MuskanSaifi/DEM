@@ -1,50 +1,60 @@
 import { NextResponse } from 'next/server';
-import path from 'path';
-import fs from 'fs/promises';
-import { writeFile } from 'fs/promises';
 import connectdb from '@/lib/dbConnect';
+import cloudinary from '@/lib/cloudinary';
 import SupportPerson from '@/models/SupportPerson';
 
 export async function POST(req) {
-  const formData = await req.formData();
-  const file = formData.get('audio');
-  const supportPersonId = formData.get('supportPersonId');
-  const message = formData.get('message');
+  try {
+    const formData = await req.formData();
+    const file = formData.get('audio');
+    const supportPersonId = formData.get('supportPersonId');
+    const message = formData.get('message');
 
-  if (!file || !supportPersonId) {
-    return NextResponse.json({ message: 'Missing fields' }, { status: 400 });
-  }
+    if (!file || !supportPersonId) {
+      return NextResponse.json({ message: 'Missing fields' }, { status: 400 });
+    }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const filename = Date.now() + '-' + file.name;
-  const filePath = path.join(process.cwd(), 'public/uploads', filename);
+    await connectdb();
 
-  await fs.mkdir(path.dirname(filePath), { recursive: true });
-  await writeFile(filePath, buffer);
+    const person = await SupportPerson.findById(supportPersonId);
+    if (!person) {
+      return NextResponse.json({ message: 'Support person not found' }, { status: 404 });
+    }
 
-  const url = `/uploads/${filename}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
 
-  await connectdb();
+    // Cloudinary stores audio under resource_type "video"
+    const uploadRes = await new Promise((resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream(
+          { folder: 'support-recordings', resource_type: 'video' },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        )
+        .end(buffer);
+    });
 
-  const person = await SupportPerson.findById(supportPersonId);
-  if (!person) {
-    return NextResponse.json({ message: 'Support person not found' }, { status: 404 });
-  }
+    if (!Array.isArray(person.recordingurl)) {
+      person.recordingurl = [];
+    }
 
-  if (!Array.isArray(person.recordingurl)) {
-    person.recordingurl = [];
-  }
+    // .ogg / .amr don't play in every browser; Cloudinary transcodes on delivery by extension
+    const playableUrl = uploadRes.secure_url.replace(/\.[^./]+$/, '.mp3');
 
-  const alreadyExists = person.recordingurl.some(r => r.url === url);
-  if (!alreadyExists) {
     person.recordingurl.push({
-      url,
+      url: playableUrl,
+      public_id: uploadRes.public_id,
       uploadTime: new Date(),
-      messages: message ? [{ text: message }] : [], // ✅ store message properly
+      messages: message ? [{ text: message }] : [],
     });
 
     await person.save();
-  }
 
-  return NextResponse.json({ message: 'Upload successful' });
+    return NextResponse.json({ message: 'Upload successful' });
+  } catch (error) {
+    console.error('Recording upload error:', error);
+    return NextResponse.json({ message: 'Upload failed' }, { status: 500 });
+  }
 }

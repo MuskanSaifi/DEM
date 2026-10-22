@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises'; // Use promise-based fs API
 import path from 'path';
 import connectdb from '@/lib/dbConnect';
+import cloudinary from '@/lib/cloudinary';
 import SupportPerson from '@/models/SupportPerson';
 
 export async function DELETE(req) {
@@ -29,20 +30,20 @@ export async function DELETE(req) {
   const recording = person.recordingurl[recordingIndex];
   const recordingUrl = recording.url;
 
-  // Get filename from URL
-  let filename = recordingUrl;
-  if (typeof recordingUrl === 'string' && recordingUrl.includes('/')) {
-    filename = recordingUrl.split('/').pop();
-  }
-
-  const baseUploadPath = path.join(process.cwd(), 'public/uploads');
-  const filePath = path.join(baseUploadPath, filename);
-
-  // Remove file
-  try {
-    await fs.unlink(filePath);
-  } catch (err) {
-    console.warn("File not found or already deleted:", err.message);
+  if (recording.public_id) {
+    try {
+      await cloudinary.uploader.destroy(recording.public_id, { resource_type: 'video' });
+    } catch (err) {
+      console.warn("Cloudinary delete failed:", err.message);
+    }
+  } else if (typeof recordingUrl === 'string' && recordingUrl.startsWith('/uploads/')) {
+    const filename = recordingUrl.split('/').pop();
+    const filePath = path.join(process.cwd(), 'public/uploads', filename);
+    try {
+      await fs.unlink(filePath);
+    } catch (err) {
+      console.warn("File not found or already deleted:", err.message);
+    }
   }
 
   // Remove recording from database

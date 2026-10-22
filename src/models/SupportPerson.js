@@ -17,6 +17,7 @@ const supportPersonSchema = new mongoose.Schema(
     recordingurl: [
       {
         url: { type: String },
+        public_id: { type: String },
         uploadTime: { type: Date, default: Date.now },
         tag: {
           type: String,
