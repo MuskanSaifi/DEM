@@ -169,16 +169,16 @@ const filteredRecordings = recordings.filter((rec) => {
 
   return (
 
-<div className="p-6 max-w-7xl mx-auto bg-white shadow-lg rounded-xl mt-6 mb-6 border border-gray-200 ">
-  <h1 className="text-3xl font-bold mb-6 text-center text-blue-700 ">Uploaded Recordings</h1>
+<div className="p-3 sm:p-6 max-w-7xl mx-auto bg-white shadow-lg rounded-xl mt-3 sm:mt-6 mb-6 border border-gray-200 ">
+  <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center text-blue-700 ">Uploaded Recordings</h1>
   <div className="flex flex-col lg:flex-row gap-6">
 
    {/* LEFT COLUMN */}
 <div className="w-full lg:w-1/3 space-y-8 self-start ">
 
-<div className='sticky top-5'>
+<div className='lg:sticky lg:top-5'>
   {/* Upload Section */}
-  <div className="bg-gradient-to-br from-white to-gray-50 p-6 rounded-xl shadow border border-gray-200 ">
+  <div className="bg-gradient-to-br from-white to-gray-50 p-4 sm:p-6 rounded-xl shadow border border-gray-200 ">
     <h2 className="text-xl font-semibold text-blue-800 mb-2">Upload Recording</h2>
 
     <label className="block text-sm text-gray-700 font-medium mb-1">Select Audio File</label>
@@ -208,7 +208,7 @@ const filteredRecordings = recordings.filter((rec) => {
   </div>
 
   {/* Filters Section */}
-  <div className="bg-gradient-to-br from-white to-gray-50 p-6 rounded-xl shadow border border-gray-200 mt-2">
+  <div className="bg-gradient-to-br from-white to-gray-50 p-4 sm:p-6 rounded-xl shadow border border-gray-200 mt-2">
     <h2 className="text-xl font-semibold text-blue-800 mb-2">Filters</h2>
 
     <label className="block text-sm text-gray-700 font-medium mb-1">Search by Message</label>
@@ -278,7 +278,7 @@ const filteredRecordings = recordings.filter((rec) => {
   ) : filteredRecordings.length === 0 ? (
     <p className="text-gray-500 italic">No recordings found.</p>
   ) : (
-    <div className="h-[520px] overflow-y-auto pr-2 space-y-6">
+    <div className="lg:h-[520px] lg:overflow-y-auto lg:pr-2 space-y-6">
       {filteredRecordings.map((rec, i) => (
         <div
           key={rec._id || i}
@@ -360,7 +360,7 @@ const filteredRecordings = recordings.filter((rec) => {
               onChange={(e) =>
                 setNewMessages((prev) => ({ ...prev, [rec.url]: e.target.value }))
               }
-              className="flex-grow px-4 py-2 w-100 text-sm border border-gray-300 rounded-full shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="flex-grow min-w-0 px-4 py-2 text-sm border border-gray-300 rounded-full shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-200"
             />
             <button
               onClick={() =>

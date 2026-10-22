@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-const Sidebar = ({ isSidebarOpen, setActiveContent, activeContent }) => {
+const Sidebar = ({ isSidebarOpen, setActiveContent, activeContent, onClose }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
 
   const sidebarItems = [
@@ -34,10 +34,19 @@ const Sidebar = ({ isSidebarOpen, setActiveContent, activeContent }) => {
   return (
     <div className="custon-sidebar">
       <div className={`resdes-sidebar ${isSidebarOpen ? "" : "resdes-closed"}`}>
-        <div className="d-flex justify-content-around align-items-center m-2">
+        <div className="d-flex justify-content-around align-items-center m-2 position-relative">
           <Link href="../">
             <Image src="/assets/logo1234.png" alt="Innodem Logo" width={100} height={50} />
-          </Link>        </div>
+          </Link>
+          <button
+            type="button"
+            className="support-sidebar-close"
+            onClick={onClose}
+            aria-label="Close menu"
+          >
+            &times;
+          </button>
+        </div>
           <h6 className="text-center mt-2">🧑  Welcome! Support Team</h6>
           <ul>
             {sidebarItems.map((item, index) => (

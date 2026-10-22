@@ -1,4 +1,4 @@
-.resdes-dashboard {
+﻿.resdes-dashboard {
     display: flex;
     height: 100vh;
     overflow-x: hidden;
@@ -273,3 +273,164 @@ h1{
   border-color: #4F46E5;
   outline: none;
 }
+
+/* Support dashboard header */
+.support-dash .resdes-header {
+  gap: 12px;
+}
+
+.support-dash .support-header-title {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.support-dash .support-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.support-sidebar-close,
+.support-sidebar-backdrop {
+  display: none;
+}
+
+/* Support dashboard: mobile / tablet — sidebar is an overlay drawer */
+@media (max-width: 991px) {
+  .support-dash {
+    position: relative;
+    height: 100dvh;
+  }
+
+  .support-dash .custon-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 0;
+    z-index: 1050;
+  }
+
+  .support-dash .resdes-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 240px;
+    max-width: 80vw;
+    max-height: 100dvh;
+    overflow-y: auto;
+    z-index: 1050;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+    transform: translateX(0);
+    transition: transform 0.25s ease;
+  }
+
+  .support-dash .resdes-sidebar.resdes-closed {
+    width: 240px;
+    transform: translateX(-100%);
+    box-shadow: none;
+  }
+
+  .support-dash .support-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1040;
+  }
+
+  .support-dash .support-sidebar-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 50%;
+    background: #f2f3f6;
+    color: #333;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .support-dash .resdes-sidebar h6 {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .support-dash .resdes-sidebar ul {
+    margin-bottom: 12px;
+  }
+
+  .support-dash .resdes-sidebar ul li {
+    padding: 2px 6px;
+  }
+
+  .support-dash .resdes-sidebar .sidebar-item {
+    padding: 8px 10px;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+
+  .support-dash .resdes-sidebar .sidebar-icon img {
+    width: 26px;
+    height: 26px;
+  }
+
+  .support-dash .resdes-content {
+    width: 100%;
+    min-width: 0;
+    padding: 8px;
+  }
+
+  .support-dash .resdes-header {
+    padding: 6px 10px;
+    gap: 8px;
+    border-radius: 8px;
+  }
+
+  .support-dash .resdes-hamburger {
+    color: #fff;
+    font-size: 20px;
+    padding: 0 2px;
+    line-height: 1;
+  }
+
+  .support-dash .support-header-title {
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .support-dash .support-btn-label {
+    display: none;
+  }
+
+  .support-dash .support-header-actions {
+    gap: 6px;
+  }
+
+  .support-dash .support-header-actions > button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    justify-content: center;
+    gap: 0;
+    font-size: 13px;
+  }
+
+  .support-dash .resdes-dynamic-content {
+    max-height: calc(100dvh - 60px) !important;
+    overflow-x: hidden;
+  }
+}
+

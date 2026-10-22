@@ -22,6 +22,7 @@ import ClientFilterModal from "@/components/ClientFilterModal";
 function ResponsiveDashboard() {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const [activeContent, setActiveContent] = useState("Dashboard");
   const [loading, setLoading] = useState(true);
   const [showClientFilterModal, setShowClientFilterModal] = useState(false);
@@ -55,10 +56,26 @@ useEffect(() => {
   checkAdminAuth();
 }, [router]);
 
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 991px)");
+    const apply = (e) => {
+      setIsMobile(e.matches);
+      setIsSidebarOpen(!e.matches);
+    };
+    apply(mq);
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
   if (loading) return <p>Loading...</p>;
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const handleSelectContent = (label) => {
+    setActiveContent(label);
+    if (isMobile) setIsSidebarOpen(false);
   };
 
   const handleLogout = async () => {
@@ -88,35 +105,50 @@ useEffect(() => {
   };
 
   return (
-    <div className="resdes-dashboard">
-      <Sidebar isSidebarOpen={isSidebarOpen} setActiveContent={setActiveContent} activeContent={activeContent} />
+    <div className="resdes-dashboard support-dash">
+      {isSidebarOpen && (
+        <div
+          className="support-sidebar-backdrop"
+          onClick={() => setIsSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      <Sidebar
+        isSidebarOpen={isSidebarOpen}
+        setActiveContent={handleSelectContent}
+        activeContent={activeContent}
+        onClose={() => setIsSidebarOpen(false)}
+      />
       <div className={`resdes-content ${isSidebarOpen ? "resdes-shrink" : "resdes-expand"}`}>
         <div className="resdes-header">
           <button onClick={toggleSidebar} className="resdes-hamburger" aria-label="Toggle Sidebar">
             &#9776;
           </button>
-          <h1>{activeContent}</h1>
+          <h1 className="support-header-title">{activeContent}</h1>
+          <div className="support-header-actions">
           <button
             type="button"
             onClick={() => setShowClientFilterModal(true)}
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-full shadow-md transition duration-300 ease-in-out"
+            aria-label="Filter Clients"
           >
-            <span>🔍</span> Filter Clients
+            <span>🔍</span> <span className="support-btn-label">Filter Clients</span>
           </button>
-          <ClientFilterModal
-            isOpen={showClientFilterModal}
-            onClose={() => setShowClientFilterModal(false)}
-            onApply={(vals) => {
-              setAppliedClientFilter(vals);
-              // Modal stays open so user can see search result
-            }}
-          />
-          <button onClick={handleLogout} className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-full shadow-md transition duration-300 ease-in-out">
+          <button onClick={handleLogout} aria-label="Logout" className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-full shadow-md transition duration-300 ease-in-out">
   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1m0-10V5"/>
-  </svg>  Logout
+  </svg>  <span className="support-btn-label">Logout</span>
 </button>
+          </div>
         </div>
+        <ClientFilterModal
+          isOpen={showClientFilterModal}
+          onClose={() => setShowClientFilterModal(false)}
+          onApply={(vals) => {
+            setAppliedClientFilter(vals);
+            // Modal stays open so user can see search result
+          }}
+        />
         <div className="resdes-dynamic-content">
 {activeContent === "Dashboard" && <Dashboard />}
 {activeContent === "Payments" &&( <Payments supportMember={supportPerson} />)}
