@@ -65,7 +65,8 @@ export async function PATCH(req) {
             return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
         }
         const body = await req.json();
-        const { productId, images = [], ...updateFields } = body; // 'images' here contains new base64 strings OR existing image objects from frontend
+        const { productId, ...updateFields } = body;
+        const imagesProvided = Object.prototype.hasOwnProperty.call(body, "images");
 
         if (!productId) {
             return NextResponse.json({ success: false, message: "Product ID is required" }, { status: 400 });
@@ -91,47 +92,77 @@ export async function PATCH(req) {
             return NextResponse.json({ success: false, message: "Product not found" }, { status: 404 });
         }
 
-        // Separate existing images from new images to upload
-        // Assuming existing images sent from frontend will be objects { url: ..., public_id: ... }
-        // And new images will be base64 strings
-        const existingImagesFromPayload = images.filter(img => typeof img === 'object' && img !== null && img.url);
-        const newImagesToUpload = images.filter(img => typeof img === 'string' && img.startsWith("data:image"));
+        if (imagesProvided) {
+            const images = Array.isArray(body.images) ? body.images : [];
+            const MAX_IMAGES = 6;
+            if (images.length > MAX_IMAGES) {
+                return NextResponse.json({
+                    success: false,
+                    message: `Image upload limit exceeded (Max ${MAX_IMAGES} images allowed)`,
+                }, { status: 400 });
+            }
+            if (images.length === 0) {
+                return NextResponse.json({
+                    success: false,
+                    message: "Please keep at least one product image",
+                }, { status: 400 });
+            }
 
-        // Combine truly existing images from DB with existing images sent from frontend (if any were removed, this needs more complex logic)
-        // For simplicity, let's assume the frontend sends ALL current images (existing and new ones to add) in the 'images' array.
-        // Or, if frontend only sends *new* images, then `existingImages` from DB is correct.
-        // The original code uses `existingProduct.images`, which is safer assuming frontend sends only *new* images.
-        const currentDbImages = existingProduct.images || [];
+            const currentDbImages = existingProduct.images || [];
+            const dbByPublicId = new Map(
+                currentDbImages.filter((img) => img?.public_id).map((img) => [img.public_id, img])
+            );
+            const dbByUrl = new Map(
+                currentDbImages.filter((img) => img?.url).map((img) => [img.url, img])
+            );
 
-        // ✅ Image Limit Check: Check against current DB images + new images to upload
-        const totalImagesAfterUpload = currentDbImages.length + newImagesToUpload.length;
-        if (totalImagesAfterUpload > 4) {
-            return NextResponse.json({
-                success: false,
-                message: "Image upload limit exceeded (Max 4 images allowed)",
-            }, { status: 400 });
+            const isDataImage = (value) =>
+                typeof value === "string" && value.startsWith("data:image");
+
+            const finalImages = [];
+            for (const img of images) {
+                const dataUrl = isDataImage(img)
+                    ? img
+                    : isDataImage(img?.url)
+                      ? img.url
+                      : null;
+                if (dataUrl) {
+                    const uploaded = await uploadToCloudinary(dataUrl);
+                    if (uploaded?.url) finalImages.push(uploaded);
+                    continue;
+                }
+
+                const url = typeof img === "string" ? img : img?.url;
+                if (!url) continue;
+                const fromDb =
+                    (img?.public_id && dbByPublicId.get(img.public_id)) ||
+                    dbByUrl.get(url);
+                finalImages.push({
+                    url: fromDb?.url || url,
+                    public_id: fromDb?.public_id || img?.public_id || "",
+                });
+            }
+
+            if (finalImages.length === 0) {
+                return NextResponse.json({
+                    success: false,
+                    message: "Please keep at least one product image",
+                }, { status: 400 });
+            }
+
+            const keptIds = new Set(finalImages.map((img) => img.public_id).filter(Boolean));
+            for (const old of currentDbImages) {
+                if (old?.public_id && !keptIds.has(old.public_id)) {
+                    try {
+                        await cloudinary.uploader.destroy(old.public_id);
+                    } catch (err) {
+                        console.warn("Cloudinary destroy failed:", old.public_id, err?.message);
+                    }
+                }
+            }
+
+            updateFields.images = finalImages;
         }
-
-        // ✅ Upload new images
-        const uploadedImages = await Promise.all(
-            newImagesToUpload.map(async (img) => await uploadToCloudinary(img))
-        );
-
-        // Filter out any nulls if uploadToCloudinary returns null for invalid inputs
-        const validUploadedImages = uploadedImages.filter(img => img !== null && img.url);
-
-        // Construct the final array of images for the product
-        // This assumes existing images are fetched from the DB, and new ones are uploaded.
-        // If the frontend also sends back existing image *objects* that haven't changed,
-        // you would need to merge `currentDbImages` with `existingImagesFromPayload` carefully
-        // to avoid duplicates or to handle removals.
-        // For now, we are adding new uploaded images to the existing images from the DB.
-        const finalImages = [
-            ...currentDbImages, // Images already associated with the product in the database
-            ...validUploadedImages // Newly uploaded images
-        ];
-
-        updateFields.images = finalImages;
 
         // ✅ Normalize country to lowercase (ISO codes should be lowercase)
         // ✅ Keep state and city in original case (full names should be preserved)

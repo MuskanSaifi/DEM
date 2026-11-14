@@ -101,9 +101,9 @@ export async function POST(req) {
       return NextResponse.json({ success: false, message: "Required fields are missing" }, { status: 400 });
     }
 
-    if (images.length > 5) {
+    if (images.length > 6) {
       console.error("❌ Too many images:", images.length);
-      return NextResponse.json({ success: false, message: "You can upload up to 5 images only" }, { status: 400 });
+      return NextResponse.json({ success: false, message: "You can upload up to 6 images only" }, { status: 400 });
     }
 
     // --- START: Changes for sellingPriceType and fixedSellingPrice ---

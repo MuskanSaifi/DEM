@@ -9,6 +9,7 @@ import LocationSelector from "./components/LocationSelector";
 import { MOQ_UNIT_OPTIONS, normalizeMoqUnit } from "@/lib/moqUnits";
 import Image from "next/image";
 import Link from "next/link";
+import ProductImageManager from "@/components/ProductImageManager";
 
 const AllProducts = () => {
   const [products, setProducts] = useState([]);
@@ -415,37 +416,14 @@ const AllProducts = () => {
     }
   };
 
-  const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    // Limit total images to 4 (existing + new)
-    const existingImageCount = selectedProduct?.images?.length || 0;
-    if (files.length + existingImageCount > 4) {
-      toast.error(`You can upload up to ${4 - existingImageCount} more images.`);
-      return;
-    }
-
-    const uploadedImages = await Promise.all(files.map(convertToBase64));
-
+  const handleImagesChange = (nextImages) => {
     setFormData((prevData) => ({
       ...prevData,
       basicDetails: {
         ...prevData.basicDetails,
-        images: [...(selectedProduct?.images || []), ...uploadedImages], // Combine existing and new images
+        images: nextImages,
       },
     }));
-  };
-
-  // ✅ Convert Image File to Base64
-  const convertToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const base64String = reader.result.split(",")[1]; // Extract base64 part
-        resolve(`data:image/jpeg;base64,${base64String}`); // Ensure proper format
-      };
-      reader.onerror = (error) => reject(error);
-    });
   };
 
   // Function to determine badge color
@@ -828,32 +806,12 @@ const AllProducts = () => {
                 </select>
               </div>
 
-              {/* Product Image  */}
-              <div className="mb-3">
-                <label className="form-label">Upload Images (Max 4)</label>
-                <input
-                  type="file"
-                  className="form-control"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageUpload} // ✅ Add event handler
-                />
-                <div className="mt-2 d-flex flex-wrap gap-2">
-                  {formData.basicDetails.images.map((img, index) => (
-                    <div key={index} className="position-relative">
-                      <Image
-                        src={img.url || img} // Use img.url if available, otherwise img directly
-                        alt={`Product Image ${index + 1}`}
-                        width={80}
-                        height={80}
-                        className="object-cover rounded"
-                        unoptimized
-                      />
-                      {/* Add a remove button if needed */}
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <ProductImageManager
+                images={formData.basicDetails.images || []}
+                onChange={handleImagesChange}
+                max={6}
+                label="Product Images"
+              />
 
 
               {/* Price */}

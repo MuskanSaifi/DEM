@@ -3,12 +3,11 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Tab, Nav } from "react-bootstrap";
-import Image from "next/image";
 import { Country, State, City } from 'country-state-city';
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { IndianLocation } from "./Indianlocation";
 import { MOQ_UNIT_OPTIONS } from "@/lib/moqUnits";
+import ProductImageManager from "@/components/ProductImageManager";
 
 
 // Slug generator function
@@ -276,29 +275,8 @@ const getMergedCitiesForState = (countryCode, stateCode, stateName) => {
       };
 
 
-      const handleImageChange = async (e) => {
-        const files = e.target.files;
-        if (!files.length) return;
-        if (files.length + product?.images?.length > 6) {
-            toast.error("You can upload a maximum of 6 images.");
-            return;
-        }
-    
-        const imagePromises = Array.from(files).map((file) => {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onloadend = () => resolve(reader.result);
-                reader.onerror = (error) => reject(error);
-            });
-        });
-    
-        try {
-            const base64Images = await Promise.all(imagePromises);
-            setProduct((prev) => ({ ...prev, images: [...prev.images, ...base64Images] }));
-        } catch (error) {
-            toast.error("Error processing images.");
-        }
+      const handleImageChange = (nextImages) => {
+        setProduct((prev) => ({ ...prev, images: nextImages }));
     };
     
 const handleSubmit = async (e) => {
@@ -662,29 +640,12 @@ const handleSubmit = async (e) => {
                                 </div>
                             </div>
 
-                            {/* Image Upload Section */}
-                            <div className="mb-3">
-                      <label className="text-gray-600 text-sm">
-                        Product Images (Max 6, each less than 500KB)
-                         <Link href="https://www.iloveimg.com/compress-image" target="blank"> click here to compress image</Link>
-                      </label>
-                       <input type="file" className="form-control" name="images" onChange={handleImageChange} accept="image/*" multiple />
-                                {product?.images?.length > 0 && (
-                                    <div className="mt-2 d-flex">
-                                        {product?.images.map((img, index) => (
-<Image
-  key={index}
-  src={img || "/placeholder.png"}
-  alt={`Preview ${index}`}
-  width={50}
-  height={50}
-  className="mr-2 rounded"
-/>
-
-))}
-                                    </div>
-                                )}
-                            </div>
+                            <ProductImageManager
+                                images={product?.images || []}
+                                onChange={handleImageChange}
+                                max={6}
+                                label="Product Images"
+                            />
 
                     <div>
   
