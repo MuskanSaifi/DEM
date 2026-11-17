@@ -4,6 +4,7 @@ import SalesEmployee from "@/models/SalesEmployee";
 import connectdb from "@/lib/dbConnect";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { employeeLeadMongoQuery } from "@/lib/salesLeadOwnership";
 
 async function verifyToken(req) {
   try {
@@ -47,19 +48,12 @@ export async function GET(req) {
       if (status) query.status = status;
       if (assignedTo) query.assignedTo = assignedTo;
     } else {
-      // Sales Employee can see their own leads and assigned leads
-      query.$or = [
-        { createdBy: user.id },
-        { assignedTo: user.id },
-      ];
+      Object.assign(query, employeeLeadMongoQuery(user.id));
       if (status) query.status = status;
     }
 
     if (employeeId) {
-      query.$or = [
-        { createdBy: employeeId },
-        { assignedTo: employeeId },
-      ];
+      Object.assign(query, employeeLeadMongoQuery(employeeId));
     }
 
     if (search) {

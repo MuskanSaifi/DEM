@@ -84,6 +84,7 @@ function statusSelectClass(status) {
   if (status === "not_interested") return "bg-red-100 text-red-800";
   if (status === "ringing") return "bg-orange-100 text-orange-800";
   if (status === "hotfollowup") return "bg-rose-100 text-rose-800";
+  if (status === "callback") return "bg-teal-100 text-teal-800";
   return "bg-gray-100 text-gray-800";
 }
 
@@ -1514,6 +1515,12 @@ useEffect(() => {
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Hot follow-up</div>
               <div className="mt-1 text-xl font-bold text-gray-900">
                 {leads.filter((l) => l.status === "hotfollowup").length}
+              </div>
+            </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "callback", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-teal-500 text-left">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Call Back</div>
+              <div className="mt-1 text-xl font-bold text-gray-900">
+                {leads.filter((l) => l.status === "callback").length}
               </div>
             </button>
           </div>

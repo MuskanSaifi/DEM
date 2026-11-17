@@ -9,6 +9,7 @@ export const SALES_LEAD_STATUS_LABELS = {
   not_interested: "Not interested",
   ringing: "Ringing",
   hotfollowup: "Hot follow-up",
+  callback: "Call Back",
 };
 
 export const SALES_LEAD_STATUS_OPTIONS = [
@@ -22,6 +23,7 @@ export const SALES_LEAD_STATUS_OPTIONS = [
   { value: "not_interested", label: SALES_LEAD_STATUS_LABELS.not_interested },
   { value: "ringing", label: SALES_LEAD_STATUS_LABELS.ringing },
   { value: "hotfollowup", label: SALES_LEAD_STATUS_LABELS.hotfollowup },
+  { value: "callback", label: SALES_LEAD_STATUS_LABELS.callback },
 ];
 
 export function formatSalesLeadStatus(status) {

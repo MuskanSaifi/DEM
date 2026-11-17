@@ -3,6 +3,7 @@ import { getJwtSecret } from "@/lib/env";
 import connectdb from "@/lib/dbConnect";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { employeeOwnsLead } from "@/lib/salesLeadOwnership";
 
 function normalizeMobile(m) {
   if (!m || typeof m !== "string") return "";
@@ -56,6 +57,13 @@ export async function PATCH(req, { params }) {
       return NextResponse.json(
         { success: false, message: "Lead not found" },
         { status: 404 }
+      );
+    }
+
+    if (user.role === "sales-employee" && !employeeOwnsLead(lead, user.id)) {
+      return NextResponse.json(
+        { success: false, message: "This lead is assigned to someone else" },
+        { status: 403 }
       );
     }
 

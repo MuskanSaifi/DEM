@@ -42,6 +42,7 @@ const salesLeadSchema = new mongoose.Schema(
         "not_interested",
         "ringing",
         "hotfollowup",
+        "callback",
       ],
       default: "new",
     },

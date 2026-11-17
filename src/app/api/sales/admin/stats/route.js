@@ -43,6 +43,7 @@ export async function GET(req) {
       notInterestedLeads,
       ringingLeads,
       hotfollowupLeads,
+      callbackLeads,
       unassignedLeads,
       paidLeads,
       totalEmployees,
@@ -58,6 +59,7 @@ export async function GET(req) {
       SalesLead.countDocuments({ status: "not_interested" }),
       SalesLead.countDocuments({ status: "ringing" }),
       SalesLead.countDocuments({ status: "hotfollowup" }),
+      SalesLead.countDocuments({ status: "callback" }),
       SalesLead.countDocuments({
         $or: [{ assignedTo: null }, { assignedTo: { $exists: false } }],
       }),
@@ -107,6 +109,7 @@ export async function GET(req) {
           notInterestedLeads,
           ringingLeads,
           hotfollowupLeads,
+          callbackLeads,
           unassignedLeads,
           paidLeads,
           totalEmployees,

@@ -22,9 +22,97 @@ async function verifyAdmin(req) {
 
 function parseDayRange(date) {
   const dayStart = new Date(`${date}T00:00:00+05:30`);
-  const dayEnd = new Date(dayStart);
-  dayEnd.setDate(dayEnd.getDate() + 1);
+  const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
   return { dayStart, dayEnd };
+}
+
+function getIstYmd(date = new Date()) {
+  return date.toLocaleDateString("en-CA", { timeZone: IST_TIMEZONE });
+}
+
+function istDayStart(ymd) {
+  return new Date(`${ymd}T00:00:00+05:30`);
+}
+
+function shiftIstYmd(ymd, days) {
+  const shifted = new Date(istDayStart(ymd).getTime() + days * 24 * 60 * 60 * 1000);
+  return shifted.toLocaleDateString("en-CA", { timeZone: IST_TIMEZONE });
+}
+
+function resolveUnassignedRange(range, from, to) {
+  const today = getIstYmd();
+  if (range === "today") return { from: today, to: today };
+  if (range === "3days") return { from: shiftIstYmd(today, -2), to: today };
+  if (range === "week") return { from: shiftIstYmd(today, -6), to: today };
+  if (range === "custom" && from && /^\d{4}-\d{2}-\d{2}$/.test(from)) {
+    const toDate = to && /^\d{4}-\d{2}-\d{2}$/.test(to) ? to : today;
+    return { from, to: toDate < from ? from : toDate };
+  }
+  return { from: null, to: null };
+}
+
+function unassignedQuery({ from, to, source } = {}) {
+  const clauses = [
+    { $or: [{ assignedTo: null }, { assignedTo: { $exists: false } }] },
+  ];
+
+  if (from && to) {
+    const { dayStart } = parseDayRange(from);
+    const { dayEnd } = parseDayRange(to);
+    const range = { $gte: dayStart, $lt: dayEnd };
+    clauses.push({
+      $or: [{ createdAt: range }, { importedAt: range }],
+    });
+  }
+
+  if (source === "bulk_import" || source === "manual") {
+    clauses.push({ source });
+  }
+
+  return clauses.length === 1 ? clauses[0] : { $and: clauses };
+}
+
+async function getUnassignedNewLeads({ range, from, to, source }) {
+  const today = getIstYmd();
+  const resolved = resolveUnassignedRange(range, from, to);
+  const last3 = { from: shiftIstYmd(today, -2), to: today };
+  const lastWeek = { from: shiftIstYmd(today, -6), to: today };
+  const date = { from: resolved.from, to: resolved.to };
+
+  const [all, todayCount, last3Count, lastWeekCount, sheetAll, sheetInRange, singleInRange, leads] =
+    await Promise.all([
+      SalesLead.countDocuments(unassignedQuery()),
+      SalesLead.countDocuments(unassignedQuery({ from: today, to: today })),
+      SalesLead.countDocuments(unassignedQuery({ from: last3.from, to: last3.to })),
+      SalesLead.countDocuments(unassignedQuery({ from: lastWeek.from, to: lastWeek.to })),
+      SalesLead.countDocuments(unassignedQuery({ source: "bulk_import" })),
+      SalesLead.countDocuments(unassignedQuery({ ...date, source: "bulk_import" })),
+      SalesLead.countDocuments(unassignedQuery({ ...date, source: "manual" })),
+      SalesLead.find(unassignedQuery({ ...date, source }))
+        .populate("createdBy", "fullname email")
+        .sort({ importedAt: -1, createdAt: -1 })
+        .limit(2000)
+        .lean(),
+    ]);
+
+  return {
+    range: range || "all",
+    source: source || "",
+    from: resolved.from,
+    to: resolved.to,
+    leads,
+    total: leads.length,
+    counts: {
+      all,
+      today: todayCount,
+      last3days: last3Count,
+      lastWeek: lastWeekCount,
+      sheetAll,
+      sheet: sheetInRange,
+      single: singleInRange,
+      filtered: leads.length,
+    },
+  };
 }
 
 function getActivityDateString(activityDate) {
@@ -177,6 +265,21 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const date = searchParams.get("date");
     const employeeId = searchParams.get("employeeId");
+    const view = searchParams.get("view");
+
+    if (view === "unassigned") {
+      const sourceParam = searchParams.get("source");
+      const payload = await getUnassignedNewLeads({
+        range: searchParams.get("range") || "today",
+        from: searchParams.get("from"),
+        to: searchParams.get("to"),
+        source:
+          sourceParam === "bulk_import" || sourceParam === "manual"
+            ? sourceParam
+            : "",
+      });
+      return NextResponse.json({ success: true, ...payload });
+    }
 
     if (employeeId && date) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {

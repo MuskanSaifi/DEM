@@ -214,12 +214,17 @@ export default function BulkImportLeads({ onImport, employees }) {
           <label className="block text-sm font-medium mb-2">
             Assign to Employee (Optional)
           </label>
+          <p className="text-xs text-gray-500 mb-2">
+            Unassigned chhodoge to sheet wali leads <strong>New Data</strong> mein
+            <span className="text-emerald-700 font-semibold"> Sheet Import</span> ki tarah
+            dikhengi — wahan se kisi salesperson ko assign kar sakte ho.
+          </p>
           <select
             value={assignedTo}
             onChange={(e) => setAssignedTo(e.target.value)}
             className="w-full border rounded px-3 py-2"
           >
-            <option value="">Unassigned</option>
+            <option value="">Unassigned — New Data mein dikhega</option>
             {employees.map((emp) => (
               <option key={emp._id} value={emp._id}>
                 {emp.fullname}

@@ -1068,6 +1068,10 @@ export default function SalesAdminDashboard() {
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Hot follow-up</div>
               <div className="mt-1 text-xl font-bold text-gray-900">{stats.hotfollowupLeads ?? 0}</div>
             </button>
+            <button type="button" onClick={() => setFilters((f) => ({ ...f, status: "callback", paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-teal-500 text-left">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Call Back</div>
+              <div className="mt-1 text-xl font-bold text-gray-900">{stats.callbackLeads ?? 0}</div>
+            </button>
             <button type="button" onClick={() => setFilters((f) => ({ ...f, assignedTo: "unassigned", status: f.status, paymentStatus: f.paymentStatus }))} className="sales-card-hover bg-white p-4 rounded-xl shadow-sm border-l-4 border-slate-500 text-left">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Unassigned Lead</div>
               <div className="mt-1 text-xl font-bold text-gray-900">{stats.unassignedLeads ?? 0}</div>
@@ -1147,7 +1151,7 @@ export default function SalesAdminDashboard() {
     </span>
   </button>
 
-  {/* Fresh New Import Data History */}
+  {/* New Data History */}
   <button
     onClick={() => setShowImportDataHistory(true)}
     className="flex items-center gap-2 px-6 py-3 rounded-2xl 
@@ -1155,7 +1159,12 @@ export default function SalesAdminDashboard() {
     text-white font-semibold shadow-md hover:shadow-xl 
     hover:-translate-y-0.5 transition-all duration-200"
   >
-    📋 Fresh New Import Data
+    📋 New Data
+    {typeof stats?.unassignedLeads === "number" && (
+      <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">
+        {stats.unassignedLeads}
+      </span>
+    )}
   </button>
 
   {/* Spacer */}
@@ -1849,6 +1858,8 @@ export default function SalesAdminDashboard() {
                             ? "bg-orange-100 text-orange-800"
                             : lead.status === "hotfollowup"
                             ? "bg-rose-100 text-rose-800"
+                            : lead.status === "callback"
+                            ? "bg-teal-100 text-teal-800"
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
@@ -2027,6 +2038,8 @@ export default function SalesAdminDashboard() {
                               ? "bg-orange-100 text-orange-800"
                               : lead.status === "hotfollowup"
                               ? "bg-rose-100 text-rose-800"
+                              : lead.status === "callback"
+                              ? "bg-teal-100 text-teal-800"
                               : "bg-gray-100 text-gray-800"
                           }`}
                         >
